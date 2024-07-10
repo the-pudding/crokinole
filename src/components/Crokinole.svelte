@@ -18,6 +18,7 @@
 		Peg Diameter: 3/8”
 	*/
 
+	const mm = 0.001;
 	const surfaceRadius = 0.3302;
 	const holeRadius = 0.0175;
 	const surfaceHeight = 0.0127;
@@ -27,8 +28,13 @@
 	const baseHeight = surfaceHeight / 2;
 	const baseRadius = surfaceRadius + ditchWidth;
 	const pegRadius = 0.0047625;
-	const pegDistance = 0.102; // 102mm from the center
 	const pegHeight = 0.0127;
+	const innerCircleRadius = 0.102;
+	const middleCircleRadius = 0.2032;
+	const outerCircleRadius = 0.305;
+	const discRadius = 0.015;
+	const discHeight = 0.01;
+
 	const edges = 96;
 
 	let el;
@@ -110,14 +116,68 @@
 		const pegs = new THREE.Group();
 		for (let i = 0; i < 8; i++) {
 			const angle = 3 / 8 + (i / 8) * Math.PI * 2;
-			const x = Math.cos(angle) * pegDistance;
-			const z = Math.sin(angle) * pegDistance;
+			const x = Math.cos(angle) * innerCircleRadius;
+			const z = Math.sin(angle) * innerCircleRadius;
 			const peg = createPeg();
 			peg.position.set(x, 0, z);
 			pegs.add(peg);
 		}
 		pegs.position.set(0, pegHeight / 2 + baseHeight + surfaceHeight, 0);
 		return pegs;
+	}
+
+	function createCircleLine(r) {
+		const geometry = new THREE.CircleGeometry(r, 64);
+		const edges = new THREE.EdgesGeometry(geometry);
+		const material = new THREE.LineBasicMaterial({ color: 0x000000 });
+		const circle = new THREE.LineSegments(edges, material);
+		circle.rotation.x = Math.PI / 2;
+		circle.position.set(0, baseHeight + surfaceHeight + mm, 0);
+		return circle;
+	}
+
+	function createQuadrantLines(innerR, outerR) {
+		const lines = new THREE.Group();
+		const material = new THREE.LineBasicMaterial({ color: 0x000000 });
+		for (let i = 0; i < 4; i++) {
+			const angle = 3 / 4 + (i / 4) * Math.PI * 2;
+			const x1 = Math.cos(angle) * innerR;
+			const z1 = Math.sin(angle) * innerR;
+			const x2 = Math.cos(angle) * outerR;
+			const z2 = Math.sin(angle) * outerR;
+			const geometry = new THREE.BufferGeometry().setFromPoints([
+				new THREE.Vector3(x1, 0, z1),
+				new THREE.Vector3(x2, 0, z2)
+			]);
+			const line = new THREE.Line(geometry, material);
+			lines.add(line);
+		}
+		lines.position.set(0, baseHeight + surfaceHeight + mm, 0);
+		return lines;
+	}
+
+	function createDisc() {
+		// Create the cylinder geometry
+		const g = new THREE.CylinderGeometry(
+			discRadius,
+			discRadius,
+			discHeight,
+			32
+		);
+
+		// Create the material
+		const m = new THREE.MeshStandardMaterial({ color: 0xffff00 });
+
+		// Create the mesh
+		const o = new THREE.Mesh(g, m);
+
+		o.position.set(
+			outerCircleRadius,
+			baseHeight + surfaceHeight + discHeight / 2,
+			0
+		);
+
+		return o;
 	}
 
 	onMount(() => {
@@ -141,12 +201,25 @@
 		const baseObject = createBase();
 		const rimObject = createRim();
 		const pegGroup = createPegs();
+		const innerCircle = createCircleLine(innerCircleRadius);
+		const middleCircle = createCircleLine(middleCircleRadius);
+		const outerCircle = createCircleLine(outerCircleRadius);
+		const perpendicularLines = createQuadrantLines(
+			middleCircleRadius,
+			outerCircleRadius
+		);
+		const disc = createDisc();
 
 		const group = new THREE.Group();
 		group.add(baseObject);
 		group.add(rimObject);
 		group.add(surfaceObject);
 		group.add(pegGroup);
+		group.add(innerCircle);
+		group.add(middleCircle);
+		group.add(outerCircle);
+		group.add(perpendicularLines);
+		group.add(disc);
 
 		scene.add(group);
 		scene.add(light);
