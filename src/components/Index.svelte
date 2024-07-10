@@ -1,5 +1,9 @@
 <script>
+	import { browser } from "$app/environment";
 	import Crokinole from "$components/Crokinole.svelte";
 </script>
 
-<Crokinole />
+{#if browser}
+	<Crokinole />
+	<Crokinole />
+{/if}

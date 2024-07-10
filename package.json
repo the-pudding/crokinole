@@ -11,13 +11,11 @@
 		"format": "prettier --write --plugin-search-dir=. ."
 	},
 	"devDependencies": {
+		"@dimforge/rapier3d-compat": "^0.13.1",
 		"@rollup/plugin-dsv": "^3.0.4",
 		"@sveltejs/adapter-static": "^3.0.2",
 		"@sveltejs/kit": "^2.5.17",
 		"@sveltejs/vite-plugin-svelte": "3.1.1",
-		"@threlte/core": "^7.3.1",
-		"@threlte/extras": "^8.11.4",
-		"@threlte/rapier": "^2.0.1",
 		"archieml": "^0.5.0",
 		"autoprefixer": "^10.4.19",
 		"bits-ui": "^0.21.10",
