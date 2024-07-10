@@ -63,15 +63,10 @@ Playing surface: 1/2” thickness on most boards.
 		const controls = new OrbitControls(camera, renderer.domElement);
 
 		const light = new THREE.DirectionalLight(0xffffff, 1);
-		// light.position.setScalar(10);
-		scene.add(light);
+
 		const size = 1;
 		const divisions = 10;
-
 		const gridHelper = new THREE.GridHelper(size, divisions);
-		scene.add(gridHelper);
-
-		scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
 		const g = cylinderLathe(outerRadius, innerRadius, height);
 		const m = new THREE.MeshStandardMaterial({
@@ -80,15 +75,6 @@ Playing surface: 1/2” thickness on most boards.
 		});
 		const o = new THREE.Mesh(g, m);
 		o.position.set(0, height / 2 + bottomHeight / 2, 0);
-
-		// let wm = new THREE.MeshBasicMaterial({ wireframe: true });
-		// let wo = new THREE.Mesh(g, wm);
-		// o.add(wo);
-
-		// let pg = new THREE.BufferGeometry().setFromPoints(g.parameters.points);
-		// let pm = new THREE.LineBasicMaterial({ color: 0x000000, depthTest: false });
-		// let po = new THREE.Line(pg, pm);
-		// o.add(po);
 
 		// create new cylinder
 		const bottom = outerRadius + ditch;
@@ -109,6 +95,10 @@ Playing surface: 1/2” thickness on most boards.
 		});
 		const o3 = new THREE.Mesh(g3, m3);
 		o3.position.set(0, rimHeight / 2, 0);
+
+		scene.add(light);
+		scene.add(gridHelper);
+		scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
 		scene.add(o);
 		scene.add(o2);
