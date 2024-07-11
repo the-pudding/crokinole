@@ -5,6 +5,8 @@
 	import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 	import createBoard from "$utils/createBoard.js";
 	import * as S from "$data/specs.js";
+	import debug from "$utils/debug.js";
+	import createHollowCylinderCollider from "$utils/createHollowCylinderCollider.js";
 
 	const fov = 45;
 	const ratio = 1;
@@ -17,6 +19,8 @@
 	let el;
 	let offsetWidth;
 	let offsetHeight;
+	let world;
+	let lines = [];
 
 	function createGrid() {
 		const size = 1;
@@ -50,8 +54,10 @@
 	}
 
 	function tick() {
-		requestAnimationFrame(tick);
+		world.step();
 		renderer.render(scene, camera);
+		debug({ scene, world, lines });
+		requestAnimationFrame(tick);
 	}
 
 	$: if (offsetWidth && offsetHeight) {
@@ -63,8 +69,23 @@
 	onMount(async () => {
 		await R.init();
 
-		let gravity = { x: 0.0, y: -9.81, z: 0.0 };
-		let world = new R.World(gravity);
+		const gravity = { x: 0.0, y: -9.81, z: 0.0 };
+		world = new R.World(gravity);
+
+		const baseC = new R.ColliderDesc(
+			new R.Cylinder(S.baseHeight / 2, S.baseRadius)
+		).setTranslation(0, S.baseHeight / 2, 0);
+
+		world.createCollider(baseC);
+
+		const surfaceC = createHollowCylinderCollider(
+			S.surfaceRadius,
+			S.holeRadius,
+			S.surfaceHeight,
+			S.segments
+		);
+
+		world.createCollider(surfaceC);
 
 		camera.position.set(1.1, 0.8, 0);
 		el.appendChild(renderer.domElement);

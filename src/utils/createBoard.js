@@ -1,7 +1,7 @@
 import * as S from "$data/specs.js";
 import * as T from "three";
 
-function cylinderLathe(outerR, innerR, h) {
+function cylinderLathe(outerR, innerR, h, segments) {
 	const halfH = h * 0.5;
 
 	const points = [
@@ -12,7 +12,7 @@ function cylinderLathe(outerR, innerR, h) {
 		new T.Vector2(innerR, -halfH)
 	];
 
-	const g = new T.LatheGeometry(points, S.segments);
+	const g = new T.LatheGeometry(points, segments);
 
 	return g;
 }
@@ -31,29 +31,39 @@ function createBase() {
 	});
 
 	const o = new T.Mesh(g, m);
-	o.position.set(0, S.baseHeight / 2, 0);
+	o.position.set(0, S.baseY, 0);
 	return o;
 }
 
 function createRim() {
-	const g = cylinderLathe(S.baseRadius + S.rimWidth, S.baseRadius, S.rimHeight);
+	const g = cylinderLathe(
+		S.baseRadius + S.rimWidth,
+		S.baseRadius,
+		S.rimHeight,
+		S.segments
+	);
 	const m = new T.MeshStandardMaterial({
 		color: 0xff88ff,
 		flatShading: true
 	});
 	const o = new T.Mesh(g, m);
-	o.position.set(0, S.rimHeight / 2, 0);
+	o.position.set(0, S.rimY, 0);
 	return o;
 }
 
 function createSurface() {
-	const g = cylinderLathe(S.surfaceRadius, S.holeRadius, S.surfaceHeight);
+	const g = cylinderLathe(
+		S.surfaceRadius,
+		S.holeRadius,
+		S.surfaceHeight,
+		S.segments
+	);
 	const m = new T.MeshStandardMaterial({
 		color: 0x4488ff,
 		flatShading: true
 	});
 	const o = new T.Mesh(g, m);
-	o.position.set(0, S.surfaceHeight / 2 + S.baseHeight, 0);
+	o.position.set(0, S.surfaceY, 0);
 	return o;
 }
 
@@ -79,7 +89,7 @@ function createPegs() {
 		peg.position.set(x, 0, z);
 		pegs.add(peg);
 	}
-	pegs.position.set(0, S.pegHeight / 2 + S.baseHeight + S.surfaceHeight, 0);
+	pegs.position.set(0, S.pegsY, 0);
 	return pegs;
 }
 
@@ -89,7 +99,6 @@ function createCircleLine(r) {
 	const material = new T.LineBasicMaterial({ color: 0x000000 });
 	const circle = new T.LineSegments(edges, material);
 	circle.rotation.x = Math.PI / 2;
-	circle.position.set(0, S.baseHeight + S.surfaceHeight + S.mm, 0);
 	return circle;
 }
 
@@ -109,7 +118,6 @@ function createQuadrantLines(innerR, outerR) {
 		const line = new T.Line(geometry, material);
 		lines.add(line);
 	}
-	lines.position.set(0, S.baseHeight + S.surfaceHeight + S.mm, 0);
 	return lines;
 }
 
@@ -127,16 +135,17 @@ export default function createBoard() {
 	);
 
 	const structure = new T.Group();
-	structure.add(rim);
-	structure.add(base);
-	structure.add(surface);
-	structure.add(pegs);
+	// structure.add(base);
+	// structure.add(rim);
+	// structure.add(surface);
+	// structure.add(pegs);
 
 	const lines = new T.Group();
 	lines.add(innerCircle);
 	lines.add(middleCircle);
 	lines.add(outerCircle);
 	lines.add(perpendicularLines);
+	lines.position.set(0, S.linesY, 0);
 
 	const board = new T.Group();
 	board.add(structure);

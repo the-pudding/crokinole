@@ -5,5 +5,4 @@
 
 {#if browser}
 	<Crokinole />
-	<Crokinole />
 {/if}
