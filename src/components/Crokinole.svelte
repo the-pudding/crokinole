@@ -16,11 +16,18 @@
 	const scene = new T.Scene();
 	const renderer = new T.WebGLRenderer({ antialias: true });
 
+	let rigidBody;
+	let disc;
 	let el;
 	let offsetWidth;
 	let offsetHeight;
 	let world;
 	let lines = [];
+
+	function flick() {
+		const impulse = new T.Vector3(-0.06, 0, 0);
+		rigidBody.applyImpulse(impulse, true);
+	}
 
 	function createGrid() {
 		const size = 1;
@@ -44,19 +51,24 @@
 		// Create the mesh
 		const o = new T.Mesh(g, m);
 
-		o.position.set(
-			S.outerCircleRadius,
-			S.baseHeight + S.surfaceHeight + S.discHeight / 2,
-			0
-		);
+		o.position.set(S.outerCircleRadius, S.discY, 0);
 
 		return o;
 	}
 
 	function tick() {
 		world.step();
+
+		const p = rigidBody.translation();
+		const r = rigidBody.rotation();
+
+		// Update the Three.js disc position and rotation
+		disc.position.set(p.x, p.y, p.z);
+		disc.quaternion.set(r.x, r.y, r.z, r.w);
+
 		renderer.render(scene, camera);
-		debug({ scene, world, lines });
+		// lines = debug({ scene, world, lines });
+
 		requestAnimationFrame(tick);
 	}
 
@@ -69,25 +81,7 @@
 	onMount(async () => {
 		await R.init();
 
-		const gravity = { x: 0.0, y: -9.81, z: 0.0 };
-		world = new R.World(gravity);
-
-		const baseC = new R.ColliderDesc(
-			new R.Cylinder(S.baseHeight / 2, S.baseRadius)
-		).setTranslation(0, S.baseHeight / 2, 0);
-
-		world.createCollider(baseC);
-
-		const surfaceC = createHollowCylinderCollider(
-			S.surfaceRadius,
-			S.holeRadius,
-			S.surfaceHeight,
-			S.segments
-		);
-
-		world.createCollider(surfaceC);
-
-		camera.position.set(1.1, 0.8, 0);
+		camera.position.set(0.7, 0.5, 0);
 		el.appendChild(renderer.domElement);
 
 		const controls = new OrbitControls(camera, renderer.domElement);
@@ -95,7 +89,7 @@
 		const ambientLight = new T.AmbientLight(0xffffff, 0.5);
 		const gridHelper = createGrid();
 
-		const disc = createDisc();
+		disc = createDisc();
 
 		const group = new T.Group();
 
@@ -108,11 +102,54 @@
 		scene.add(ambientLight);
 		scene.add(gridHelper);
 		scene.add(group);
+
+		const gravity = { x: 0.0, y: -9.81, z: 0.0 };
+		world = new R.World(gravity);
+
+		const baseC = new R.ColliderDesc(
+			new R.Cylinder(S.baseHeight / 2, S.baseRadius)
+		).setTranslation(0, S.baseY, 0);
+
+		world.createCollider(baseC);
+
+		const friction = 0.15;
+		const restitution = 0.03;
+
+		const structure = board.children.find((d) => d.name === "structure");
+		const surface = structure.children.find((d) => d.name === "surface");
+		const surfaceC = createHollowCylinderCollider(surface.geometry)
+			.setTranslation(0, S.surfaceY, 0)
+			.setFriction(friction)
+			.setRestitution(restitution);
+
+		world.createCollider(surfaceC);
+
+		const discC = new R.ColliderDesc(
+			new R.Cylinder(S.discHeight / 2, S.discRadius)
+		)
+			.setFriction(friction)
+			.setRestitution(restitution);
+
+		const mass = 0.06;
+
+		const linearDamping = 0;
+		const rigidBodyDesc = R.RigidBodyDesc.dynamic()
+			.setAdditionalMass(mass)
+			.setLinearDamping(linearDamping)
+			.setTranslation(S.outerCircleRadius, S.discY * 5, 0)
+			.setCcdEnabled(true);
+
+		rigidBody = world.createRigidBody(rigidBodyDesc);
+
+		const collider = world.createCollider(discC, rigidBody);
+
 		tick();
 	});
 </script>
 
 <div bind:this={el} bind:offsetWidth bind:offsetHeight></div>
+
+<button on:click={flick}>FLICK</button>
 
 <style>
 	div {

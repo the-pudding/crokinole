@@ -31,6 +31,7 @@ function createBase() {
 	});
 
 	const o = new T.Mesh(g, m);
+	o.name = "base";
 	o.position.set(0, S.baseY, 0);
 	return o;
 }
@@ -47,6 +48,7 @@ function createRim() {
 		flatShading: true
 	});
 	const o = new T.Mesh(g, m);
+	o.name = "rim";
 	o.position.set(0, S.rimY, 0);
 	return o;
 }
@@ -64,6 +66,7 @@ function createSurface() {
 	});
 	const o = new T.Mesh(g, m);
 	o.position.set(0, S.surfaceY, 0);
+	o.name = "surface";
 	return o;
 }
 
@@ -76,11 +79,13 @@ function createPeg() {
 	);
 	const m = new T.MeshStandardMaterial({ color: 0x88ff44 });
 	const o = new T.Mesh(g, m);
+	o.name = "peg";
 	return o;
 }
 
 function createPegs() {
 	const pegs = new T.Group();
+	pegs.name = "pegs";
 	for (let i = 0; i < 8; i++) {
 		const angle = 3 / 8 + (i / 8) * Math.PI * 2;
 		const x = Math.cos(angle) * S.innerCircleRadius;
@@ -135,12 +140,14 @@ export default function createBoard() {
 	);
 
 	const structure = new T.Group();
-	// structure.add(base);
-	// structure.add(rim);
-	// structure.add(surface);
-	// structure.add(pegs);
+	structure.name = "structure";
+	structure.add(base);
+	structure.add(rim);
+	structure.add(surface);
+	structure.add(pegs);
 
 	const lines = new T.Group();
+	lines.name = "lines";
 	lines.add(innerCircle);
 	lines.add(middleCircle);
 	lines.add(outerCircle);
