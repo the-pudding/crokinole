@@ -1,4 +1,6 @@
 <script>
+	const DEBUG = false;
+
 	import { onMount } from "svelte";
 	import * as T from "three";
 	import R from "@dimforge/rapier3d-compat";
@@ -7,6 +9,7 @@
 	import * as S from "$data/specs.js";
 	import debug from "$utils/debug.js";
 	import createHollowCylinderCollider from "$utils/createHollowCylinderCollider.js";
+	import { Raycaster, Vector2 } from "three";
 
 	const fov = 45;
 	const ratio = 1;
@@ -16,27 +19,69 @@
 	const scene = new T.Scene();
 	const renderer = new T.WebGLRenderer({ antialias: true });
 
-	let rigidBody;
-	let disc;
-	let activeDisc;
 	let el;
 	let offsetWidth;
 	let offsetHeight;
 	let world;
-	let lines = [];
 
 	let xAngle = 0;
 	let yAngle = 0;
 	let flickAmt = -0.06;
-	let discs = []; // Store all the discs
+	let discs = [];
+	let lines = [];
+
+	let activeDiscIndex = -1; // To keep track of which disc is in play; -1 means no disc is active
+	const raycaster = new Raycaster();
+
+	// Use raycaster to get the intersection point of the mouse with the discs
+	function onCanvasClick(event) {
+		const rect = renderer.domElement.getBoundingClientRect();
+
+		const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+		const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+		raycaster.setFromCamera(new T.Vector2(x, y), camera);
+
+		const intersects = raycaster.intersectObjects(
+			discs.map((d) => d.disc),
+			false
+		);
+
+		if (intersects.length > 0) {
+			const clickedDisc = intersects[0].object;
+			const clickedIndex = discs.findIndex((d) => d.disc === clickedDisc);
+			setActiveDisc(clickedIndex);
+		}
+	}
+
+	// A separate mousemove function detects if a disc is hovered, which we use for cursors and highlighting
+	function onCanvasMouseMove(event) {
+		const rect = renderer.domElement.getBoundingClientRect();
+		const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+		const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+		raycaster.setFromCamera(new T.Vector2(x, y), camera);
+
+		const intersects = raycaster.intersectObjects(
+			discs.map((d) => d.disc),
+			false
+		);
+
+		if (intersects.length > 0) {
+			renderer.domElement.style.cursor = "pointer";
+		} else {
+			renderer.domElement.style.cursor = "default";
+		}
+	}
 
 	function flick() {
+		if (activeDiscIndex === -1 || activeDiscIndex >= discs.length) return;
+
+		// const latestDisc = discs[activeDiscIndex];
+		// const activeDisc = latestDisc;
 		const impulse = new T.Vector3(flickAmt, yAngle, xAngle);
-		// discs.forEach(({ rigidBody }) => {
-		// 	rigidBody.applyImpulse(impulse, true);
-		// });
-		const latestDisc = discs[discs.length - 1];
-		latestDisc.rigidBody.applyImpulse(impulse, true);
+		const activeDisc = discs[activeDiscIndex];
+		activeDisc.rigidBody.applyImpulse(impulse, true);
 	}
 
 	function reset() {
@@ -55,7 +100,6 @@
 	}
 
 	function createDisc() {
-		// Create the cylinder geometry
 		const g = new T.CylinderGeometry(
 			S.discRadius,
 			S.discRadius,
@@ -63,12 +107,10 @@
 			S.segments / 3
 		);
 
-		// Create the material
+		// FIXME: Which material works best here?
 		const m = new T.MeshStandardMaterial({ color: 0xffff00 });
 
-		// Create the mesh
 		const o = new T.Mesh(g, m);
-
 		o.position.set(S.outerCircleRadius, S.discY, 0);
 
 		return o;
@@ -93,7 +135,28 @@
 		const rigidBody = world.createRigidBody(rigidBodyDesc);
 		const collider = world.createCollider(discC, rigidBody);
 
+		const discIndex = discs.length;
+
 		discs.push({ disc, rigidBody });
+
+		// Make the disc active
+		setActiveDisc(discIndex);
+	}
+
+	function setActiveDisc(index) {
+		activeDiscIndex = index;
+		updateDiscHighlights();
+	}
+
+	// FIXME: Better treatment for highlighted disc.
+	function updateDiscHighlights() {
+		discs.forEach(({ disc }, index) => {
+			if (index === activeDiscIndex) {
+				disc.material.emissive.setHex(0xff0000);
+			} else {
+				disc.material.emissive.setHex(0x000000);
+			}
+		});
 	}
 
 	let showGameOver = false;
@@ -108,7 +171,7 @@
 			disc.quaternion.set(r.x, r.y, r.z, r.w);
 		});
 
-		// Check if any disc is off the board
+		// FIXME: Game probably shouldn't end if any disc is off the board... maybe if all of them are
 		discs.forEach(({ rigidBody }) => {
 			if (isDiscOffBoard(rigidBody)) {
 				showGameOver = true;
@@ -116,7 +179,10 @@
 		});
 
 		renderer.render(scene, camera);
-		// lines = debug({ scene, world, lines });
+
+		if (DEBUG) {
+			lines = debug({ scene, world, lines });
+		}
 
 		requestAnimationFrame(tick);
 	}
@@ -185,6 +251,8 @@
 		bind:this={el}
 		bind:offsetWidth
 		bind:offsetHeight
+		on:click={onCanvasClick}
+		on:mousemove={onCanvasMouseMove}
 	></div>
 
 	{#if showGameOver}
@@ -225,7 +293,6 @@
 		<button on:click={flick}>FLICK</button>
 		<button on:click={reset}>RESET</button>
 		<button on:click={addDisc}>ADD DISC</button>
-		<!-- Button to add a new disc -->
 	</div>
 </main>
 
