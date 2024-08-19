@@ -40,15 +40,11 @@
 	}
 
 	function reset() {
-		// Reset position
-		rigidBody.setTranslation({ x: S.outerCircleRadius, y: S.discY * 5, z: 0 });
-
-		// Reset rotation
-		rigidBody.setRotation({ x: 0, y: 0, z: 0, w: 1 });
-
-		// Reset linear and angular velocity
-		rigidBody.setLinvel({ x: 0, y: 0, z: 0 });
-		rigidBody.setAngvel({ x: 0, y: 0, z: 0 });
+		discs.forEach(({ disc, rigidBody }) => {
+			world.removeRigidBody(rigidBody);
+			scene.remove(disc);
+		});
+		discs = [];
 	}
 
 	function createGrid() {
