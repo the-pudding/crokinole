@@ -18,15 +18,37 @@
 
 	let rigidBody;
 	let disc;
+	let activeDisc;
 	let el;
 	let offsetWidth;
 	let offsetHeight;
 	let world;
 	let lines = [];
 
+	let xAngle = 0;
+	let yAngle = 0;
+	let flickAmt = -0.06;
+	let discs = []; // Store all the discs
+
 	function flick() {
-		const impulse = new T.Vector3(-0.06, 0, 0);
-		rigidBody.applyImpulse(impulse, true);
+		const impulse = new T.Vector3(flickAmt, yAngle, xAngle);
+		// discs.forEach(({ rigidBody }) => {
+		// 	rigidBody.applyImpulse(impulse, true);
+		// });
+		const latestDisc = discs[discs.length - 1];
+		latestDisc.rigidBody.applyImpulse(impulse, true);
+	}
+
+	function reset() {
+		// Reset position
+		rigidBody.setTranslation({ x: S.outerCircleRadius, y: S.discY * 5, z: 0 });
+
+		// Reset rotation
+		rigidBody.setRotation({ x: 0, y: 0, z: 0, w: 1 });
+
+		// Reset linear and angular velocity
+		rigidBody.setLinvel({ x: 0, y: 0, z: 0 });
+		rigidBody.setAngvel({ x: 0, y: 0, z: 0 });
 	}
 
 	function createGrid() {
@@ -56,20 +78,59 @@
 		return o;
 	}
 
+	function addDisc() {
+		const disc = createDisc();
+		scene.add(disc);
+
+		const discC = new R.ColliderDesc(
+			new R.Cylinder(S.discHeight / 2, S.discRadius)
+		)
+			.setFriction(0.15)
+			.setRestitution(0.03);
+
+		const rigidBodyDesc = R.RigidBodyDesc.dynamic()
+			.setAdditionalMass(0.06)
+			.setLinearDamping(0)
+			.setTranslation(S.outerCircleRadius, S.discY * 5, 0)
+			.setCcdEnabled(true);
+
+		const rigidBody = world.createRigidBody(rigidBodyDesc);
+		const collider = world.createCollider(discC, rigidBody);
+
+		discs.push({ disc, rigidBody });
+	}
+
+	let showGameOver = false;
 	function tick() {
 		world.step();
 
-		const p = rigidBody.translation();
-		const r = rigidBody.rotation();
+		discs.forEach(({ disc, rigidBody }) => {
+			const p = rigidBody.translation();
+			const r = rigidBody.rotation();
 
-		// Update the Three.js disc position and rotation
-		disc.position.set(p.x, p.y, p.z);
-		disc.quaternion.set(r.x, r.y, r.z, r.w);
+			disc.position.set(p.x, p.y, p.z);
+			disc.quaternion.set(r.x, r.y, r.z, r.w);
+		});
+
+		// Check if any disc is off the board
+		discs.forEach(({ rigidBody }) => {
+			if (isDiscOffBoard(rigidBody)) {
+				showGameOver = true;
+			}
+		});
 
 		renderer.render(scene, camera);
 		// lines = debug({ scene, world, lines });
 
 		requestAnimationFrame(tick);
+	}
+
+	function isDiscOffBoard(rigidBody) {
+		const p = rigidBody.translation();
+		const distanceFromCenter = Math.sqrt(p.x * p.x + p.z * p.z);
+
+		// Check if the disc is below the board or outside its radius
+		return distanceFromCenter > S.baseRadius;
 	}
 
 	$: if (offsetWidth && offsetHeight) {
@@ -89,14 +150,11 @@
 		const ambientLight = new T.AmbientLight(0xffffff, 0.5);
 		const gridHelper = createGrid();
 
-		disc = createDisc();
-
 		const group = new T.Group();
 
 		const board = createBoard();
 
 		group.add(board);
-		group.add(disc);
 
 		scene.add(directionalLight);
 		scene.add(ambientLight);
@@ -112,51 +170,110 @@
 
 		world.createCollider(baseC);
 
-		const friction = 0.15;
-		const restitution = 0.03;
-
 		const structure = board.children.find((d) => d.name === "structure");
 		const surface = structure.children.find((d) => d.name === "surface");
 		const surfaceC = createHollowCylinderCollider(surface.geometry)
 			.setTranslation(0, S.surfaceY, 0)
-			.setFriction(friction)
-			.setRestitution(restitution);
+			.setFriction(0.15)
+			.setRestitution(0.03);
 
 		world.createCollider(surfaceC);
-
-		const discC = new R.ColliderDesc(
-			new R.Cylinder(S.discHeight / 2, S.discRadius)
-		)
-			.setFriction(friction)
-			.setRestitution(restitution);
-
-		const mass = 0.06;
-
-		const linearDamping = 0;
-		const rigidBodyDesc = R.RigidBodyDesc.dynamic()
-			.setAdditionalMass(mass)
-			.setLinearDamping(linearDamping)
-			.setTranslation(S.outerCircleRadius, S.discY * 5, 0)
-			.setCcdEnabled(true);
-
-		rigidBody = world.createRigidBody(rigidBodyDesc);
-
-		const collider = world.createCollider(discC, rigidBody);
 
 		tick();
 	});
 </script>
 
-<div bind:this={el} bind:offsetWidth bind:offsetHeight></div>
+<main>
+	<div
+		class="canvas-container"
+		bind:this={el}
+		bind:offsetWidth
+		bind:offsetHeight
+	></div>
 
-<button on:click={flick}>FLICK</button>
+	{#if showGameOver}
+		<div class="screen-overlay"></div>
+		<div class="modal">
+			Game Over
+			<button
+				on:click={() => {
+					reset();
+					showGameOver = false;
+				}}>Play Again</button
+			>
+		</div>
+	{/if}
+
+	<div style="display: flex; flex-direction: row; gap: 8px;">
+		<div style="display: flex; flex-direction: column; gap: 8px;">
+			<label for="xAngle">X Angle {xAngle}</label>
+			<input
+				type="range"
+				min="-0.1"
+				max="0.1"
+				step="0.01"
+				bind:value={xAngle}
+			/>
+		</div>
+
+		<div style="display: flex; flex-direction: column; gap: 8px;">
+			<label for="yAngle">Y Angle {yAngle}</label>
+			<input type="range" min="0" max=".2" step="0.01" bind:value={yAngle} />
+		</div>
+
+		<div style="display: flex; flex-direction: column; gap: 8px;">
+			<label for="flickAmt">Flick Amt {flickAmt}</label>
+			<input type="range" min="-.3" max="0" step="0.01" bind:value={flickAmt} />
+		</div>
+
+		<button on:click={flick}>FLICK</button>
+		<button on:click={reset}>RESET</button>
+		<button on:click={addDisc}>ADD DISC</button>
+		<!-- Button to add a new disc -->
+	</div>
+</main>
 
 <style>
-	div {
+	main {
+		position: relative;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-direction: column;
+		gap: 12px;
+	}
+	.canvas-container {
 		max-width: 600px;
 		width: 100%;
 		aspect-ratio: 1;
 		margin: 0 auto;
 		background: #000;
+	}
+
+	.modal {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		background-color: rgba(0, 0, 0, 0.5);
+		color: white;
+		padding: 20px;
+		border-radius: 5px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+		z-index: 20;
+	}
+
+	.screen-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		z-index: 10;
 	}
 </style>
