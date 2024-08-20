@@ -18,7 +18,7 @@
 			(new Date() - new Date(2024, 7, 1)) / 1000 / 60 / 60 / 24
 		);
 		document.querySelector(".elapsed").textContent =
-			`about ${format(",")(elapsed)} days since I wrote this`;
+			`about ${format(",")(elapsed)} days since I wrote it`;
 	});
 </script>
 
