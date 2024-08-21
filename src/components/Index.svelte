@@ -13,7 +13,7 @@
 	$: body = copy.body;
 
 	onMount(() => {
-		// Aug 1, 2024 to now (in days)
+		// TODO replace Aug 1 with real publish date
 		const elapsed = Math.floor(
 			(new Date() - new Date(2024, 7, 1)) / 1000 / 60 / 60 / 24
 		);
