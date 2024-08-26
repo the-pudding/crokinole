@@ -5,9 +5,10 @@
 	import Crokinole from "$components/Crokinole.svelte";
 	import Hero from "$components/Hero.svelte";
 	import Byline from "$components/Byline.svelte";
+	import Video from "$components/Video.svelte";
 	import CMS from "$components/helpers/CMS.svelte";
 
-	const components = { Hero, Byline };
+	const components = { Hero, Byline, Video };
 
 	const copy = getContext("copy");
 	$: body = copy.body;
