@@ -7,6 +7,7 @@
 	export let muted = false;
 	export let controls = false;
 	export let restart = false;
+	export let figcaption;
 	import RotateCCW from "lucide-svelte/icons/rotate-ccw";
 
 	let videoEl;
@@ -17,7 +18,7 @@
 	}
 </script>
 
-<div class="video-container">
+<figure>
 	<video
 		bind:this={videoEl}
 		{src}
@@ -31,15 +32,27 @@
 	{#if restart}<button on:click={onRestart} aria-label="restart"
 			><RotateCCW></RotateCCW></button
 		>{/if}
-</div>
+	{#if figcaption}
+		<figcaption>
+			{@html figcaption}
+		</figcaption>
+	{/if}
+</figure>
 
 <style>
-	.video-container {
+	figure {
 		position: relative;
+	}
+
+	figcaption {
+		font-size: var(--14px);
+		padding: 4px 0;
+		text-align: center;
 	}
 
 	video {
 		display: block;
+		margin: 0;
 	}
 
 	button {

@@ -13,17 +13,13 @@
 			<svelte:component this={component} {...content}></svelte:component>
 		{:else}
 			{#each content as { type, value }}
-				{@const component = components[value?.name]}
-				{#if type === "component"}
-					{#if component}
-						<svelte:component this={component} {...value}></svelte:component>
-					{:else}
-						<p>Missing component: {value?.name}</p>
-					{/if}
+				{@const component = components[type]}
+				{#if component}
+					<svelte:component this={component} {...value}></svelte:component>
 				{:else if type === "text"}
 					<p>{@html value}</p>
 				{:else}
-					<svelte:element this={type} {...value.attributes}
+					<svelte:element this={type} {...value}
 						>{#if typeof value === "string"}{@html value}{/if}</svelte:element
 					>
 				{/if}
