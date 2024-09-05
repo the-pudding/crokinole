@@ -30,55 +30,142 @@
 	let discs = [];
 	let lines = [];
 
-	let activeDiscIndex = -1; // To keep track of which disc is in play; -1 means no disc is active
+	let activeDiscIndex = -1;
 	const raycaster = new Raycaster();
 
-	// Use raycaster to get the intersection point of the mouse with the discs
-	function onCanvasClick(event) {
-		const rect = renderer.domElement.getBoundingClientRect();
+	// New variables for the arrow
+	let arrow;
+	let isDragging = false;
+	let dragPlane;
 
-		const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-		const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+	function createArrow() {
+		const arrowGeometry = new T.CylinderGeometry(0.02, 0.02, 0.1, 32);
+		const arrowMaterial = new T.MeshBasicMaterial({
+			color: 0xffffff,
+			transparent: true,
+			opacity: 0.5
+		});
+		arrow = new T.Mesh(arrowGeometry, arrowMaterial);
+		arrow.rotation.z = Math.PI / 2; // Point the arrow to the right initially
+		scene.add(arrow);
 
-		raycaster.setFromCamera(new T.Vector2(x, y), camera);
+		// Create an invisible plane for dragging
+		const planeGeometry = new T.PlaneGeometry(2, 2);
+		const planeMaterial = new T.MeshBasicMaterial({ visible: false });
+		dragPlane = new T.Mesh(planeGeometry, planeMaterial);
+		dragPlane.rotation.x = -Math.PI / 2; // Make the plane horizontal
+		scene.add(dragPlane);
 
-		const intersects = raycaster.intersectObjects(
-			discs.map((d) => d.disc),
-			false
-		);
+		// Initially hide the arrow
+		arrow.visible = false;
+	}
 
-		if (intersects.length > 0) {
-			const clickedDisc = intersects[0].object;
-			const clickedIndex = discs.findIndex((d) => d.disc === clickedDisc);
-			setActiveDisc(clickedIndex);
+	function updateArrowPosition() {
+		if (activeDiscIndex !== -1 && activeDiscIndex < discs.length) {
+			const activeDisc = discs[activeDiscIndex];
+			const discPosition = activeDisc.disc.position;
+			arrow.position.set(discPosition.x, discPosition.y, discPosition.z);
+			dragPlane.position.copy(arrow.position);
+			arrow.visible = true;
+		} else {
+			arrow.visible = false;
 		}
 	}
 
-	// A separate mousemove function detects if a disc is hovered, which we use for cursors and highlighting
-	function onCanvasMouseMove(event) {
+	function onCanvasMouseDown(event) {
 		const rect = renderer.domElement.getBoundingClientRect();
 		const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
 		const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
 		raycaster.setFromCamera(new T.Vector2(x, y), camera);
 
-		const intersects = raycaster.intersectObjects(
-			discs.map((d) => d.disc),
-			false
-		);
+		const intersects = raycaster.intersectObject(arrow);
 
 		if (intersects.length > 0) {
-			renderer.domElement.style.cursor = "pointer";
+			isDragging = true;
+			controls.enabled = false; // Disable orbit controls while dragging
+
+			// Project the intersection point onto the drag plane
+			const planeIntersect = new T.Vector3();
+			raycaster.ray.intersectPlane(
+				new T.Plane(new T.Vector3(0, 1, 0), -S.discY),
+				planeIntersect
+			);
+			dragStart.copy(planeIntersect);
+		}
+	}
+
+	function onCanvasMouseMove(event) {
+		if (isDragging) {
+			const rect = renderer.domElement.getBoundingClientRect();
+			const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+
+			// Calculate angle based on x position
+			// Map x from [-1, 1] to [-90, 90] degrees
+			const angle = x * 90;
+
+			// Convert degrees to radians for Three.js rotation
+			const angleRad = T.MathUtils.degToRad(angle);
+
+			// Update arrow rotation
+			arrow.rotation.y = -angleRad;
+
+			// Update xAngle for flick calculation
+			// Map angle from [-90, 90] to [0.1, -0.1] to invert the direction
+			xAngle = -((angle / 90) * 0.1);
+
+			// Optional: Clamp xAngle to ensure it stays within [-0.1, 0.1]
+			xAngle = T.MathUtils.clamp(xAngle, -0.1, 0.1);
 		} else {
-			renderer.domElement.style.cursor = "default";
+			// Existing mouse move logic for disc hovering
+			const rect = renderer.domElement.getBoundingClientRect();
+			const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+			const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+			raycaster.setFromCamera(new T.Vector2(x, y), camera);
+
+			const intersects = raycaster.intersectObjects(
+				discs.map((d) => d.disc),
+				false
+			);
+
+			if (intersects.length > 0) {
+				renderer.domElement.style.cursor = "pointer";
+			} else {
+				renderer.domElement.style.cursor = "default";
+			}
+		}
+	}
+
+	function onCanvasMouseUp() {
+		isDragging = false;
+		controls.enabled = true; // Re-enable orbit controls after dragging
+	}
+
+	function onCanvasClick(event) {
+		if (!isDragging) {
+			const rect = renderer.domElement.getBoundingClientRect();
+			const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+			const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+			raycaster.setFromCamera(new T.Vector2(x, y), camera);
+
+			const intersects = raycaster.intersectObjects(
+				discs.map((d) => d.disc),
+				false
+			);
+
+			if (intersects.length > 0) {
+				const clickedDisc = intersects[0].object;
+				const clickedIndex = discs.findIndex((d) => d.disc === clickedDisc);
+				setActiveDisc(clickedIndex);
+			}
 		}
 	}
 
 	function flick() {
 		if (activeDiscIndex === -1 || activeDiscIndex >= discs.length) return;
 
-		// const latestDisc = discs[activeDiscIndex];
-		// const activeDisc = latestDisc;
 		const impulse = new T.Vector3(flickAmt, yAngle, xAngle);
 		const activeDisc = discs[activeDiscIndex];
 		activeDisc.rigidBody.applyImpulse(impulse, true);
@@ -146,6 +233,7 @@
 	function setActiveDisc(index) {
 		activeDiscIndex = index;
 		updateDiscHighlights();
+		updateArrowPosition();
 	}
 
 	// FIXME: Better treatment for highlighted disc.
@@ -171,12 +259,15 @@
 			disc.quaternion.set(r.x, r.y, r.z, r.w);
 		});
 
+		// Update arrow position to follow active disc
+		updateArrowPosition();
+
 		// FIXME: Game probably shouldn't end if any disc is off the board... maybe if all of them are
-		discs.forEach(({ rigidBody }) => {
-			if (isDiscOffBoard(rigidBody)) {
-				showGameOver = true;
-			}
-		});
+		// discs.forEach(({ rigidBody }) => {
+		// 	if (isDiscOffBoard(rigidBody)) {
+		// 		showGameOver = true;
+		// 	}
+		// });
 
 		renderer.render(scene, camera);
 
@@ -205,9 +296,13 @@
 		await R.init();
 
 		camera.position.set(0.7, 0.5, 0);
+		camera.lookAt(0, 0, 0);
 		el.appendChild(renderer.domElement);
 
-		const controls = new OrbitControls(camera, renderer.domElement);
+		// Disable dragging
+		// const controls = new OrbitControls(camera, renderer.domElement, {
+		// 	enabled: false
+		// });
 		const directionalLight = new T.DirectionalLight(0xffffff, 1);
 		const ambientLight = new T.AmbientLight(0xffffff, 0.5);
 		const gridHelper = createGrid();
@@ -222,6 +317,8 @@
 		scene.add(ambientLight);
 		scene.add(gridHelper);
 		scene.add(group);
+
+		createArrow();
 
 		const gravity = { x: 0.0, y: -9.81, z: 0.0 };
 		world = new R.World(gravity);
@@ -278,6 +375,8 @@
 		bind:offsetHeight
 		on:click={onCanvasClick}
 		on:mousemove={onCanvasMouseMove}
+		on:mousedown={onCanvasMouseDown}
+		on:mouseup={onCanvasMouseUp}
 	></div>
 
 	{#if showGameOver}
