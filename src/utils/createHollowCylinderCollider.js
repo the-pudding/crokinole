@@ -14,6 +14,31 @@ import R from "@dimforge/rapier3d-compat";
 // 	return new Float32Array(vertices);
 // }
 
+function convertThreeMeshToMeshObject(mesh) {
+	const positions = mesh.geometry.attributes.position.array;
+	const vertices = [];
+	for (let i = 0; i < positions.length; i += 3) {
+		vertices.push(positions[i], positions[i + 1], positions[i + 2]);
+	}
+
+	let indices = [];
+	if (mesh.geometry.index) {
+		indices = Array.from(mesh.geometry.index.array);
+	} else if (mesh.geometry.attributes.index) {
+		indices = Array.from(mesh.geometry.attributes.index.array);
+	} else if (mesh.geometry.index === null) {
+		for (let i = 0; i < vertices.length; i++) {
+			indices.push(i);
+		}
+	}
+
+	return {
+		vertices: new Float32Array(vertices),
+		indices: new Uint32Array(indices)
+	};
+	// return new Mesh(vertices, indices);
+}
+
 function extractVerticesIndicesFromGeometry(geometry) {
 	const vertices = [];
 	const indices = [];
@@ -39,13 +64,19 @@ function extractVerticesIndicesFromGeometry(geometry) {
 	};
 }
 
-export default function createHollowCylinderCollider(geometry) {
-	// const vertices = extractVerticesFromGeometry(geometry);
+export default function createHollowCylinderCollider(mesh) {
+	// const { vertices, indices} = extractVerticesIndicesFromGeometry(mesh.geometry);
 
 	// Create the convex hull collider
 	// const colliderDesc = R.ColliderDesc.convexHull(vertices);
 	// return colliderDesc;
-	const { vertices, indices } = extractVerticesIndicesFromGeometry(geometry);
-	const colliderDesc = R.ColliderDesc.trimesh(vertices, indices);
+
+	const { vertices, indices } = convertThreeMeshToMeshObject(mesh);
+	// https://rapier.rs/javascript3d/enums/TriMeshFlags.html
+	const colliderDesc = R.ColliderDesc.trimesh(
+		vertices,
+		indices,
+		R.TriMeshFlags.FIX_INTERNAL_EDGES
+	);
 	return colliderDesc;
 }
