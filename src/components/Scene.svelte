@@ -16,7 +16,7 @@
 	let flickDirection = writable({ x: 0, z: 0 });
 
 	// Constants
-	const FLICK_STRENGTH_FACTOR = 0.001;
+	const FLICK_STRENGTH_FACTOR = 0.0025;
 	const FRICTION = 0.98;
 	const BOARD_RADIUS = 2;
 	const COLLISION_DAMPING = 0.8;
@@ -358,7 +358,7 @@
 			? {
 					start: new THREE.Vector3(
 						$currentDisc.position.x,
-						0.1,
+						0,
 						$currentDisc.position.z
 					),
 					direction: new THREE.Vector3(
@@ -366,13 +366,16 @@
 						0,
 						-$flickDirection.z
 					).normalize(),
-					length: Math.min(
-						Math.max(
-							Math.sqrt($flickDirection.x ** 2 + $flickDirection.z ** 2) * 100,
-							0.2
-						),
-						2
-					),
+					length:
+						Math.sqrt($flickDirection.x ** 2 + $flickDirection.z ** 2) * 100,
+					// OPTIONAL: Cap the length of the arrow to a maximum value
+					// length: Math.min(
+					// 	Math.max(
+					// 		Math.sqrt($flickDirection.x ** 2 + $flickDirection.z ** 2) * 100,
+					// 		0.2
+					// 	),
+					// 	2
+					// ),
 					color: 0x000000
 				}
 			: null;
@@ -385,15 +388,24 @@
 <T.AmbientLight intensity={0.5} />
 <T.DirectionalLight position={[10, 10, 5]} intensity={1} castShadow />
 
+<!-- Invisible board to catch mouse events -->
+<T.Mesh
+	position={[0, -0.1, -0.1]}
+	rotation.x={-Math.PI / 2}
+	on:pointermove={updateFlick}
+	on:pointerup={endFlick}
+	on:pointerleave={endFlick}
+>
+	<T.PlaneGeometry args={[BOARD_RADIUS * 4, BOARD_RADIUS * 4]} />
+	<T.MeshBasicMaterial color="white" transparent={true} opacity={0} />
+</T.Mesh>
+
 <!-- Board -->
 <T.Mesh
 	position={[0, -0.1, 0]}
 	rotation.x={-Math.PI / 2}
-	on:pointerdown={startFlick}
-	on:pointermove={updateFlick}
-	on:pointerup={endFlick}
-	on:pointerleave={endFlick}
 	receiveShadow
+	on:pointerdown={startFlick}
 >
 	<T.RingGeometry args={[CENTER_HOLE_RADIUS, BOARD_RADIUS, 192]} />
 	<T.MeshStandardMaterial color="#eac89e" />
