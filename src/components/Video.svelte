@@ -42,6 +42,7 @@
 <style>
 	figure {
 		position: relative;
+		margin: 32px 0;
 	}
 
 	figcaption {

@@ -6,7 +6,8 @@
 </script>
 
 {#each body as { section, content }}
-	{@const id = section.toLowerCase()}
+	<!-- replace all non alpha numeric characters with "" -->
+	{@const id = section.toLowerCase().replace(/[^a-z0-9]/g, "")}
 	{@const component = components[section]}
 	<section {id}>
 		{#if component}
@@ -14,14 +15,17 @@
 		{:else}
 			{#each content as { type, value }}
 				{@const component = components[type]}
+				{@const isString = typeof value === "string"}
 				{#if component}
 					<svelte:component this={component} {...value}></svelte:component>
 				{:else if type === "text"}
 					<p>{@html value}</p>
+				{:else if isString}
+					<svelte:element this={type}>
+						{@html value}
+					</svelte:element>
 				{:else}
-					<svelte:element this={type} {...value}
-						>{#if typeof value === "string"}{@html value}{/if}</svelte:element
-					>
+					<svelte:element this={type} {...value}></svelte:element>
 				{/if}
 			{/each}
 		{/if}

@@ -6,9 +6,10 @@
 	import Hero from "$components/Hero.svelte";
 	import Byline from "$components/Byline.svelte";
 	import Video from "$components/Video.svelte";
-	import CMS from "$components/helpers/CMS.svelte";
+	import Image from "$components/Image.svelte";
+	import MicroCMS from "$components/helpers/MicroCMS.svelte";
 
-	const components = { Hero, Byline, Video };
+	const components = { Hero, Byline, Video, Image };
 
 	const copy = getContext("copy");
 	$: body = copy.body;
@@ -23,7 +24,7 @@
 	});
 </script>
 
-<CMS {body} {components}></CMS>
+<MicroCMS {body} {components}></MicroCMS>
 <!-- 
 {#if browser}
 	<Crokinole />
