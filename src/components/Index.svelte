@@ -7,9 +7,11 @@
 	import Byline from "$components/Byline.svelte";
 	import Video from "$components/Video.svelte";
 	import Image from "$components/Image.svelte";
+	import Table from "$components/Table.svelte";
+	import Method from "$components/Method.svelte";
 	import MicroCMS from "$components/helpers/MicroCMS.svelte";
 
-	const components = { Hero, Byline, Video, Image };
+	const components = { Hero, Byline, Video, Image, Table, Method };
 
 	const copy = getContext("copy");
 	$: body = copy.body;

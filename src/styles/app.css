@@ -68,35 +68,12 @@
 	}
 }
 
-h1 {
-	font-size: var(--72px, 72px);
-	font-weight: 700;
-	font-family: var(--sans);
-}
-
-h2 {
-	font-size: var(--36px, 36px);
-}
-
-h3 {
-	font-size: var(--28px, 28px);
-}
-
-h4 {
-	font-size: var(--24px, 24px);
-}
-
-h5 {
-	font-size: var(--22px, 22px);
-}
-
-h6 {
-	font-size: var(--20px, 20px);
-}
-
-
-p {
+p, h1, h2, h3, h4 {
 	font-size: var(--24px);
+}
+
+h1, h2, h3, h4 {
+	font-weight: bold;
 }
 
 section {
