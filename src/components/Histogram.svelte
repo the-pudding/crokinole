@@ -1,6 +1,7 @@
 <script>
 	import { format, sum, max } from "d3";
 	export let caption;
+	export let note;
 	import misses from "$data/misses.csv";
 
 	const raw = misses.map(({ bin, count }) => ({ bin: +bin, count: +count }));
@@ -9,29 +10,45 @@
 	const data = raw.map((d) => ({ ...d, percent: d.count / total }));
 </script>
 
-<div>
+<div class="c">
 	<p><strong>{caption}</strong></p>
 	<div class="chart">
 		<!-- css histogram -->
 		<div class="bins">
 			{#each data as { bin, count, percent }}
 				{@const height = format("%")(count / maximum)}
-				{@const label = bin === 17 ? "None" : bin}
+				{@const label = bin === 17 ? "&nbsp;" : bin}
 				<div class="bin">
 					<p class="percent" class:hide={percent < 0.03}>
 						{format(".0%")(percent)}
 					</p>
 					<div class="bar" style:height />
-					<p class="label">{label}</p>
+					<p class="label"><strong>{@html label}</strong></p>
 				</div>
 			{/each}
 		</div>
+		<div class="annotation">
+			<p>
+				<strong>Double perfect rounds</strong>
+				<br />
+				No misses<br />&darr;
+			</p>
+		</div>
 	</div>
+
+	<p class="note">
+		<em>Note: {@html note}</em>
+	</p>
 </div>
 
 <style>
-	div {
+	.c {
 		font-family: var(--sans);
+		margin: 32px 0;
+	}
+
+	.chart {
+		position: relative;
 	}
 
 	p {
@@ -64,10 +81,23 @@
 		margin: 0;
 	}
 
-	.percent {
+	.annotation {
+		position: absolute;
+		bottom: 32px;
+		right: 0;
+	}
+
+	.annotation p {
+		margin: 0;
+		font-size: var(--14px);
+		text-align: right;
 	}
 
 	.hide {
 		display: none;
+	}
+
+	.note {
+		font-size: var(--14px);
 	}
 </style>
