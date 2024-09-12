@@ -1,28 +1,34 @@
 <script>
 	import odds from "$data/odds.csv";
+	import competitive from "$data/competitive.csv";
 	export let caption;
 	export let src;
 	export let note;
+	export let right;
 
-	const sources = { odds };
+	const sources = { odds, competitive };
+
+	$: alignRight = right.split(",").map(Number) || [];
 </script>
 
 <table>
 	{#if caption}
-		<caption>{caption}</caption>
+		<caption><strong>{caption}</strong></caption>
 	{/if}
 	<thead>
 		<tr>
-			{#each Object.keys(sources[src][0]) as key}
-				<th>{key}</th>
+			{#each Object.keys(sources[src][0]) as key, i}
+				{@const right = alignRight.includes(i)}
+				<th class:right>{key}</th>
 			{/each}
 		</tr>
 	</thead>
 	<tbody>
 		{#each sources[src] as row}
 			<tr>
-				{#each Object.values(row) as value}
-					<td>{@html value}</td>
+				{#each Object.values(row) as value, i}
+					{@const right = alignRight.includes(i)}
+					<td class:right>{@html value}</td>
 				{/each}
 			</tr>
 		{/each}
@@ -34,17 +40,22 @@
 
 <style>
 	table {
-		font-family: var(--mono);
+		font-family: var(--sans);
 	}
 
 	td,
 	th {
 		padding-right: 16px;
+		font-size: var(--16px);
 	}
 
-	th:nth-of-type(2),
-	td:nth-of-type(2) {
+	th.right,
+	td.right {
 		text-align: right;
+	}
+
+	caption {
+		font-size: var(--18px);
 	}
 
 	p {

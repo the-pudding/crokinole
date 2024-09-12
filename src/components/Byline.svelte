@@ -1,6 +1,13 @@
 <script>
-	export let content;
+	export let text;
 </script>
 
-<p>{@html content.author}</p>
-<datetime>{content.date}</datetime>
+<div>
+	<p>{@html text}</p>
+</div>
+
+<style>
+	p {
+		font-size: var(--16px);
+	}
+</style>

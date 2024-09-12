@@ -68,12 +68,16 @@
 	}
 }
 
-p, h1, h2, h3, h4 {
+p, h1, h2, h3, h4, li, caption {
 	font-size: var(--24px);
 }
 
 h1, h2, h3, h4 {
 	font-weight: bold;
+}
+
+h2 {
+	margin-top: 64px;
 }
 
 section {
