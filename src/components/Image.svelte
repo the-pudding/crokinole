@@ -1,14 +1,15 @@
 <script>
 	export let src;
 	export let alt;
+	export let figcaption;
 </script>
 
 <figure>
 	<img {src} {alt} />
 
-	{#if alt}
+	{#if figcaption}
 		<figcaption>
-			{@html alt}
+			{@html figcaption}
 		</figcaption>
 	{/if}
 </figure>
