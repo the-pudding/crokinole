@@ -21,8 +21,8 @@
 		<thead>
 			<tr>
 				{#each Object.keys(sources[src][0]) as key, i}
-					{@const right = rights.includes(i)}
-					<th class:right>{key}</th>
+					{@const r = rights.includes(i)}
+					<th class:r>{key}</th>
 				{/each}
 			</tr>
 		</thead>
