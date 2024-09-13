@@ -49,7 +49,7 @@
 	td,
 	th {
 		padding: 8px 16px;
-		font-size: var(--16px);
+		font-size: var(--14px);
 	}
 
 	td {

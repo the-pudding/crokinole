@@ -29,7 +29,7 @@
 		</div>
 		<div class="annotation">
 			<p>
-				<strong>Double perfect rounds</strong>
+				<strong>Double perfect round</strong>
 				<br />
 				No misses<br />&darr;
 			</p>
