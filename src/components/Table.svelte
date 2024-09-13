@@ -5,10 +5,12 @@
 	export let src;
 	export let note;
 	export let right;
+	export let highlight;
 
 	const sources = { odds, competitive };
 
-	$: alignRight = right.split(",").map(Number) || [];
+	$: rights = right.split(",").map(Number) || [];
+	$: highlights = highlight.split(",").map(Number) || [];
 </script>
 
 <div class="c">
@@ -19,17 +21,18 @@
 		<thead>
 			<tr>
 				{#each Object.keys(sources[src][0]) as key, i}
-					{@const right = alignRight.includes(i)}
+					{@const right = rights.includes(i)}
 					<th class:right>{key}</th>
 				{/each}
 			</tr>
 		</thead>
 		<tbody>
-			{#each sources[src] as row}
-				<tr>
-					{#each Object.values(row) as value, i}
-						{@const right = alignRight.includes(i)}
-						<td class:right>{@html value}</td>
+			{#each sources[src] as row, i}
+				{@const h = highlights.includes(i)}
+				<tr class:h>
+					{#each Object.values(row) as value, j}
+						{@const r = rights.includes(j)}
+						<td class:r>{@html value}</td>
 					{/each}
 				</tr>
 			{/each}
@@ -56,13 +59,19 @@
 		border: 1px solid var(--color-gray-300);
 	}
 
-	th.right,
-	td.right {
+	th.r,
+	td.r {
 		text-align: right;
+	}
+
+	tr.h {
+		background-color: var(--color-bg2);
+		font-weight: bold;
 	}
 
 	caption {
 		font-size: var(--24px);
+		font-family: var(--serif);
 	}
 
 	p {

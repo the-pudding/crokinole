@@ -52,7 +52,8 @@
 	}
 
 	p {
-		font-size: var(--18px);
+		font-size: var(--24px);
+		font-family: var(--serif);
 	}
 
 	.bins {
