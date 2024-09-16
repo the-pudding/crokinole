@@ -30,9 +30,9 @@
 	--color-mark: var(--color-secondary);
 	--color-selection: var(--color-gray-300);
 	--color-border: var(--color-gray-300);
-	--color-button-bg: var(--color-gray-300);
-	--color-button-fg: var(--color-gray-900);
-	--color-button-hover: var(--color-gray-400);
+	--color-button-bg: var(--color-fg);
+	--color-button-fg: var(--color-bg);
+	--color-button-hover: var(--color-gray-900);
 	--color-input-bg: var(--color-gray-50);
 	--color-input-fg: var(--color-gray-900);
 	--color-placeholder: var(--color-gray-500);
