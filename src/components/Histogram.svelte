@@ -11,7 +11,7 @@
 </script>
 
 <div class="c">
-	<p><strong>{caption}</strong></p>
+	<h2><strong>{caption}</strong></h2>
 	<div class="chart">
 		<!-- css histogram -->
 		<div class="bins">
@@ -44,16 +44,15 @@
 <style>
 	.c {
 		font-family: var(--sans);
-		margin: 32px 0;
 	}
 
 	.chart {
 		position: relative;
 	}
 
-	p {
-		font-size: var(--24px);
+	h2 {
 		font-family: var(--serif);
+		margin-top: 0;
 	}
 
 	.bins {

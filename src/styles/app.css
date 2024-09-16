@@ -78,13 +78,26 @@ h1, h2, h3, h4 {
 	font-weight: bold;
 }
 
-h2 {
+section > p, section > h2, section > h3, section > h4, section > ul, section > ol, section > div {
+	max-width: 640px;
+	margin: 16px auto;
+	padding: 0 16px;
+
+}
+
+section > h2 {
+	margin-bottom: 0;
+	padding-bottom: 0;
 	margin-top: 64px;
 }
 
-section {
-	max-width: 640px;
-	margin: 16px auto;
+section > div.c {
+	margin-top: 64px;
+}
+
+section > figure, section > video {
+	max-width: 800px;
+	margin: 0 auto;
 }
 
 video {

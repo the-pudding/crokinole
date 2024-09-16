@@ -17,7 +17,7 @@
 <style>
 	figure {
 		position: relative;
-		margin: 32px 0;
+		margin: 32px auto;
 	}
 
 	figcaption {
@@ -29,5 +29,6 @@
 	img {
 		display: block;
 		margin: 0;
+		width: 100%;
 	}
 </style>

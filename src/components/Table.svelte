@@ -46,7 +46,6 @@
 <style>
 	.c {
 		font-family: var(--sans);
-		margin: 32px 0;
 	}
 
 	td,
@@ -72,6 +71,7 @@
 	caption {
 		font-size: var(--24px);
 		font-family: var(--serif);
+		margin-bottom: 16px;
 	}
 
 	p {
