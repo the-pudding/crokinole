@@ -11,11 +11,12 @@ const DISC_DENSITY = 0.05;
 const DISC_FRICTIONAIR = 0.05;
 
 const COLOR = {
-	line: "#666",
-	disc: "#000",
+	line: "#888",
+	player1: "#c0c",
+	player2: "#0cc",
 	board: "#fff",
 	shadow: "#eee",
-	active: "#f00"
+	active: "#000"
 };
 
 let engine;
@@ -24,103 +25,20 @@ let runner;
 let render;
 
 let discs = [];
-// let trap = [];
 
 let mid;
+let lineWidth;
+let maxSpeed;
 
 let activeDisc;
 let mousePosition;
 let vector;
 
 // TODO move private vs public
-export function addDisc(opts = {}) {
-	const x = opts.x || mid;
-	const y = opts.y || mid + mid * S.five;
-	const r = mid * S.disc;
-	const density = DISC_DENSITY;
-	const restitution = DISC_RESTITUTION;
-	const frictionAir = DISC_FRICTIONAIR;
-
-	const disc = Matter.Bodies.circle(
-		x,
-		y,
-		r,
-		{
-			density,
-			restitution,
-			frictionAir,
-			render: { fillStyle: COLOR.disc },
-			label: "disc",
-			collisionFilter: {
-				category: DISC_CATEGORY,
-				mask: DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY
-			}
-		},
-		64
-	);
-
-	discs.push(disc);
-	Matter.World.add(world, disc);
-	activeDisc = disc;
-}
-
 function updateDiscColors() {
 	discs.forEach((d) => {
-		d.render.fillStyle = d.id === activeDisc.id ? COLOR.active : COLOR.disc;
+		d.render.lineWidth = d.id === activeDisc.id ? 3 : 0;
 	});
-}
-
-export function select({ x, y }) {
-	const clickedDiscs = Matter.Query.point(discs, { x, y });
-
-	if (clickedDiscs.length > 0) {
-		activeDisc = clickedDiscs[0];
-		updateDiscColors();
-	}
-}
-
-export function drag({ x, y }) {
-	vector = {
-		x: mousePosition.x - activeDisc.position.x,
-		y: mousePosition.y - activeDisc.position.y
-	};
-
-	// Cap the vector length for max power
-	const maxDragLength = mid * 0.25;
-	const maxSpeed = activeDisc.mass * half * 0.0005;
-
-	// Calculate the current vector length
-	const currentVectorLength = Matter.Vector.magnitude(vector);
-
-	// Limit the vector length to the maximum drag length
-	const clampedVectorLength = Math.min(currentVectorLength, maxDragLength);
-
-	// update vector based on clamped vector length
-	vector = Matter.Vector.mult(
-		Matter.Vector.normalise(vector),
-		clampedVectorLength
-	);
-}
-
-export function release() {
-	const maxSpeed = activeDisc.mass * half * 0.0005;
-	const maxDragLength = width * 0.1;
-	// const forceMagnitude = maxSpeed * 1;
-
-	const speed = (Matter.Vector.magnitude(vector) / maxDragLength) * maxSpeed;
-
-	// Apply the scaled speed to the normalized vector (direction)
-	const force = Matter.Vector.mult(Matter.Vector.normalise(vector), speed);
-
-	// Apply force to active disc based on the vector
-	// const force = Matter.Vector.mult(
-	// 	Matter.Vector.normalise(vector),
-	// 	Matter.Vector.magnitude(vector) / maxSpeed
-	// );
-
-	// Scale the speed proportionally to the vector length
-
-	Matter.Body.applyForce(activeDisc, activeDisc.position, force);
 }
 
 function createZones() {
@@ -134,7 +52,7 @@ function createZones() {
 			render: {
 				fillStyle: COLOR.shadow,
 				strokeStyle: COLOR.line,
-				lineWidth: 2
+				lineWidth
 			},
 			label: "20"
 		},
@@ -151,7 +69,7 @@ function createZones() {
 			render: {
 				fillStyle: COLOR.board,
 				strokeStyle: COLOR.line,
-				lineWidth: 2
+				lineWidth
 			},
 			label: "15"
 		},
@@ -168,7 +86,7 @@ function createZones() {
 			render: {
 				fillStyle: COLOR.board,
 				strokeStyle: COLOR.line,
-				lineWidth: 2
+				lineWidth
 			},
 			label: "10"
 		},
@@ -185,7 +103,7 @@ function createZones() {
 			render: {
 				fillStyle: COLOR.board,
 				strokeStyle: COLOR.line,
-				lineWidth: 2
+				lineWidth
 			},
 			label: "5"
 		},
@@ -202,7 +120,7 @@ function createZones() {
 			render: {
 				fillStyle: COLOR.board,
 				strokeStyle: COLOR.line,
-				lineWidth: 2
+				lineWidth
 			},
 			label: "surface"
 		},
@@ -219,7 +137,7 @@ function createZones() {
 			render: {
 				fillStyle: COLOR.shadow,
 				strokeStyle: COLOR.line,
-				lineWidth: S.rimWidth * mid
+				lineWidth: S.rimWidth
 			},
 			label: "base"
 		},
@@ -238,8 +156,8 @@ function createZones() {
 
 function createTrap20() {
 	const wallCount = 16;
-	const wallThickness = Math.max(2, mid * 0.02);
-	const wallRadius = S.twenty * mid + wallThickness / 2;
+	const wallThickness = Math.max(2, mid * 0.05);
+	const wallRadius = S.twenty * mid + wallThickness / 2 - 1;
 
 	const trap = [];
 
@@ -279,8 +197,8 @@ function createTrap20() {
 
 function createTrapRim() {
 	const wallCount = 32;
-	const wallThickness = Math.max(8, mid * 0.08);
-	const wallRadius = S.base * mid + wallThickness / 2;
+	const wallThickness = Math.max(8, mid * 0.2);
+	const wallRadius = S.base * mid + wallThickness / 2 - 1;
 
 	const trap = [];
 
@@ -320,8 +238,8 @@ function createTrapRim() {
 
 function createTrapSurface() {
 	const wallCount = 32;
-	const wallThickness = Math.max(8, mid * 0.06);
-	const wallRadius = S.surface * mid - wallThickness / 2;
+	const wallThickness = Math.max(8, mid * 0.1);
+	const wallRadius = S.surface * mid - wallThickness / 2 + 1;
 
 	const trap = [];
 
@@ -385,33 +303,11 @@ function createPegs() {
 	Matter.World.add(world, pegBodies);
 }
 
-export function flickDisc() {
-	if (!activeDisc) return;
-
-	const maxSpeed = activeDisc.mass * mid * 0.0005;
-	const forceMagnitude = maxSpeed * 1;
-
-	const r = Math.random() * 0;
-
-	const angle = Math.atan2(
-		mid - activeDisc.position.y,
-		mid - activeDisc.position.x
-	);
-
-	const forceX = forceMagnitude * Math.cos(angle);
-	const forceY = forceMagnitude * Math.sin(angle);
-
-	Matter.Body.applyForce(activeDisc, activeDisc.position, {
-		x: forceX,
-		y: forceY
-	});
-}
-
-function createQuadrantLines(render, ctx) {
+function renderQuadrantLines(ctx) {
 	const numLines = 4; // Four quadrants
 	ctx.beginPath();
 	ctx.strokeStyle = COLOR.line; // Black color for the lines
-	ctx.lineWidth = 1;
+	ctx.lineWidth = lineWidth / 2;
 
 	for (let i = 0; i < numLines; i++) {
 		const angle = 3 / 4 + (i / numLines) * Math.PI * 2;
@@ -450,7 +346,7 @@ function drawVector(render, ctx) {
 
 function afterRender() {
 	const ctx = render.context;
-	createQuadrantLines(render, ctx);
+	renderQuadrantLines(ctx);
 	// drawVector(render, ctx);
 }
 
@@ -516,9 +412,127 @@ function collisionStart(event) {
 	});
 }
 
+export function addDisc(opts = {}) {
+	const player = opts.player || "player1";
+	const x = opts.x ? opts.x * mid * 2 : mid;
+	const y = opts.y
+		? opts.y * mid * 2
+		: player === "player1"
+			? mid + mid * S.five
+			: mid - mid * S.five;
+	const r = mid * S.disc;
+	const density = DISC_DENSITY;
+	const restitution = DISC_RESTITUTION;
+	const frictionAir = DISC_FRICTIONAIR;
+
+	const disc = Matter.Bodies.circle(
+		x,
+		y,
+		r,
+		{
+			density,
+			restitution,
+			frictionAir,
+			render: {
+				fillStyle: COLOR[player],
+				strokeStyle: COLOR.active
+			},
+			label: "disc",
+			collisionFilter: {
+				category: DISC_CATEGORY,
+				mask: DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY
+			}
+		},
+		64
+	);
+
+	discs.push(disc);
+	Matter.World.add(world, disc);
+	activeDisc = disc;
+	updateDiscColors();
+	maxSpeed = activeDisc.mass * mid * 0.0007;
+}
+
+export function select({ x, y }) {
+	const clickedDiscs = Matter.Query.point(discs, { x, y });
+
+	if (clickedDiscs.length > 0) {
+		activeDisc = clickedDiscs[0];
+		updateDiscColors();
+	}
+}
+
+export function drag({ x, y }) {
+	vector = {
+		x: mousePosition.x - activeDisc.position.x,
+		y: mousePosition.y - activeDisc.position.y
+	};
+
+	// Cap the vector length for max power
+	const maxDragLength = mid * 0.25;
+
+	// Calculate the current vector length
+	const currentVectorLength = Matter.Vector.magnitude(vector);
+
+	// Limit the vector length to the maximum drag length
+	const clampedVectorLength = Math.min(currentVectorLength, maxDragLength);
+
+	// update vector based on clamped vector length
+	vector = Matter.Vector.mult(
+		Matter.Vector.normalise(vector),
+		clampedVectorLength
+	);
+}
+
+export function release() {
+	const maxDragLength = width * 0.1;
+	// const forceMagnitude = maxSpeed * 1;
+
+	const speed = (Matter.Vector.magnitude(vector) / maxDragLength) * maxSpeed;
+
+	// Apply the scaled speed to the normalized vector (direction)
+	const force = Matter.Vector.mult(Matter.Vector.normalise(vector), speed);
+
+	// Apply force to active disc based on the vector
+	// const force = Matter.Vector.mult(
+	// 	Matter.Vector.normalise(vector),
+	// 	Matter.Vector.magnitude(vector) / maxSpeed
+	// );
+
+	// Scale the speed proportionally to the vector length
+
+	Matter.Body.applyForce(activeDisc, activeDisc.position, force);
+}
+
+export function flickDisc({ target, speed, random }) {
+	if (!activeDisc) return;
+
+	const s = speed || 0.25;
+	const forceMagnitude = maxSpeed * s;
+
+	// const r = Math.random() * 0;
+
+	const tX = target ? target.x * mid * 2 : mid;
+	const tY = target ? target.y * mid * 2 : mid;
+
+	const angle = Math.atan2(
+		tX - activeDisc.position.y,
+		tY - activeDisc.position.x
+	);
+
+	const forceX = forceMagnitude * Math.cos(angle);
+	const forceY = forceMagnitude * Math.sin(angle);
+
+	Matter.Body.applyForce(activeDisc, activeDisc.position, {
+		x: forceX,
+		y: forceY
+	});
+}
+
 export function init({ element, width }) {
 	const height = width;
 	mid = width / 2;
+	lineWidth = width < 400 ? 2 : 4;
 	engine = Matter.Engine.create();
 	world = engine.world;
 

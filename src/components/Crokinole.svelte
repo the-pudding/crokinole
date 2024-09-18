@@ -37,11 +37,19 @@
 	}
 
 	function onAdd() {
-		C.addDisc();
+		C.addDisc({ player: "player1" });
 	}
 
 	function onFlick() {
-		C.flickDisc();
+		C.flickDisc({});
+	}
+
+	function onScenario() {
+		[
+			{ x: 0.7, y: 0.5, player: "player1" },
+			{ x: 0.4, y: 0.4, player: "player2" },
+			{}
+		].forEach(C.addDisc);
 	}
 
 	$: x = mousePosition ? (mousePosition.x / width).toFixed(2) : 0;
@@ -69,6 +77,7 @@
 	<div>
 		<button on:click={onFlick}>Flick Disc</button>
 		<button on:click={onAdd}>Add Disc</button>
+		<button on:click={onScenario}>Scenario</button>
 	</div>
 {/if}
 
