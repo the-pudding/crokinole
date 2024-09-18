@@ -33,7 +33,7 @@
 		const x = event.offsetX;
 		const y = event.offsetY;
 
-		C.select({ x, y });
+		// C.select({ x, y });
 	}
 
 	function onAdd() {
@@ -41,13 +41,13 @@
 	}
 
 	function onFlick() {
-		C.flickDisc({});
+		C.flickDisc({ target: { x: 0.47, y: 0.52 }, speed: 0.4 });
 	}
 
 	function onScenario() {
 		[
 			{ x: 0.7, y: 0.5, player: "player1" },
-			{ x: 0.4, y: 0.4, player: "player2" },
+			{ x: 0.45, y: 0.48, player: "player2" },
 			{}
 		].forEach(C.addDisc);
 	}
