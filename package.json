@@ -11,7 +11,6 @@
 		"format": "prettier --write --plugin-search-dir=. ."
 	},
 	"devDependencies": {
-		"@dimforge/rapier3d-compat": "^0.13.1",
 		"@rollup/plugin-dsv": "^3.0.4",
 		"@sveltejs/adapter-static": "^3.0.2",
 		"@sveltejs/kit": "^2.5.17",
@@ -22,6 +21,7 @@
 		"d3": "^7.9.0",
 		"lodash.debounce": "^4.0.8",
 		"lucide-svelte": "^0.397.0",
+		"matter-js": "^0.20.0",
 		"postcss": "^8.4.38",
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.5",

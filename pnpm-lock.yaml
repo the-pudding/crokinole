@@ -5,9 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 devDependencies:
-  '@dimforge/rapier3d-compat':
-    specifier: ^0.13.1
-    version: 0.13.1
   '@rollup/plugin-dsv':
     specifier: ^3.0.4
     version: 3.0.4(rollup@4.18.1)
@@ -38,6 +35,9 @@ devDependencies:
   lucide-svelte:
     specifier: ^0.397.0
     version: 0.397.0(svelte@4.2.18)
+  matter-js:
+    specifier: ^0.20.0
+    version: 0.20.0
   postcss:
     specifier: ^8.4.38
     version: 8.4.39
@@ -89,10 +89,6 @@ packages:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
-    dev: true
-
-  /@dimforge/rapier3d-compat@0.13.1:
-    resolution: {integrity: sha512-SsQ/MTH4Vvs8f62g31iVV1VOmzwNwsJl91rVzafi5B2mCrI2OsQ3VyjJOb4/tvS5VNc6OLjIDgfClcOAkW+O2A==}
     dev: true
 
   /@esbuild/aix-ppc64@0.21.5:
@@ -1423,6 +1419,10 @@ packages:
     resolution: {integrity: sha512-iIRwTIf0QKV3UAnYK4PU8uiEc4SRh5jX0mwpIwETPpHdhVM4f53RSwS/vXvN1JhGX+Cs7B8qIq3d6AH49O5fAQ==}
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
+    dev: true
+
+  /matter-js@0.20.0:
+    resolution: {integrity: sha512-iC9fYR7zVT3HppNnsFsp9XOoQdQN2tUyfaKg4CHLH8bN+j6GT4Gw7IH2rP0tflAebrHFw730RR3DkVSZRX8hwA==}
     dev: true
 
   /mdn-data@2.0.30:

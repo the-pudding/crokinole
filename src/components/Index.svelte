@@ -2,7 +2,6 @@
 	import { browser } from "$app/environment";
 	import { format } from "d3";
 	import { getContext, onMount } from "svelte";
-	import Crokinole from "$components/Crokinole.svelte";
 	import MicroCMS from "$components/helpers/MicroCMS.svelte";
 	import Hero from "$components/Hero.svelte";
 	import Byline from "$components/Byline.svelte";

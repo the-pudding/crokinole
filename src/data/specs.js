@@ -13,26 +13,15 @@
 		Peg Diameter: 3/8”
 	*/
 
-export const segments = 96;
-export const mm = 0.001;
-export const surfaceRadius = 330 * mm;
-export const holeRadius = 17.5 * mm;
-export const surfaceHeight = 12.7 * mm;
-export const ditchWidth = 51 * mm;
-export const rimWidth = 6.35 * mm;
-export const rimHeight = 38.1 * mm;
-export const pegRadius = 4.7625 * mm;
-export const pegHeight = 12.7 * mm;
-export const innerCircleRadius = 102 * mm;
-export const middleCircleRadius = 203 * mm;
-export const outerCircleRadius = 305 * mm;
-export const baseHeight = surfaceHeight / 2;
-export const baseRadius = surfaceRadius + ditchWidth;
-export const baseY = baseHeight / 2;
-export const rimY = rimHeight / 2;
-export const surfaceY = baseHeight + surfaceHeight / 2;
-export const pegsY = baseHeight + surfaceHeight + pegHeight / 2;
-export const linesY = baseHeight + surfaceHeight + mm;
-export const discRadius = 15 * mm;
-export const discHeight = 10 * mm;
-export const discY = baseHeight + surfaceHeight + discHeight / 2;
+const lineWidth = 8;
+const max = 381 + lineWidth;
+export const surface = 330 / max;
+export const ditchWidth = 51 / max;
+export const base = surface + ditchWidth;
+export const rimWidth = 6.35 / max;
+export const peg = 4.7625 / max;
+export const twenty = 17.5 / max;
+export const fifteen = 102 / max;
+export const ten = 203 / max;
+export const five = 305 / max;
+export const disc = 15 / max;
