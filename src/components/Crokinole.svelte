@@ -6,7 +6,7 @@
 	export let dev;
 	let element;
 	let isDragging;
-	let mousePosition;
+	let target;
 	let x = 0;
 	let y = 0;
 
@@ -15,16 +15,18 @@
 
 		// if (!activeDisc) return;
 		isDragging = true;
-		mousePosition = { x: event.offsetX, y: event.offsetY };
+		// target = { x: event.offsetX, y: event.offsetY };
 	}
 
 	function onMousemove(event) {
 		if (!isDragging) return;
-		mousePosition = { x: event.offsetX, y: event.offsetY };
+		target = { x: event.offsetX, y: event.offsetY };
+		C.drag(target);
 	}
 
 	function onMouseup() {
 		isDragging = false;
+		C.flickDisc();
 		// if (!activeDisc) return;
 	}
 
@@ -52,8 +54,8 @@
 		].forEach(C.addDisc);
 	}
 
-	$: x = mousePosition ? (mousePosition.x / width).toFixed(2) : 0;
-	$: y = mousePosition ? (mousePosition.y / width).toFixed(2) : 0;
+	$: x = target ? (target.x / width).toFixed(2) : 0;
+	$: y = target ? (target.y / width).toFixed(2) : 0;
 	onMount(() => {
 		C.init({ element, width });
 	});

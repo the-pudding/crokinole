@@ -15,8 +15,9 @@ const COLOR = {
 	player1: "#c0c",
 	player2: "#0cc",
 	board: "#fff",
-	shadow: "#eee",
-	active: "#000"
+	shadow: "#fff",
+	active: "#000",
+	vector: "#0c0"
 };
 
 let engine;
@@ -31,15 +32,17 @@ let lineWidth;
 
 let activeDisc;
 let shotMaxMagnitude;
+let shotMaxIndicatorMagnitude;
 let shotVector;
+let indicatorVector;
 let mode;
 let indicatorVisible;
 
 // TODO move private vs public
 function updateDiscColors() {
-	discs.forEach((d) => {
-		d.render.lineWidth = d.id === activeDisc?.id ? 3 : 0;
-	});
+	// discs.forEach((d) => {
+	// 	d.render.lineWidth = d.id === activeDisc?.id ? 3 : 0;
+	// });
 }
 
 function createZones() {
@@ -308,7 +311,6 @@ function createQuadrants() {
 	const numLines = 4; // Four quadrants
 	const innerRadius = mid * S.five; // Inner radius for the lines
 	const outerRadius = mid * S.ten; // Outer radius for the lines
-	const lineWidth = 2; // Thickness of the lines
 
 	// Array to hold the created lines
 	const quadrantLines = [];
@@ -335,7 +337,7 @@ function createQuadrants() {
 			midX,
 			midY,
 			length, // Line length
-			lineWidth, // Line thickness
+			lineWidth * 0.5, // Line thickness
 			{
 				isStatic: true,
 				angle: angle, // Rotate the line to match the angle
@@ -357,29 +359,74 @@ function createQuadrants() {
 	Matter.World.add(world, quadrantLines);
 }
 
-function drawVector(render, ctx) {
-	if (!activeDisc || !vector) return;
+function drawIndicator(ctx) {
+	if (!activeDisc || !indicatorVector) return;
 
+	const discRadius = activeDisc.circleRadius; // Get the radius of the disc
+
+	// Calculate the direction of the vector (normalized)
+	const normalizedVector = Matter.Vector.normalise(indicatorVector);
+
+	// Shift the starting point to the edge of the disc by moving in the direction of the normalized vector
+	const startX = activeDisc.position.x + normalizedVector.x;
+	const startY = activeDisc.position.y + normalizedVector.y;
+
+	// Calculate the end points for the main line and the opposite dashed line
+	const endX = activeDisc.position.x + indicatorVector.x;
+	const endY = activeDisc.position.y + indicatorVector.y;
+	const mirrorX = activeDisc.position.x - indicatorVector.x;
+	const mirrorY = activeDisc.position.y - indicatorVector.y;
+
+	// Start drawing the main indicator line
 	ctx.beginPath();
-	ctx.strokeStyle = "#555";
+	ctx.strokeStyle = COLOR.vector;
 	ctx.lineWidth = 2;
 
-	// Draw a line from the active disc's center to the vector endpoint
-	ctx.moveTo(activeDisc.position.x, activeDisc.position.y);
-	ctx.lineTo(
-		activeDisc.position.x + vector.x,
-		activeDisc.position.y + vector.y
-	);
-
+	// Draw the solid line starting from the outer edge of the disc
+	ctx.moveTo(startX, startY);
+	ctx.lineTo(endX, endY);
 	ctx.stroke();
+
+	// Draw the arrow at the end of the line
+	const arrowLength = mid * 0.03; // Length of the arrowhead
+	const arrowAngle = Math.PI / 4; // Angle for the arrowhead
+
+	// Calculate direction of the arrow based on the indicatorVector
+	const angle = Math.atan2(indicatorVector.y, indicatorVector.x);
+
+	// Draw the two lines of the arrowhead
+	ctx.beginPath();
+	ctx.moveTo(endX, endY);
+	ctx.lineTo(
+		endX - arrowLength * Math.cos(angle - arrowAngle),
+		endY - arrowLength * Math.sin(angle - arrowAngle)
+	);
+	ctx.moveTo(endX, endY);
+	ctx.lineTo(
+		endX - arrowLength * Math.cos(angle + arrowAngle),
+		endY - arrowLength * Math.sin(angle + arrowAngle)
+	);
+	ctx.stroke();
+
+	// Draw the dashed line in the mirror opposite direction, also starting from the disc's edge
+	const mirrorStartX = activeDisc.position.x - normalizedVector.x * discRadius;
+	const mirrorStartY = activeDisc.position.y - normalizedVector.y * discRadius;
+
+	ctx.setLineDash([5, 5]); // Define the dash pattern [dash length, space length]
+	ctx.beginPath();
+	ctx.moveTo(mirrorStartX, mirrorStartY);
+	ctx.lineTo(mirrorX, mirrorY);
+	ctx.stroke();
+	ctx.setLineDash([]); // Reset to solid lines for future drawing
+
 	ctx.closePath();
 }
 
-// function afterRender() {
-// 	const ctx = render.context;
-// 	renderQuadrantLines(ctx);
-// 	// drawVector(render, ctx);
-// }
+function afterRender() {
+	const ctx = render.context;
+	// renderQuadrantLines(ctx);
+	if (indicatorVisible) drawIndicator(ctx);
+}
 
 function collisionActive(event) {
 	// twenty hole
@@ -447,22 +494,54 @@ function updateShotVector({ target, speed }) {
 		y: target.y - activeDisc.position.y
 	};
 
+	const normalizedVector = Matter.Vector.normalise(vector);
+
 	if (speed) {
 		// preset flick - if its just a speed and a target
-		const normalizedVector = Matter.Vector.normalise(vector);
 		const shotVectorMagnitude = speed * shotMaxMagnitude;
 		shotVector = Matter.Vector.mult(normalizedVector, shotVectorMagnitude);
 	} else {
 		// user flick
 		const currentMagnitude = Matter.Vector.magnitude(vector);
-		const shotVectorMagnitude = Math.min(currentMagnitude, shotMaxMagnitude);
+		const indicatorMagnitude = Math.min(
+			currentMagnitude,
+			shotMaxIndicatorMagnitude
+		);
+
+		const shotVectorMagnitude =
+			(indicatorMagnitude / shotMaxIndicatorMagnitude) * shotMaxMagnitude;
 
 		// update vector based on clamped vector length
-		shotVector = Matter.Vector.mult(
-			Matter.Vector.normalise(vector),
-			shotVectorMagnitude
-		);
+		shotVector = Matter.Vector.mult(normalizedVector, shotVectorMagnitude);
+
+		// visual version
+		indicatorVector = Matter.Vector.mult(normalizedVector, indicatorMagnitude);
 	}
+}
+
+function panCameraToFollowDisc(disc) {
+	// Define how much margin you want around the disc when following
+	const margin = 100; // Adjust this value to control how much margin around the disc
+
+	// Calculate the bounds to center the camera on the disc
+	render.bounds.min.x = disc.position.x - render.options.width / 2 + margin;
+	render.bounds.min.y = disc.position.y - render.options.height / 2 + margin;
+	render.bounds.max.x = disc.position.x + render.options.width / 2 - margin;
+	render.bounds.max.y = disc.position.y + render.options.height / 2 - margin;
+}
+
+function zoomCamera(scale) {
+	const centerX = (render.bounds.min.x + render.bounds.max.x) / 2;
+	const centerY = (render.bounds.min.y + render.bounds.max.y) / 2;
+
+	// Apply zoom by scaling the bounds
+	const newWidth = render.options.width * scale;
+	const newHeight = render.options.height * scale;
+
+	render.bounds.min.x = centerX - newWidth / 2;
+	render.bounds.min.y = centerY - newHeight / 2;
+	render.bounds.max.x = centerX + newWidth / 2;
+	render.bounds.max.y = centerY + newHeight / 2;
 }
 
 export function addDisc(opts = {}) {
@@ -515,8 +594,15 @@ export function addDisc(opts = {}) {
 // 	}
 // }
 
-export function drag({ x, y }) {
+export function drag(mouse) {
 	if (!activeDisc) return;
+	setIndicatorVisible(true);
+	// calculate the inverse of the mouse position from the active disc position
+	// this will be the target for the flick
+	const diffX = activeDisc.position.x - mouse.x;
+	const diffY = activeDisc.position.y - mouse.y;
+	const x = activeDisc.position.x + diffX;
+	const y = activeDisc.position.y + diffY;
 	updateShotVector({ target: { x, y } });
 }
 
@@ -527,6 +613,9 @@ export function release() {
 export function flickDisc(opts) {
 	if (!activeDisc) return;
 	if (opts && (!opts.target || !opts.speed)) return;
+
+	setIndicatorVisible(false);
+
 	if (opts && opts.target && opts.speed) {
 		const target = {
 			x: opts.target.x * mid * 2,
@@ -538,7 +627,6 @@ export function flickDisc(opts) {
 	}
 
 	Matter.Body.applyForce(activeDisc, activeDisc.position, shotVector);
-	activeDisc = undefined;
 	updateDiscColors();
 }
 
@@ -546,15 +634,15 @@ export function setMode(v) {
 	mode = v;
 }
 
-export function setIndicatorVisibile(v) {
-	indicatorVisibile = v;
+export function setIndicatorVisible(v) {
+	indicatorVisible = v;
 }
 
 export function init({ element, width }) {
 	const height = width;
 	mid = width / 2;
-	lineWidth = width < 400 ? 2 : 4;
-	shotMaxMagnitude = mid * 0.25;
+	lineWidth = width < 400 ? 1 : 2;
+	shotMaxIndicatorMagnitude = mid * 0.2;
 
 	setMode("shoot");
 
@@ -573,7 +661,8 @@ export function init({ element, width }) {
 			height,
 			wireframes: false,
 			pixelRatio: "auto",
-			background: "transparent"
+			background: "transparent",
+			hasBounds: true
 		}
 	});
 
@@ -584,11 +673,24 @@ export function init({ element, width }) {
 	createTrapRim();
 	createTrapSurface();
 
-	// Matter.Events.on(render, "afterRender", afterRender);
+	Matter.Events.on(render, "afterRender", afterRender);
 
 	Matter.Runner.run(runner, engine);
 	Matter.Render.run(render);
 
 	Matter.Events.on(engine, "collisionActive", collisionActive);
 	Matter.Events.on(engine, "collisionStart", collisionStart);
+
+	// Matter.Events.on(engine, "afterUpdate", function () {
+	// 	if (activeDisc) {
+	// 		// Pan to follow the disc
+	// 		panCameraToFollowDisc(activeDisc);
+
+	// 		// Optionally, apply zoom based on the speed of the disc or other factors
+	// 		// For example, zoom in when the disc is moving fast and zoom out when it's slow
+	// 		const speed = Matter.Vector.magnitude(activeDisc.velocity);
+	// 		const zoomScale = 1;
+	// 		zoomCamera(zoomScale);
+	// 	}
+	// });
 }
