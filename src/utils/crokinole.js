@@ -83,52 +83,7 @@ export default function createCrokinoleSimulation() {
 			64
 		);
 
-		const zone15 = Matter.Bodies.circle(
-			mid,
-			mid,
-			mid * S.fifteen,
-			{
-				isStatic: true,
-				isSensor: true,
-				render: {
-					visible: false
-				},
-				label: "15"
-			},
-			64
-		);
-
-		const zone10 = Matter.Bodies.circle(
-			mid,
-			mid,
-			mid * S.ten,
-			{
-				isStatic: true,
-				isSensor: true,
-				render: {
-					visible: false
-				},
-				label: "10"
-			},
-			64
-		);
-
-		const zone5 = Matter.Bodies.circle(
-			mid,
-			mid,
-			mid * S.five,
-			{
-				isStatic: true,
-				isSensor: true,
-				render: {
-					visible: false
-				},
-				label: "5"
-			},
-			64
-		);
-
-		Matter.World.add(world, [zone5, zone10, zone15, zone20]);
+		Matter.World.add(world, [zone20]);
 	}
 
 	function createTrap20() {
@@ -391,7 +346,6 @@ export default function createCrokinoleSimulation() {
 	}
 
 	function collisionStart(event) {
-		// rim
 		event.pairs.forEach(({ bodyA, bodyB }) => {
 			const disc =
 				bodyA.label === "disc" ? bodyA : bodyB.label === "disc" ? bodyB : null;
@@ -417,9 +371,9 @@ export default function createCrokinoleSimulation() {
 			} else if (disc && otherDisc) {
 				disc.collided = true;
 				otherDisc.collided = true;
-				const shooterDisc = disc.id === activeDisc.id;
-				const shooterOtherDisc = otherDisc.id === activeDisc.id;
-				if (shooterDisc || shooterOtherDisc) activeDisc.valid = true;
+				const opp = disc.player !== otherDisc.player;
+				disc.collidedOpp = opp;
+				otherDisc.collidedOpp = opp;
 			}
 		});
 	}
@@ -512,36 +466,88 @@ export default function createCrokinoleSimulation() {
 		return match?.score || 0;
 	}
 
-	function onSleepStart(event) {
+	function getIntersect15(disc) {
+		const center = { x: mid, y: mid };
+
+		const discR = disc.circleRadius;
+		const discP = disc.position;
+
+		const distance = Math.sqrt(
+			Math.pow(discP.x - center.x, 2) + Math.pow(discP.y - center.y, 2)
+		);
+
+		const zoneR = mid * S.fifteen;
+
+		if (distance - discR < zoneR) return true;
+	}
+
+	function sleepStart() {
 		// check if all discs sleeping
 		const allSleeping = discs.every((d) => d.isSleeping);
 
-		// opponents on board
-		const hasOpps = discs.some((d) => d.player !== activeDisc.player);
-
 		if (allSleeping) {
+			// score
 			discs.forEach((d) => {
 				d.score = getZoneForDisc(d);
-				// TODO 15/20 for open 20
-				// TODO same shot collide open 20 not removing
-				let valid;
-				if (d.player !== activeDisc.player) valid = true;
-				if (d.id === activeDisc.id) {
-					if (hasOpps.length && d.valid) valid = true;
-					else if (hasOpps.length && !d.valid) valid = false;
-					else if (!hasOpps.length) valid = d.score >= 15;
-				} else if (d.player === activeDisc.player) valid = activeDisc.valid;
-				d.valid = valid;
+				d.intersect15 = getIntersect15(d);
+			});
 
-				// remove body
+			// validate
+			// opponents on board
+			const hasOpps = discs.some((d) => d.player !== activeDisc.player);
+			const collidedOpp = discs.some((d) => d.collidedOpp);
+			const intersected15 = discs
+				.filter((d) => d.player === activeDisc.player)
+				.some((d) => d.intersect15);
+			discs.forEach((d) => {
+				// opponent on board
+				if (hasOpps.length) {
+					// same as shooter
+					if (d.player === activeDisc.player) {
+						// if shooter
+						if (d.id === activeDisc.id) {
+							d.valid = collidedOpp;
+						} else {
+							// if non-shooter (if it collided, one disc must have opp collided)
+							d.valid = d.collided ? collidedOpp : true;
+						}
+					} else {
+						// opp is always valid
+						d.valid = true;
+					}
+				} else {
+					// no opps on board - open 20
+					if (d.id === activeDisc.id) {
+						d.valid = d.collided ? intersected15 : d.intersect15;
+					} else {
+						// one disc must be in or on 15 or it didn't get touched
+						d.valid = d.collided ? intersected15 : true;
+					}
+				}
 				if (!d.valid || !d.score) Matter.World.remove(world, d);
 			});
 
+			// clean up
 			discs = discs.filter((d) => d.score > 0 && d.valid);
+
+			const scores = discs.map((d) => ({ player: d.player, score: d.score }));
+
+			// remove 20
+			discs.forEach((d) => {
+				if (d.score === 20) Matter.World.remove(world, d);
+			});
+
+			discs = discs.filter((d) => d.score !== 20);
 
 			activeDisc = null;
 
-			const scores = discs.map((d) => ({ player: d.player, score: d.score }));
+			discs.forEach((d) => {
+				d.valid = undefined;
+				d.collided = undefined;
+				d.collidedOpp = undefined;
+				d.intersect15 = undefined;
+				d.in20 = undefined;
+			});
 
 			emitter.emit("shotComplete", scores);
 			setMode("standby");
@@ -633,7 +639,7 @@ export default function createCrokinoleSimulation() {
 		discs.push(disc);
 		activeDisc = disc;
 
-		Matter.Events.on(disc, "sleepStart", onSleepStart);
+		Matter.Events.on(disc, "sleepStart", sleepStart);
 		Matter.World.add(world, disc);
 
 		updateDiscColors();
