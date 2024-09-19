@@ -11,7 +11,6 @@
 </script>
 
 <div class="c">
-	<h2><strong>{caption}</strong></h2>
 	<div class="chart">
 		<!-- css histogram -->
 		<div class="bins">
