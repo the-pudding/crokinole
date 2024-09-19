@@ -1,9 +1,12 @@
 <script>
 	import { onMount } from "svelte";
 	import * as C from "$utils/crokinole.js";
+	import * as S from "$data/specs.js";
 
 	export let width;
 	export let dev;
+
+	const angles = [45, 135, 225, 315];
 	let element;
 	let isDragging;
 	let target;
@@ -64,14 +67,48 @@
 <!-- svelte-ignore missing-declaration -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div
-	class="c"
-	bind:this={element}
-	on:click={onClick}
-	on:mousedown={onMousedown}
-	on:mousemove={onMousemove}
-	on:mouseup={onMouseup}
-></div>
+<div class="c">
+	<div class="bg" style:width="{width}px" style:height="{width}px">
+		<div
+			class="base"
+			style="--w: {S.base * width}px; --b: {(S.rimWidth / 2) * width}px;"
+		></div>
+		<div class="surface" style="--w: {S.surface * width}px;"></div>
+		<div
+			class="five"
+			style="--w: {S.five * width}px; --b: {((S.five - S.ten) / 2) * width}px"
+		></div>
+
+		<div
+			class="ten"
+			style="--w: {S.ten * width}px; --b: {((S.ten - S.fifteen) / 2) * width}px"
+		></div>
+
+		<div
+			class="fifteen"
+			style="--w: {S.fifteen * width}px; --b: {((S.fifteen - S.twenty) / 2) *
+				width}px"
+		></div>
+
+		<div class="twenty" style="--w: {S.twenty * width}px;"></div>
+
+		{#each angles as angle}
+			<div
+				class="quadrant-line"
+				style="--w: {((S.five - S.ten) * width) / 2}px; --x: {(S.ten * width) /
+					2}px; --angle: {angle}deg;"
+			></div>
+		{/each}
+	</div>
+	<div
+		class="fg"
+		bind:this={element}
+		on:click={onClick}
+		on:mousedown={onMousedown}
+		on:mousemove={onMousemove}
+		on:mouseup={onMouseup}
+	></div>
+</div>
 
 {#if dev}
 	<p>x: {x}, y: {y}</p>
@@ -87,6 +124,76 @@
 	.c {
 		display: flex;
 		justify-content: center;
+		position: relative;
+		--color-line: var(--color-gray-200);
+		--color-board: var(--color-white);
+		--color-ditch: var(--color-gray-200);
+		--color-rim: var(--color-gray-400);
+		--outline-width: 2px;
+	}
+
+	.bg {
+		position: absolute;
+		top: 0;
+		left: 50%;
+		transform: translateX(-50%);
+	}
+
+	.fg {
+		position: relative;
+	}
+
+	.bg > div {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: var(--w);
+		height: var(--w);
+		border-width: var(--b);
+		border-style: solid;
+		border-radius: 50%;
+	}
+
+	.bg .base {
+		border: none;
+		background: var(--color-ditch);
+		outline: var(--b) solid var(--color-rim);
+	}
+
+	.bg .surface {
+		border: none;
+		background: var(--color-board);
+	}
+
+	.five {
+		border-color: var(--color-board);
+		outline: var(--outline-width) solid var(--color-line);
+	}
+
+	.ten {
+		border-color: var(--color-board);
+		outline: var(--outline-width) solid var(--color-line);
+	}
+
+	.fifteen {
+		border-color: var(--color-board);
+		outline: var(--outline-width) solid var(--color-line);
+	}
+
+	.bg .twenty {
+		background: var(--color-ditch);
+		border: none;
+	}
+
+	.bg .quadrant-line {
+		transform-origin: 0 0;
+		transform: rotate(var(--angle)) translate(var(--x), -1px);
+		width: var(--w);
+		height: var(--outline-width);
+		border: none;
+		background: var(--color-line);
+		border-radius: 0;
 	}
 
 	p {

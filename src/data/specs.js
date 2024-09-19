@@ -13,8 +13,9 @@
 		Peg Diameter: 3/8”
 	*/
 
-export const rimWidth = 12;
-const max = 381 + rimWidth;
+const rim = 8;
+const max = 381 + rim;
+export const rimWidth = rim / max;
 export const surface = 330 / max;
 export const ditchWidth = 51 / max;
 export const base = surface + ditchWidth;

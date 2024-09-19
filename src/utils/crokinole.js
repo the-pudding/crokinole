@@ -1,5 +1,6 @@
 import Matter from "matter-js";
 import * as S from "$data/specs.js";
+import variables from "$data/variables.json";
 
 const DISC_CATEGORY = 0x0001;
 const PEG_CATEGORY = 0x0002;
@@ -11,13 +12,11 @@ const DISC_DENSITY = 0.05;
 const DISC_FRICTIONAIR = 0.05;
 
 const COLOR = {
-	line: "#888",
 	player1: "#c0c",
 	player2: "#0cc",
-	board: "#fff",
-	shadow: "#fff",
 	active: "#000",
-	vector: "#0c0"
+	vector: "#000",
+	peg: variables.color["gray-400"]
 };
 
 let engine;
@@ -28,7 +27,6 @@ let render;
 let discs = [];
 
 let mid;
-let lineWidth;
 
 let activeDisc;
 let shotMaxMagnitude;
@@ -54,9 +52,7 @@ function createZones() {
 			isStatic: true,
 			isSensor: true,
 			render: {
-				fillStyle: COLOR.shadow,
-				strokeStyle: COLOR.line,
-				lineWidth
+				visible: false
 			},
 			label: "20"
 		},
@@ -71,9 +67,7 @@ function createZones() {
 			isStatic: true,
 			isSensor: true,
 			render: {
-				fillStyle: COLOR.board,
-				strokeStyle: COLOR.line,
-				lineWidth
+				visible: false
 			},
 			label: "15"
 		},
@@ -88,9 +82,7 @@ function createZones() {
 			isStatic: true,
 			isSensor: true,
 			render: {
-				fillStyle: COLOR.board,
-				strokeStyle: COLOR.line,
-				lineWidth
+				visible: false
 			},
 			label: "10"
 		},
@@ -105,57 +97,14 @@ function createZones() {
 			isStatic: true,
 			isSensor: true,
 			render: {
-				fillStyle: COLOR.board,
-				strokeStyle: COLOR.line,
-				lineWidth
+				visible: false
 			},
 			label: "5"
 		},
 		64
 	);
 
-	const zoneSurface = Matter.Bodies.circle(
-		mid,
-		mid,
-		mid * S.surface,
-		{
-			isStatic: true,
-			isSensor: true,
-			render: {
-				fillStyle: COLOR.board,
-				strokeStyle: COLOR.line,
-				lineWidth
-			},
-			label: "surface"
-		},
-		64
-	);
-
-	const zoneBase = Matter.Bodies.circle(
-		mid,
-		mid,
-		mid * S.base,
-		{
-			isStatic: true,
-			isSensor: true,
-			render: {
-				fillStyle: COLOR.shadow,
-				strokeStyle: COLOR.line,
-				lineWidth: S.rimWidth
-			},
-			label: "base"
-		},
-		64
-	);
-
-	Matter.World.add(world, [
-		zoneBase,
-		zoneSurface,
-		zone5,
-		zone10,
-		zone15,
-		zone20
-	]);
+	Matter.World.add(world, [zone5, zone10, zone15, zone20]);
 }
 
 function createTrap20() {
@@ -294,7 +243,7 @@ function createPegs() {
 		const peg = Matter.Bodies.circle(x, y, r, {
 			isStatic: true,
 			restitution: 0.9,
-			render: { fillStyle: COLOR.line },
+			render: { fillStyle: COLOR.peg },
 			collisionFilter: {
 				category: PEG_CATEGORY,
 				mask: DISC_CATEGORY
@@ -305,58 +254,6 @@ function createPegs() {
 	}
 
 	Matter.World.add(world, pegBodies);
-}
-
-function createQuadrants() {
-	const numLines = 4; // Four quadrants
-	const innerRadius = mid * S.five; // Inner radius for the lines
-	const outerRadius = mid * S.ten; // Outer radius for the lines
-
-	// Array to hold the created lines
-	const quadrantLines = [];
-
-	for (let i = 0; i < numLines; i++) {
-		// Calculate the angle for each line
-		const angle = 3 / 4 + (i / numLines) * Math.PI * 2;
-
-		// Calculate the starting and ending points of the line (inner and outer radius)
-		const x1 = mid + Math.cos(angle) * innerRadius;
-		const y1 = mid + Math.sin(angle) * innerRadius;
-		const x2 = mid + Math.cos(angle) * outerRadius;
-		const y2 = mid + Math.sin(angle) * outerRadius;
-
-		// Calculate the midpoint for the Matter.js rectangle (line)
-		const midX = (x1 + x2) / 2;
-		const midY = (y1 + y2) / 2;
-
-		// Calculate the length of the line using the distance between x1, y1 and x2, y2
-		const length = Matter.Vector.magnitude({ x: x2 - x1, y: y2 - y1 });
-
-		// Create a line as a static rectangle body with the correct angle
-		const line = Matter.Bodies.rectangle(
-			midX,
-			midY,
-			length, // Line length
-			lineWidth * 0.5, // Line thickness
-			{
-				isStatic: true,
-				angle: angle, // Rotate the line to match the angle
-				render: {
-					fillStyle: COLOR.line // Set the color of the lines
-				},
-				collisionFilter: {
-					category: 0x0000, // No collision category
-					mask: 0x0000 // Won't collide with anything
-				}
-			}
-		);
-
-		// Add the line to the quadrant lines array
-		quadrantLines.push(line);
-	}
-
-	// Add all lines to the Matter.js world
-	Matter.World.add(world, quadrantLines);
 }
 
 function drawIndicator(ctx) {
@@ -544,6 +441,15 @@ function zoomCamera(scale) {
 	render.bounds.max.y = centerY + newHeight / 2;
 }
 
+// function afterUpdate() {
+// 	const threshold = 0.1;
+// 	const stillMoving = discs.some((d) => d.speed >= threshold);
+// }
+
+function onSleepStart(event) {
+	console.log(event);
+}
+
 export function addDisc(opts = {}) {
 	const player = opts.player || "player1";
 	const x = opts.x ? opts.x * mid * 2 : mid;
@@ -573,11 +479,14 @@ export function addDisc(opts = {}) {
 			collisionFilter: {
 				category: DISC_CATEGORY,
 				mask: DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY
-			}
+			},
+			sleepThreshold: 1,
+			isSleeping: true
 		},
 		64
 	);
 
+	Matter.Events.on(disc, "sleepStart", onSleepStart);
 	discs.push(disc);
 	Matter.World.add(world, disc);
 	activeDisc = disc;
@@ -641,12 +550,13 @@ export function setIndicatorVisible(v) {
 export function init({ element, width }) {
 	const height = width;
 	mid = width / 2;
-	lineWidth = width < 400 ? 1 : 2;
 	shotMaxIndicatorMagnitude = mid * 0.2;
 
 	setMode("shoot");
 
-	engine = Matter.Engine.create();
+	engine = Matter.Engine.create({
+		enableSleeping: true // Globally enable sleeping
+	});
 	world = engine.world;
 
 	engine.gravity.y = 0;
@@ -662,12 +572,12 @@ export function init({ element, width }) {
 			wireframes: false,
 			pixelRatio: "auto",
 			background: "transparent",
-			hasBounds: true
+			hasBounds: true,
+			showSleeping: false // Disable sleeping visual cue (like opacity change)
 		}
 	});
 
 	createZones();
-	createQuadrants();
 	createPegs();
 	createTrap20();
 	createTrapRim();
@@ -681,7 +591,7 @@ export function init({ element, width }) {
 	Matter.Events.on(engine, "collisionActive", collisionActive);
 	Matter.Events.on(engine, "collisionStart", collisionStart);
 
-	// Matter.Events.on(engine, "afterUpdate", function () {
+	// Matter.Events.on(engine, "afterUpdate", afterUpdate);
 	// 	if (activeDisc) {
 	// 		// Pan to follow the disc
 	// 		panCameraToFollowDisc(activeDisc);
