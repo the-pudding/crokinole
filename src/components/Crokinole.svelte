@@ -59,9 +59,7 @@
 
 	$: x = target ? (target.x / width).toFixed(2) : 0;
 	$: y = target ? (target.y / width).toFixed(2) : 0;
-	onMount(() => {
-		C.init({ element, width });
-	});
+	$: if (width) C.init({ element, width });
 </script>
 
 <!-- svelte-ignore missing-declaration -->
@@ -122,8 +120,6 @@
 
 <style>
 	.c {
-		display: flex;
-		justify-content: center;
 		position: relative;
 		--color-line: var(--color-gray-200);
 		--color-board: var(--color-white);

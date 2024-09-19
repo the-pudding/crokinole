@@ -11,6 +11,7 @@ const DISC_RESTITUTION = 0.9;
 const DISC_DENSITY = 0.05;
 const DISC_FRICTIONAIR = 0.05;
 
+// TODO color vars
 const COLOR = {
 	player1: "#c0c",
 	player2: "#0cc",
@@ -23,20 +24,18 @@ let engine;
 let world;
 let runner;
 let render;
-
-let discs = [];
-
 let mid;
-
-let activeDisc;
 let shotMaxMagnitude;
 let shotMaxIndicatorMagnitude;
 let shotVector;
 let indicatorVector;
-let mode;
 let indicatorVisible;
 
-// TODO move private vs public
+// things to carry over on resize
+let discs = [];
+let mode;
+let activeDisc;
+
 function updateDiscColors() {
 	// discs.forEach((d) => {
 	// 	d.render.lineWidth = d.id === activeDisc?.id ? 3 : 0;
@@ -441,13 +440,54 @@ function zoomCamera(scale) {
 	render.bounds.max.y = centerY + newHeight / 2;
 }
 
-// function afterUpdate() {
-// 	const threshold = 0.1;
-// 	const stillMoving = discs.some((d) => d.speed >= threshold);
-// }
+function afterUpdate() {
+	// const threshold = 0.1;
+	// const stillMoving = discs.some((d) => d.speed >= threshold);
+}
 
 function onSleepStart(event) {
 	console.log(event);
+}
+
+function clearInstance() {
+	// Clear the world bodies
+	Matter.Composite.clear(world, false);
+
+	// Remove engine events
+	Matter.Events.off(engine);
+
+	// Stop the render and remove canvas
+	Matter.Render.stop(render);
+	render.canvas.remove();
+	render.context = null;
+	render.textures = {};
+
+	// Stop the runner
+	Matter.Runner.stop(runner);
+}
+
+function reAddDiscs(prevMid) {
+	discs.forEach((disc) => {
+		// move position of discs scaled based on prevMid compared to mid
+		const s = mid / prevMid;
+		const x = disc.position.x * s;
+		const y = disc.position.y * s;
+		Matter.Body.setPosition(disc, { x, y });
+		Matter.Body.scale(disc, s, s);
+		Matter.World.add(world, disc);
+	});
+}
+
+export function removeDiscs() {
+	discs.forEach((disc) => {
+		Matter.World.remove(world, disc);
+	});
+
+	discs = [];
+	activeDisc = null;
+	indicatorVisible = false;
+	indicatorVector = undefined;
+	shotVector = undefined;
 }
 
 export function addDisc(opts = {}) {
@@ -494,15 +534,6 @@ export function addDisc(opts = {}) {
 	shotMaxMagnitude = activeDisc.mass * mid * 0.0007;
 }
 
-// export function select({ x, y }) {
-// 	const clickedDiscs = Matter.Query.point(discs, { x, y });
-
-// 	if (clickedDiscs.length > 0) {
-// 		activeDisc = clickedDiscs[0];
-// 		updateDiscColors();
-// 	}
-// }
-
 export function drag(mouse) {
 	if (!activeDisc) return;
 	setIndicatorVisible(true);
@@ -548,14 +579,21 @@ export function setIndicatorVisible(v) {
 }
 
 export function init({ element, width }) {
+	let prevMid;
+
+	if (engine) {
+		clearInstance();
+		prevMid = mid;
+	} else {
+		setMode("shoot");
+	}
+
 	const height = width;
 	mid = width / 2;
 	shotMaxIndicatorMagnitude = mid * 0.2;
 
-	setMode("shoot");
-
 	engine = Matter.Engine.create({
-		enableSleeping: true // Globally enable sleeping
+		enableSleeping: true
 	});
 	world = engine.world;
 
@@ -573,10 +611,11 @@ export function init({ element, width }) {
 			pixelRatio: "auto",
 			background: "transparent",
 			hasBounds: true,
-			showSleeping: false // Disable sleeping visual cue (like opacity change)
+			showSleeping: false
 		}
 	});
 
+	reAddDiscs(prevMid);
 	createZones();
 	createPegs();
 	createTrap20();
@@ -590,17 +629,26 @@ export function init({ element, width }) {
 
 	Matter.Events.on(engine, "collisionActive", collisionActive);
 	Matter.Events.on(engine, "collisionStart", collisionStart);
-
 	// Matter.Events.on(engine, "afterUpdate", afterUpdate);
-	// 	if (activeDisc) {
-	// 		// Pan to follow the disc
-	// 		panCameraToFollowDisc(activeDisc);
-
-	// 		// Optionally, apply zoom based on the speed of the disc or other factors
-	// 		// For example, zoom in when the disc is moving fast and zoom out when it's slow
-	// 		const speed = Matter.Vector.magnitude(activeDisc.velocity);
-	// 		const zoomScale = 1;
-	// 		zoomCamera(zoomScale);
-	// 	}
-	// });
 }
+
+// 	if (activeDisc) {
+// 		// Pan to follow the disc
+// 		panCameraToFollowDisc(activeDisc);
+
+// 		// Optionally, apply zoom based on the speed of the disc or other factors
+// 		// For example, zoom in when the disc is moving fast and zoom out when it's slow
+// 		const speed = Matter.Vector.magnitude(activeDisc.velocity);
+// 		const zoomScale = 1;
+// 		zoomCamera(zoomScale);
+// 	}
+// });
+
+// export function select({ x, y }) {
+// 	const clickedDiscs = Matter.Query.point(discs, { x, y });
+
+// 	if (clickedDiscs.length > 0) {
+// 		activeDisc = clickedDiscs[0];
+// 		updateDiscColors();
+// 	}
+// }
