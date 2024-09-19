@@ -23,6 +23,6 @@
 	div {
 		width: calc(min(100svw, 100svh) * 0.7);
 		height: calc(min(100svw, 100svh) * 0.7);
-		margin: 0 auto;
+		margin: 32px auto;
 	}
 </style>

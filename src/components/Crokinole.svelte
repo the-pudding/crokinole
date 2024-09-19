@@ -1,11 +1,12 @@
 <script>
 	import { onMount } from "svelte";
-	import * as C from "$utils/crokinole.js";
+	import C from "$utils/crokinole.js";
 	import * as S from "$data/specs.js";
 
 	export let width;
 	export let dev;
 
+	const crokinole = C();
 	const angles = [45, 135, 225, 315];
 	let element;
 	let isDragging;
@@ -24,12 +25,12 @@
 	function onMousemove(event) {
 		if (!isDragging) return;
 		target = { x: event.offsetX, y: event.offsetY };
-		C.drag(target);
+		crokinole.drag(target);
 	}
 
 	function onMouseup() {
 		isDragging = false;
-		C.flickDisc();
+		crokinole.flickDisc();
 		// if (!activeDisc) return;
 	}
 
@@ -38,15 +39,15 @@
 		const x = event.offsetX;
 		const y = event.offsetY;
 
-		// C.select({ x, y });
+		// crokinole.select({ x, y });
 	}
 
 	function onAdd() {
-		C.addDisc({ player: "player1" });
+		crokinole.addDisc({ player: "player1", mode: "shoot" });
 	}
 
 	function onFlick() {
-		C.flickDisc({ target: { x: 0.47, y: 0.52 }, speed: 0.4 });
+		crokinole.flickDisc({ target: { x: 0.47, y: 0.52 }, speed: 0.4 });
 	}
 
 	function onScenario() {
@@ -54,12 +55,12 @@
 			{ x: 0.7, y: 0.5, player: "player1" },
 			{ x: 0.45, y: 0.48, player: "player2" },
 			{}
-		].forEach(C.addDisc);
+		].forEach(crokinole.addDisc);
 	}
 
 	$: x = target ? (target.x / width).toFixed(2) : 0;
 	$: y = target ? (target.y / width).toFixed(2) : 0;
-	$: if (width) C.init({ element, width });
+	$: if (width) crokinole.init({ element, width });
 </script>
 
 <!-- svelte-ignore missing-declaration -->
@@ -121,6 +122,8 @@
 <style>
 	.c {
 		position: relative;
+		display: flex;
+		justify-content: center;
 		--color-line: var(--color-gray-200);
 		--color-board: var(--color-white);
 		--color-ditch: var(--color-gray-200);
