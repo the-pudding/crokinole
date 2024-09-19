@@ -71,8 +71,8 @@
 }
 
 p, h1, h2, h3, h4, li, caption {
-	font-size: var(--24px);
-	line-height: 1.6;
+	font-size: var(--28px);
+	line-height: 1.5;
 }
 
 h1, h2, h3, h4 {
@@ -80,7 +80,7 @@ h1, h2, h3, h4 {
 }
 
 section > p, section > h2, section > h3, section > h4, section > ul, section > ol, section > div {
-	max-width: 640px;
+	max-width: 700px;
 	margin: 24px auto;
 	padding: 0 16px;
 
