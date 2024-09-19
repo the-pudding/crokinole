@@ -14,6 +14,8 @@
 	let x = 0;
 	let y = 0;
 
+	let turn = 0;
+
 	function onMousedown(event) {
 		if (!dev) return;
 
@@ -43,24 +45,36 @@
 	}
 
 	function onAdd() {
-		crokinole.addDisc({ player: "player1", mode: "shoot" });
+		crokinole.addDisc({ player: "player1", mode: "place" });
 	}
 
 	function onFlick() {
-		crokinole.flickDisc({ target: { x: 0.47, y: 0.52 }, speed: 0.4 });
+		crokinole.flickDisc({ target: { x: 0.5, y: 0.5 }, speed: 0.4 });
 	}
 
 	function onScenario() {
 		[
 			{ x: 0.7, y: 0.5, player: "player1" },
 			{ x: 0.45, y: 0.48, player: "player2" },
-			{}
+			{ mode: "shoot" }
 		].forEach(crokinole.addDisc);
+	}
+
+	function onShotComplete(data) {
+		console.log(data);
+	}
+
+	function onAim() {
+		crokinole.setMode("shoot");
 	}
 
 	$: x = target ? (target.x / width).toFixed(2) : 0;
 	$: y = target ? (target.y / width).toFixed(2) : 0;
 	$: if (width) crokinole.init({ element, width });
+
+	onMount(() => {
+		crokinole.on("shotComplete", onShotComplete);
+	});
 </script>
 
 <!-- svelte-ignore missing-declaration -->
@@ -75,21 +89,26 @@
 		<div class="surface" style="--w: {S.surface * width}px;"></div>
 		<div
 			class="five"
-			style="--w: {S.five * width}px; --b: {((S.five - S.ten) / 2) * width}px"
+			style="--w: {Math.floor(S.five * width)}px; --b: {((S.five - S.ten) / 2) *
+				width}px"
 		></div>
 
 		<div
 			class="ten"
-			style="--w: {S.ten * width}px; --b: {((S.ten - S.fifteen) / 2) * width}px"
+			style="--w: {Math.floor(S.ten * width)}px; --b: {((S.ten - S.fifteen) /
+				2) *
+				width}px"
 		></div>
 
 		<div
 			class="fifteen"
-			style="--w: {S.fifteen * width}px; --b: {((S.fifteen - S.twenty) / 2) *
+			style="--w: {Math.floor(S.fifteen * width)}px; --b: {((S.fifteen -
+				S.twenty) /
+				2) *
 				width}px"
 		></div>
 
-		<div class="twenty" style="--w: {S.twenty * width}px;"></div>
+		<div class="twenty" style="--w: {Math.floor(S.twenty * width)}px;"></div>
 
 		{#each angles as angle}
 			<div
@@ -109,6 +128,8 @@
 	></div>
 </div>
 
+<!-- <input type="range" min={0.21} max={0.79} step={0.01} /> -->
+
 {#if dev}
 	<p>x: {x}, y: {y}</p>
 
@@ -116,6 +137,7 @@
 		<button on:click={onFlick}>Flick Disc</button>
 		<button on:click={onAdd}>Add Disc</button>
 		<button on:click={onScenario}>Scenario</button>
+		<button on:click={onAim}>Aim/Shoot</button>
 	</div>
 {/if}
 

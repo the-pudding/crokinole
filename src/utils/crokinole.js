@@ -20,7 +20,31 @@ const COLOR = {
 	peg: variables.color["gray-400"]
 };
 
+// Define a simple event emitter class
+class EventEmitter {
+	constructor() {
+		this.events = {};
+	}
+
+	// Register an event listener
+	on(event, listener) {
+		if (!this.events[event]) {
+			this.events[event] = [];
+		}
+		this.events[event].push(listener);
+	}
+
+	// Emit an event
+	emit(event, data) {
+		if (this.events[event]) {
+			this.events[event].forEach((listener) => listener(data));
+		}
+	}
+}
+
 export default function createCrokinoleSimulation() {
+	const emitter = new EventEmitter(); // Event emitter instance
+
 	let engine;
 	let world;
 	let runner;
@@ -371,6 +395,14 @@ export default function createCrokinoleSimulation() {
 		event.pairs.forEach(({ bodyA, bodyB }) => {
 			const disc =
 				bodyA.label === "disc" ? bodyA : bodyB.label === "disc" ? bodyB : null;
+
+			const otherDisc =
+				bodyA.label === "disc" && bodyA.id !== disc.id
+					? bodyA
+					: bodyB.label === "disc" && bodyB.id !== disc.id
+						? bodyB
+						: null;
+
 			const rim =
 				bodyA.label === "trap rim"
 					? bodyA
@@ -382,6 +414,12 @@ export default function createCrokinoleSimulation() {
 				disc.frictionAir = 0.3;
 				disc.collisionFilter.mask =
 					DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY | SURFACE_CATEGORY;
+			} else if (disc && otherDisc) {
+				disc.collided = true;
+				otherDisc.collided = true;
+				const shooterDisc = disc.id === activeDisc.id;
+				const shooterOtherDisc = otherDisc.id === activeDisc.id;
+				if (shooterDisc || shooterOtherDisc) activeDisc.valid = true;
 			}
 		});
 	}
@@ -475,18 +513,38 @@ export default function createCrokinoleSimulation() {
 	}
 
 	function onSleepStart(event) {
-		const disc = event.source;
-		disc.score = getZoneForDisc(disc);
-
-		if (disc.score === 0) {
-			Matter.World.remove(world, disc);
-		}
-
 		// check if all discs sleeping
 		const allSleeping = discs.every((d) => d.isSleeping);
+
+		// opponents on board
+		const hasOpps = discs.some((d) => d.player !== activeDisc.player);
+
 		if (allSleeping) {
-			setMode("standby");
+			discs.forEach((d) => {
+				d.score = getZoneForDisc(d);
+				// TODO 15/20 for open 20
+				// TODO same shot collide open 20 not removing
+				let valid;
+				if (d.player !== activeDisc.player) valid = true;
+				if (d.id === activeDisc.id) {
+					if (hasOpps.length && d.valid) valid = true;
+					else if (hasOpps.length && !d.valid) valid = false;
+					else if (!hasOpps.length) valid = d.score >= 15;
+				} else if (d.player === activeDisc.player) valid = activeDisc.valid;
+				d.valid = valid;
+
+				// remove body
+				if (!d.valid || !d.score) Matter.World.remove(world, d);
+			});
+
+			discs = discs.filter((d) => d.score > 0 && d.valid);
+
 			activeDisc = null;
+
+			const scores = discs.map((d) => ({ player: d.player, score: d.score }));
+
+			emitter.emit("shotComplete", scores);
+			setMode("standby");
 		}
 		// TODO fire event that says shot all done and provide disc status
 		// discs.map(d => d)
@@ -585,15 +643,64 @@ export default function createCrokinoleSimulation() {
 	}
 
 	function drag(mouse) {
-		if (!activeDisc || mode !== "shoot" || mode !== "play") return;
-		setIndicatorVisible(true);
-		// calculate the inverse of the mouse position from the active disc position
-		// this will be the target for the flick
-		const diffX = activeDisc.position.x - mouse.x;
-		const diffY = activeDisc.position.y - mouse.y;
-		const x = activeDisc.position.x + diffX;
-		const y = activeDisc.position.y + diffY;
-		updateShotVector({ target: { x, y } });
+		if (!activeDisc || mode === "standby" || mode === "play") return;
+
+		if (mode === "place") {
+			const buffer = 2;
+			const angles = [45 - buffer, 135 + buffer];
+			// Set the radius of the five circle
+			const fiveCircleRadius = mid * S.five;
+
+			// Calculate the difference in x from the center (mid)
+			let diffX = mouse.x - mid;
+
+			// Clamp diffX to be within the bounds of the five circle's radius
+			diffX = Math.max(-fiveCircleRadius, Math.min(fiveCircleRadius, diffX));
+
+			const p1 = activeDisc.player === "player1";
+			const mult = p1 ? -1 : 1;
+			const minAngle = angles[p1 ? 0 : 1] * mult * -1;
+			const maxAngle = angles[p1 ? 1 : 0] * mult * -1;
+			// Calculate the y-coordinate based on the clamped diffX
+			const y =
+				mid -
+				Math.sqrt(
+					Math.max(0, Math.pow(fiveCircleRadius, 2) - Math.pow(diffX, 2))
+				) *
+					mult;
+
+			// Set the disc's position to the clamped x and calculated y
+			const newPosition = { x: mid + diffX, y };
+			const center = { x: mid, y: mid };
+			const radians = Matter.Vector.angle(center, newPosition);
+			const degrees = (radians * 180) / Math.PI;
+			if (degrees > minAngle && degrees < maxAngle) {
+				Matter.Body.setPosition(activeDisc, newPosition);
+			} else if (degrees <= minAngle) {
+				const radiansClamped = (minAngle * Math.PI) / 180;
+				const a = Math.cos(radiansClamped) * fiveCircleRadius;
+				const b = Math.sin(radiansClamped) * fiveCircleRadius;
+				const x = mid + a;
+				const y = mid + b;
+				Matter.Body.setPosition(activeDisc, { x, y });
+			} else if (degrees >= maxAngle) {
+				const radiansClamped = (maxAngle * Math.PI) / 180;
+				const a = Math.cos(radiansClamped) * fiveCircleRadius;
+				const b = Math.sin(radiansClamped) * fiveCircleRadius;
+				const x = mid + a;
+				const y = mid + b;
+				Matter.Body.setPosition(activeDisc, { x, y });
+			}
+		} else if (mode === "shoot") {
+			setIndicatorVisible(true);
+			// Calculate the inverse of the mouse position from the active disc position
+			// This will be the target for the flick
+			const diffX = activeDisc.position.x - mouse.x;
+			const diffY = activeDisc.position.y - mouse.y;
+			const x = activeDisc.position.x + diffX;
+			const y = activeDisc.position.y + diffY;
+			updateShotVector({ target: { x, y } });
+		}
 	}
 
 	function release() {
@@ -693,7 +800,8 @@ export default function createCrokinoleSimulation() {
 		flickDisc,
 		setMode,
 		setIndicatorVisible,
-		init
+		init,
+		on: (event, listener) => emitter.on(event, listener)
 	};
 	// 	if (activeDisc) {
 	// 		// Pan to follow the disc
