@@ -50,7 +50,7 @@
 	}
 
 	function addDisc() {
-		crokinole.addDisc({ player: "player1", mode: "place" });
+		crokinole.addDisc({ player: "player1", state: "place" });
 	}
 
 	function onFlick() {
@@ -61,7 +61,7 @@
 		[
 			{ x: 0.7, y: 0.5, player: "player1" },
 			{ x: 0.45, y: 0.48, player: "player2" },
-			{ mode: "shoot" }
+			{ state: "shoot" }
 		].forEach(crokinole.addDisc);
 	}
 
@@ -70,7 +70,7 @@
 	}
 
 	function onAim() {
-		crokinole.setMode("shoot");
+		crokinole.setState("shoot");
 	}
 
 	function updateRange() {
@@ -81,10 +81,10 @@
 	function onPhaseClick() {
 		if (phase === "place") {
 			phase = "aim";
-			crokinole.setMode("aim");
+			crokinole.setState("aim");
 		} else if (phase === "aim") {
 			phase = "shoot";
-			crokinole.setMode("shoot");
+			crokinole.setState("shoot");
 		}
 	}
 

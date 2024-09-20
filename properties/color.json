@@ -39,20 +39,17 @@
 		"gray-1000": {
 			"value": "rgb(25, 25, 25)"
 		},
-		"purple": {
-			"value": "#a239ca"
+		"pink-aa": {
+			"value": "#FF00FF"
 		},
-		"blue": {
-			"value": "#4717f6"
+		"pink-aaa": {
+			"value": "#D100D1"
 		},
-		"green": {
-			"value": "#34a29e"
+		"teal-aa": {
+			"value": "#00A3A3"
 		},
-		"red": {
-			"value": "#ff533d"
-		},
-		"yellow": {
-			"value": "#e5e338"
+		"teal-aaa": {
+			"value": "#008080"
 		}
 	}
 }

@@ -11,13 +11,11 @@ const DISC_RESTITUTION = 0.9;
 const DISC_DENSITY = 0.05;
 const DISC_FRICTIONAIR = 0.05;
 
-// TODO color vars
 const COLOR = {
-	player1: "#c0c",
-	player2: "#0cc",
-	active: "#000",
-	vector: "#000",
-	peg: variables.color["gray-400"]
+	player1: variables.color["pink-aa"],
+	player2: variables.color["teal-aa"],
+	active: variables.color["black"],
+	vector: variables.color["black"]
 };
 
 // Define a simple event emitter class
@@ -58,7 +56,7 @@ export default function createCrokinoleSimulation() {
 
 	// things to carry over on resize
 	let discs = [];
-	let mode; // standby, place, shoot, play
+	let state; // idle, place, shoot, play
 	let activeDisc;
 
 	function updateDiscColors() {
@@ -222,7 +220,7 @@ export default function createCrokinoleSimulation() {
 			const peg = Matter.Bodies.circle(x, y, r, {
 				isStatic: true,
 				restitution: 0.9,
-				render: { fillStyle: COLOR.peg },
+				render: { fillStyle: "#000" },
 				collisionFilter: {
 					category: PEG_CATEGORY,
 					mask: DISC_CATEGORY
@@ -550,7 +548,7 @@ export default function createCrokinoleSimulation() {
 			});
 
 			emitter.emit("shotComplete", scores);
-			setMode("standby");
+			setState("idle");
 		}
 		// TODO fire event that says shot all done and provide disc status
 		// discs.map(d => d)
@@ -600,7 +598,7 @@ export default function createCrokinoleSimulation() {
 
 	function addDisc(opts = {}) {
 		const player = opts.player || "player1";
-		const m = opts.mode || "place";
+		const m = opts.state || "place";
 		const x = opts.x ? opts.x * mid * 2 : mid;
 		const y = opts.y
 			? opts.y * mid * 2
@@ -645,13 +643,13 @@ export default function createCrokinoleSimulation() {
 		updateDiscColors();
 		shotMaxMagnitude = activeDisc.mass * mid * 0.0007;
 
-		setMode(m);
+		setState(m);
 	}
 
 	function drag(mouse) {
-		if (!activeDisc || mode === "standby" || mode === "play") return;
+		if (!activeDisc || state === "idle" || state === "play") return;
 
-		if (mode === "place") {
+		if (state === "place") {
 			const buffer = 2;
 			const angles = [45 - buffer, 135 + buffer];
 			// Set the radius of the five circle
@@ -697,7 +695,7 @@ export default function createCrokinoleSimulation() {
 				const y = mid + b;
 				Matter.Body.setPosition(activeDisc, { x, y });
 			}
-		} else if (mode === "shoot") {
+		} else if (state === "shoot") {
 			setIndicatorVisible(true);
 			// Calculate the inverse of the mouse position from the active disc position
 			// This will be the target for the flick
@@ -710,15 +708,15 @@ export default function createCrokinoleSimulation() {
 	}
 
 	function release() {
-		if (!activeDisc || mode !== "shoot") return;
+		if (!activeDisc || state !== "shoot") return;
 		flickDisc();
 	}
 
 	function flickDisc(opts) {
-		if (!activeDisc || mode !== "shoot") return;
+		if (!activeDisc || state !== "shoot") return;
 		if (opts && (!opts.target || !opts.speed)) return;
 
-		setMode("play");
+		setState("play");
 
 		setIndicatorVisible(false);
 
@@ -736,8 +734,8 @@ export default function createCrokinoleSimulation() {
 		updateDiscColors();
 	}
 
-	function setMode(v) {
-		mode = v;
+	function setState(v) {
+		state = v;
 	}
 
 	function setIndicatorVisible(v) {
@@ -751,7 +749,7 @@ export default function createCrokinoleSimulation() {
 			clearInstance();
 			prevMid = mid;
 		} else {
-			setMode("standby");
+			setState("idle");
 		}
 
 		const height = width;
@@ -806,7 +804,7 @@ export default function createCrokinoleSimulation() {
 		drag,
 		release,
 		flickDisc,
-		setMode,
+		setState,
 		setIndicatorVisible,
 		init,
 		on: (event, listener) => emitter.on(event, listener)
