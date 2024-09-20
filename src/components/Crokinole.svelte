@@ -2,12 +2,15 @@
 	import { onMount } from "svelte";
 	import C from "$utils/crokinole.js";
 	import * as S from "$data/specs.js";
+	import UI from "$components/Crokinole.UI.svelte";
 
 	export let width;
+	export let ui;
 	export let dev;
 
 	const crokinole = C();
 	const angles = [45, 135, 225, 315];
+
 	let element;
 	let isDragging;
 	let target;
@@ -15,6 +18,8 @@
 	let y = 0;
 
 	let turn = 0;
+	let rangeValue;
+	let phase = "place";
 
 	function onMousedown(event) {
 		if (!dev) return;
@@ -44,7 +49,7 @@
 		// crokinole.select({ x, y });
 	}
 
-	function onAdd() {
+	function addDisc() {
 		crokinole.addDisc({ player: "player1", mode: "place" });
 	}
 
@@ -68,11 +73,29 @@
 		crokinole.setMode("shoot");
 	}
 
+	function updateRange() {
+		target = { x: rangeValue[0] * width, y: 0 };
+		crokinole.drag(target);
+	}
+
+	function onPhaseClick() {
+		if (phase === "place") {
+			phase = "aim";
+			crokinole.setMode("aim");
+		} else if (phase === "aim") {
+			phase = "shoot";
+			crokinole.setMode("shoot");
+		}
+	}
+
+	$: buttonText = phase === "place" ? "Aim" : "Shoot";
 	$: x = target ? (target.x / width).toFixed(2) : 0;
 	$: y = target ? (target.y / width).toFixed(2) : 0;
 	$: if (width) crokinole.init({ element, width });
+	$: if (width) updateRange(rangeValue);
 
 	onMount(() => {
+		crokinole.on("ready", addDisc);
 		crokinole.on("shotComplete", onShotComplete);
 	});
 </script>
@@ -128,17 +151,29 @@
 	></div>
 </div>
 
+{#if ui}
+	<div class="ui">
+		<div class="top">
+			<UI {phase} bind:value={rangeValue}></UI>
+		</div>
+		<div class="bottom">
+			{#if phase !== "shoot"}
+				<button on:click={onPhaseClick}>{buttonText}</button>
+			{/if}
+		</div>
+	</div>
+{/if}
 <!-- <input type="range" min={0.21} max={0.79} step={0.01} /> -->
 
 {#if dev}
 	<p>x: {x}, y: {y}</p>
 
-	<div>
+	<!-- <div>
 		<button on:click={onFlick}>Flick Disc</button>
 		<button on:click={onAdd}>Add Disc</button>
 		<button on:click={onScenario}>Scenario</button>
 		<button on:click={onAim}>Aim/Shoot</button>
-	</div>
+	</div> -->
 {/if}
 
 <style>
@@ -221,5 +256,36 @@
 		margin: 0;
 		font-size: 14px;
 		text-align: center;
+	}
+
+	.ui {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.ui > div {
+		height: 32px;
+		display: flex;
+		justify-content: center;
+		width: 100%;
+		margin: 4px 0;
+	}
+
+	.bottom button {
+		padding: 0;
+		width: 10em;
+		font-size: var(--14px);
+		text-transform: uppercase;
+		font-weight: bold;
+		height: 100%;
+	}
+
+	.bottom p {
+		text-align: center;
+		font-size: var(--14px);
+		text-transform: uppercase;
+		font-weight: bold;
 	}
 </style>

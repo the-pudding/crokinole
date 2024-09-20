@@ -16,7 +16,7 @@
 </script>
 
 <div bind:this={el} bind:offsetWidth>
-	<Crokinole {width} dev={true}></Crokinole>
+	<Crokinole {width} dev={true} ui={true}></Crokinole>
 </div>
 
 <style>

@@ -42,7 +42,7 @@
 <style>
 	figure {
 		position: relative;
-		margin: 32px auto;
+		margin: 48px auto 32px auto;
 	}
 
 	figcaption {

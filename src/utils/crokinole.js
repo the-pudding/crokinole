@@ -796,6 +796,8 @@ export default function createCrokinoleSimulation() {
 		Matter.Events.on(engine, "collisionActive", collisionActive);
 		Matter.Events.on(engine, "collisionStart", collisionStart);
 		// Matter.Events.on(engine, "afterUpdate", afterUpdate);
+
+		if (!discs.length) emitter.emit("ready");
 	}
 
 	return {
