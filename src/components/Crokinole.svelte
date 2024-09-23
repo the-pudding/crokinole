@@ -2,24 +2,51 @@
 	import { onMount } from "svelte";
 	import C from "$utils/crokinole.js";
 	import * as S from "$data/specs.js";
-	import UI from "$components/Crokinole.UI.svelte";
+	import Slider from "$components/Crokinole.Slider.svelte";
+	import Button from "$components/Crokinole.Button.svelte";
 
 	export let width;
 	export let ui;
 	export let dev;
+	export let tutorial;
 
 	const crokinole = C();
 	const angles = [45, 135, 225, 315];
+	const pegs = [15, 60, 105, 150, 195, 240, 285, 330];
+	const regions = ["five", "ten", "fifteen", "twenty"];
+	const regionText = {
+		five: "5",
+		ten: "10",
+		fifteen: "15",
+		twenty: "20"
+	};
+	const rangeDefault = {
+		place: {
+			value: [0.5],
+			min: 0.22,
+			max: 0.78,
+			step: 0.01
+		},
+		aim: {
+			value: [0],
+			min: -90,
+			max: 90,
+			step: 1
+		}
+	};
 
 	let element;
 	let isDragging;
 	let target;
 	let x = 0;
 	let y = 0;
+	let uiVisible;
 
 	let turn = 0;
-	let rangeValue = [0];
+	let rangeValue = rangeDefault.place.value;
+	let power = 0.5;
 	let phase = "place";
+	let degrees;
 
 	function onMousedown(event) {
 		if (!dev) return;
@@ -41,6 +68,7 @@
 		// if (!activeDisc) return;
 	}
 
+	// just for dev
 	function onClick(event) {
 		if (!dev) return;
 		const x = event.offsetX;
@@ -73,14 +101,26 @@
 		crokinole.setState("shoot");
 	}
 
+	function onRelease() {
+		crokinole.flickDisc({ degrees, power });
+	}
+
 	function updateRange() {
-		target = { x: rangeValue[0] * width, y: 0 };
-		crokinole.drag(target);
+		if (phase === "place") crokinole.placeDisc(rangeValue[0] * width);
+		else if (phase === "aim") {
+			degrees = Math.round(rangeValue[0]);
+			crokinole.aimDisc({ degrees, power: 0.5 });
+		}
+	}
+
+	function updatePower() {
+		crokinole.aimDisc({ degrees, power });
 	}
 
 	function onPhaseClick() {
 		if (phase === "place") {
 			phase = "aim";
+			rangeValue = rangeDefault.aim.value;
 			crokinole.setState("aim");
 		} else if (phase === "aim") {
 			phase = "shoot";
@@ -88,14 +128,24 @@
 		}
 	}
 
-	$: buttonText = phase === "place" ? "Aim" : "Shoot";
+	function updateTutorial() {
+		crokinole.removeDiscs();
+		uiVisible = true;
+		if (tutorial !== "regions") addDisc();
+		else uiVisible = false;
+	}
+
+	$: buttonText = phase === "place" ? "Place" : "Aim";
 	$: x = target ? (target.x / width).toFixed(2) : 0;
 	$: y = target ? (target.y / width).toFixed(2) : 0;
 	$: if (width) crokinole.init({ element, width });
 	$: if (width) updateRange(rangeValue);
+	$: if (width) updatePower(power);
+	$: if (width) updateTutorial(tutorial);
+	$: tutorialClass = tutorial ? `tutorial-${tutorial}` : "";
 
 	onMount(() => {
-		crokinole.on("ready", addDisc);
+		// crokinole.on("ready", addDisc);
 		crokinole.on("shotComplete", onShotComplete);
 	});
 </script>
@@ -103,41 +153,49 @@
 <!-- svelte-ignore missing-declaration -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="c">
+<div class="c {tutorialClass}">
 	<div class="bg" style:width="{width}px" style:height="{width}px">
 		<div
 			class="base"
 			style="--w: {S.base * width}px; --b: {(S.rimWidth / 2) * width}px;"
 		></div>
+
 		<div class="surface" style="--w: {S.surface * width}px;"></div>
-		<div
-			class="five"
-			style="--w: {Math.floor(S.five * width)}px; --b: {((S.five - S.ten) / 2) *
-				width}px"
-		></div>
 
-		<div
-			class="ten"
-			style="--w: {Math.floor(S.ten * width)}px; --b: {((S.ten - S.fifteen) /
-				2) *
-				width}px"
-		></div>
-
-		<div
-			class="fifteen"
-			style="--w: {Math.floor(S.fifteen * width)}px; --b: {((S.fifteen -
-				S.twenty) /
-				2) *
-				width}px"
-		></div>
+		{#each regions.slice(0, 3) as region, i}
+			<div
+				class={region}
+				style="--w: {Math.floor(S[region] * width)}px; --b: {((S[region] -
+					S[regions[i + 1]]) /
+					2) *
+					width}px"
+			></div>
+		{/each}
 
 		<div class="twenty" style="--w: {Math.floor(S.twenty * width)}px;"></div>
+
+		{#each regions as region}
+			{@const text = regionText[region]}
+			<span
+				class="text-{region}"
+				style="--w: {Math.floor(width / 2 - (S[region] * width) / 2)}px;"
+				>{text}</span
+			>
+		{/each}
 
 		{#each angles as angle}
 			<div
 				class="quadrant-line"
 				style="--w: {((S.five - S.ten) * width) / 2}px; --x: {(S.ten * width) /
 					2}px; --angle: {angle}deg;"
+			></div>
+		{/each}
+
+		{#each pegs as peg}
+			<div
+				class="peg"
+				style="--w: {S.peg * width}px; --x: {((S.fifteen - S.peg) * width) /
+					2}px; --angle: {peg}deg;"
 			></div>
 		{/each}
 	</div>
@@ -152,18 +210,26 @@
 </div>
 
 {#if ui}
-	<div class="ui">
+	<div class="ui" class:visible={uiVisible}>
 		<div class="top">
-			<UI {phase} bind:value={rangeValue}></UI>
-		</div>
-		<div class="bottom">
-			{#if phase !== "shoot"}
-				<button on:click={onPhaseClick}>{buttonText}</button>
+			{#if phase === "shoot"}
+				<Button bind:value={power} on:release={onRelease}></Button>
+			{:else}<button on:click={onPhaseClick}>{buttonText}</button>
 			{/if}
 		</div>
+		{#if ["place", "aim"].includes(phase)}
+			<div class="bottom">
+				<Slider
+					{phase}
+					min={rangeDefault[phase]?.min}
+					max={rangeDefault[phase]?.max}
+					step={rangeDefault[phase]?.step}
+					bind:value={rangeValue}
+				></Slider>
+			</div>
+		{/if}
 	</div>
 {/if}
-<!-- <input type="range" min={0.21} max={0.79} step={0.01} /> -->
 
 {#if dev}
 	<p>x: {x}, y: {y}</p>
@@ -195,6 +261,7 @@
 		top: 0;
 		left: 50%;
 		transform: translateX(-50%);
+		pointer-events: none;
 	}
 
 	.fg {
@@ -211,6 +278,7 @@
 		border-width: var(--b);
 		border-style: solid;
 		border-radius: 50%;
+		transition: border-color 0.2s;
 	}
 
 	.bg .base {
@@ -254,6 +322,15 @@
 		border-radius: 0;
 	}
 
+	.bg .peg {
+		transform-origin: 0 0;
+		transform: rotate(var(--angle))
+			translate(calc(var(--x) - 1px), calc(var(--w) - 2px));
+		width: var(--w);
+		border: none;
+		background: var(--color-rim);
+	}
+
 	p {
 		margin: 0;
 		font-size: 14px;
@@ -265,6 +342,14 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s;
+	}
+
+	.ui.visible {
+		opacity: 1;
+		pointer-events: auto;
 	}
 
 	.ui > div {
@@ -272,15 +357,13 @@
 		display: flex;
 		justify-content: center;
 		width: 100%;
-		margin: 4px 0;
+		margin: 8px 0 4px 0;
 	}
 
-	.bottom button {
+	:global(.ui button) {
 		padding: 0;
-		width: 10em;
-		font-size: var(--14px);
+		width: 12em;
 		text-transform: uppercase;
-		font-weight: bold;
 		height: 100%;
 	}
 
@@ -289,5 +372,49 @@
 		font-size: var(--14px);
 		text-transform: uppercase;
 		font-weight: bold;
+	}
+
+	span {
+		opacity: 0;
+		transition: opacity 0.2s;
+		position: absolute;
+		top: var(--w);
+		left: 50%;
+		transform: translate(-50%, 25%);
+	}
+
+	.tutorial-regions span {
+		opacity: 1;
+		font-family: var(--sans);
+		font-weight: bold;
+		font-size: var(--16px);
+	}
+
+	.tutorial-regions .five {
+		border-color: var(--color-purple-aaa);
+	}
+
+	.tutorial-regions .ten {
+		border-color: var(--color-red-aa);
+	}
+
+	.tutorial-regions .fifteen {
+		border-color: var(--color-teal-aa);
+	}
+
+	.tutorial-regions .twenty {
+		background: var(--color-fg);
+	}
+
+	span.text-five {
+		color: var(--color-bg);
+	}
+
+	span.text-twenty {
+		transform: translate(-50%, 125%);
+	}
+
+	.tutorial-open .fifteen {
+		border-color: var(--color-fg);
 	}
 </style>

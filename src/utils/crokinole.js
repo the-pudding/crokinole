@@ -220,7 +220,7 @@ export default function createCrokinoleSimulation() {
 			const peg = Matter.Bodies.circle(x, y, r, {
 				isStatic: true,
 				restitution: 0.9,
-				render: { fillStyle: "#000" },
+				render: { visible: false },
 				collisionFilter: {
 					category: PEG_CATEGORY,
 					mask: DISC_CATEGORY
@@ -695,6 +695,8 @@ export default function createCrokinoleSimulation() {
 				const y = mid + b;
 				Matter.Body.setPosition(activeDisc, { x, y });
 			}
+		} else if (state === "aim") {
+			console.log(mouse);
 		} else if (state === "shoot") {
 			setIndicatorVisible(true);
 			// Calculate the inverse of the mouse position from the active disc position
@@ -707,31 +709,115 @@ export default function createCrokinoleSimulation() {
 		}
 	}
 
-	function release() {
-		if (!activeDisc || state !== "shoot") return;
-		flickDisc();
+	function placeDisc(mouseX) {
+		if (!activeDisc || state !== "place") return;
+		const buffer = 2;
+		const angles = [45 - buffer, 135 + buffer];
+		// Set the radius of the five circle
+		const fiveCircleRadius = mid * S.five;
+
+		// Calculate the difference in x from the center (mid)
+		let diffX = mouseX - mid;
+
+		// Clamp diffX to be within the bounds of the five circle's radius
+		diffX = Math.max(-fiveCircleRadius, Math.min(fiveCircleRadius, diffX));
+
+		const p1 = activeDisc.player === "player1";
+		const mult = p1 ? -1 : 1;
+		const minAngle = angles[p1 ? 0 : 1] * mult * -1;
+		const maxAngle = angles[p1 ? 1 : 0] * mult * -1;
+		// Calculate the y-coordinate based on the clamped diffX
+		const y =
+			mid -
+			Math.sqrt(
+				Math.max(0, Math.pow(fiveCircleRadius, 2) - Math.pow(diffX, 2))
+			) *
+				mult;
+
+		// Set the disc's position to the clamped x and calculated y
+		const newPosition = { x: mid + diffX, y };
+		const center = { x: mid, y: mid };
+		const radians = Matter.Vector.angle(center, newPosition);
+		const degrees = (radians * 180) / Math.PI;
+		if (degrees > minAngle && degrees < maxAngle) {
+			Matter.Body.setPosition(activeDisc, newPosition);
+		} else if (degrees <= minAngle) {
+			const radiansClamped = (minAngle * Math.PI) / 180;
+			const a = Math.cos(radiansClamped) * fiveCircleRadius;
+			const b = Math.sin(radiansClamped) * fiveCircleRadius;
+			const x = mid + a;
+			const y = mid + b;
+			Matter.Body.setPosition(activeDisc, { x, y });
+		} else if (degrees >= maxAngle) {
+			const radiansClamped = (maxAngle * Math.PI) / 180;
+			const a = Math.cos(radiansClamped) * fiveCircleRadius;
+			const b = Math.sin(radiansClamped) * fiveCircleRadius;
+			const x = mid + a;
+			const y = mid + b;
+			Matter.Body.setPosition(activeDisc, { x, y });
+		}
 	}
 
-	function flickDisc(opts) {
+	function getTarget({ degrees, speed }) {
+		const radians = ((degrees - 90) * Math.PI) / 180;
+		const x = activeDisc.position.x + Math.cos(radians);
+		const y = activeDisc.position.y + Math.sin(radians);
+
+		// make the target maxVectorIndicatorMagnitude away from the activeDisc position
+		const target = {
+			x: activeDisc.position.x + (x - activeDisc.position.x) * speed,
+			y: activeDisc.position.y + (y - activeDisc.position.y) * speed
+		};
+
+		return target;
+	}
+
+	function aimDisc({ degrees, power }) {
+		if (!activeDisc || !["aim", "shoot"].includes(state)) return;
+
+		setIndicatorVisible(true);
+
+		const speed = power * shotMaxIndicatorMagnitude;
+		const target = getTarget({ degrees, speed });
+		updateShotVector({ target });
+	}
+
+	function flickDisc() {
 		if (!activeDisc || state !== "shoot") return;
-		if (opts && (!opts.target || !opts.speed)) return;
 
 		setState("play");
 
 		setIndicatorVisible(false);
 
-		if (opts && opts.target && opts.speed) {
-			const target = {
-				x: opts.target.x * mid * 2,
-				y: opts.target.y * mid * 2
-			};
-
-			const speed = opts.speed;
-			updateShotVector({ target, speed });
-		}
-
 		Matter.Body.applyForce(activeDisc, activeDisc.position, shotVector);
 		updateDiscColors();
+	}
+
+	// function flickDisc(opts) {
+	// 	if (!activeDisc || state !== "shoot") return;
+	// 	if (opts && (!opts.target || !opts.speed)) return;
+
+	// 	setState("play");
+
+	// 	setIndicatorVisible(false);
+
+	// 	if (opts && opts.target && opts.speed) {
+	// 		const target = {
+	// 			x: opts.target.x * mid * 2,
+	// 			y: opts.target.y * mid * 2
+	// 		};
+
+	// 		const speed = opts.speed;
+	// 		updateShotVector({ target, speed });
+	// 	}
+
+	// 	Matter.Body.applyForce(activeDisc, activeDisc.position, shotVector);
+	// 	updateDiscColors();
+	// }
+
+	function release() {
+		if (!activeDisc || state !== "shoot") return;
+		flickDisc();
 	}
 
 	function setState(v) {
@@ -801,6 +887,8 @@ export default function createCrokinoleSimulation() {
 	return {
 		removeDiscs,
 		addDisc,
+		placeDisc,
+		aimDisc,
 		drag,
 		release,
 		flickDisc,

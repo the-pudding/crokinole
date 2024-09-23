@@ -1,26 +1,22 @@
 <script>
 	import { Slider } from "bits-ui";
 
-	export let value = [0.5];
-	let min = 0.22;
-	let max = 0.78;
-	let step = 0.01;
-
-	export let phase;
+	export let value;
+	export let min;
+	export let max;
+	export let step;
 </script>
 
-{#if ["place", "aim"].includes(phase)}
-	<div class="c">
-		<Slider.Root bind:value let:thumbs {min} {max} {step}>
-			<span class="bg">
-				<Slider.Range />
-			</span>
-			{#each thumbs as thumb}
-				<Slider.Thumb {thumb} />
-			{/each}
-		</Slider.Root>
-	</div>
-{/if}
+<div class="c">
+	<Slider.Root bind:value let:thumbs {min} {max} {step}>
+		<span class="bg">
+			<Slider.Range />
+		</span>
+		{#each thumbs as thumb}
+			<Slider.Thumb {thumb} />
+		{/each}
+	</Slider.Root>
+</div>
 
 <style>
 	.c {

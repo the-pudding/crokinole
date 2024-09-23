@@ -64,7 +64,8 @@
 	}
 
 	tr.h {
-		background-color: var(--color-bg2);
+		background-color: var(--color-fg);
+		color: var(--color-bg);
 		font-weight: bold;
 	}
 
