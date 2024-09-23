@@ -1,6 +1,6 @@
 /**
  * Do not edit directly
- * Generated on Fri, 20 Sep 2024 15:54:51 GMT
+ * Generated on Mon, 23 Sep 2024 13:41:14 GMT
  */
 
 :root {
@@ -24,10 +24,13 @@
   --color-gray-800: #373737;
   --color-gray-900: #262626;
   --color-gray-1000: #191919;
-  --color-pink-aa: #ff00ff;
+  --color-pink-aa: #ff24ff;
   --color-pink-aaa: #d100d1;
   --color-teal-aa: #00a3a3;
   --color-teal-aaa: #008080;
+  --color-red-aa: #fe5f55;
+  --color-red-aaa: #e91101;
+  --color-purple-aaa: #564592;
   --12px: 0.75rem;
   --14px: 0.875rem;
   --16px: 1rem;

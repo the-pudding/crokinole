@@ -22,10 +22,13 @@
     "gray-800": "rgb(55, 55, 55)",
     "gray-900": "rgb(38, 38, 38)",
     "gray-1000": "rgb(25, 25, 25)",
-    "pink-aa": "#FF00FF",
+    "pink-aa": "#FF24FF",
     "pink-aaa": "#D100D1",
     "teal-aa": "#00A3A3",
-    "teal-aaa": "#008080"
+    "teal-aaa": "#008080",
+    "red-aa": "#FE5F55",
+    "red-aaa": "#E91101",
+    "purple-aaa": "#564592"
   },
   "": {
     "12px": "0.75rem",

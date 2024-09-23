@@ -40,7 +40,7 @@
 			"value": "rgb(25, 25, 25)"
 		},
 		"pink-aa": {
-			"value": "#FF00FF"
+			"value": "#FF24FF"
 		},
 		"pink-aaa": {
 			"value": "#D100D1"
@@ -50,6 +50,15 @@
 		},
 		"teal-aaa": {
 			"value": "#008080"
+		},
+		"red-aa": {
+			"value": "#FE5F55"
+		},
+		"red-aaa": {
+			"value": "#E91101"
+		},
+		"purple-aaa": {
+			"value": "#564592"
 		}
 	}
 }
