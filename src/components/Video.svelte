@@ -1,6 +1,5 @@
 <script>
 	export let src;
-	export let poster;
 	export let preload = "auto";
 	export let autoplay = false;
 	export let loop = false;
@@ -16,6 +15,8 @@
 		videoEl.currentTime = 0;
 		video.play();
 	}
+
+	$: poster = src.replace("videos", "images").replace("mp4", "jpg");
 </script>
 
 <figure>

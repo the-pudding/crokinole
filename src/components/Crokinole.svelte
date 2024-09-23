@@ -178,8 +178,9 @@
 			{@const text = regionText[region]}
 			<span
 				class="text-{region}"
-				style="--w: {Math.floor(width / 2 - (S[region] * width) / 2)}px;"
-				>{text}</span
+				style="--w: {Math.floor(
+					width / 2 - (S[region] * width) / 2
+				)}px; --d: {S[region] * width}px;">{text}</span
 			>
 		{/each}
 
@@ -194,7 +195,7 @@
 		{#each pegs as peg}
 			<div
 				class="peg"
-				style="--w: {S.peg * width}px; --x: {((S.fifteen - S.peg) * width) /
+				style="--w: {S.peg * width}px; --x: {((S.fifteen - S.peg) * width + 1) /
 					2}px; --angle: {peg}deg;"
 			></div>
 		{/each}
@@ -253,6 +254,7 @@
 		--color-board: var(--color-white);
 		--color-ditch: var(--color-gray-200);
 		--color-rim: var(--color-gray-400);
+		--color-peg: var(--color-gray-600);
 		--outline-width: 2px;
 	}
 
@@ -328,7 +330,7 @@
 			translate(calc(var(--x) - 1px), calc(var(--w) - 2px));
 		width: var(--w);
 		border: none;
-		background: var(--color-rim);
+		background: var(--color-peg);
 	}
 
 	p {
@@ -380,7 +382,7 @@
 		position: absolute;
 		top: var(--w);
 		left: 50%;
-		transform: translate(-50%, 25%);
+		transform: translate(-50%, 8px);
 	}
 
 	.tutorial-regions span {
@@ -391,30 +393,27 @@
 	}
 
 	.tutorial-regions .five {
-		border-color: var(--color-purple-aaa);
-	}
-
-	.tutorial-regions .ten {
 		border-color: var(--color-red-aa);
 	}
 
-	.tutorial-regions .fifteen {
+	.tutorial-regions .ten {
 		border-color: var(--color-teal-aa);
 	}
 
-	.tutorial-regions .twenty {
-		background: var(--color-fg);
+	.tutorial-regions .fifteen {
+		border-color: var(--color-purple-aaa);
 	}
 
-	span.text-five {
+	span.text-fifteen {
 		color: var(--color-bg);
 	}
 
 	span.text-twenty {
-		transform: translate(-50%, 125%);
+		transform: translate(-50%, calc(var(--d) + 4px));
+		color: var(--color-bg);
 	}
 
 	.tutorial-open .fifteen {
-		border-color: var(--color-fg);
+		border-color: var(--color-purple-aaa);
 	}
 </style>

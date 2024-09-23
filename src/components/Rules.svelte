@@ -101,4 +101,9 @@
 		color: var(--color-you-text);
 		font-weight: bold;
 	}
+
+	:global(span.fifteen) {
+		color: var(--color-purple-aaa);
+		font-weight: bold;
+	}
 </style>
