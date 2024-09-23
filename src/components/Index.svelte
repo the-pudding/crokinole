@@ -10,8 +10,18 @@
 	import Table from "$components/Table.svelte";
 	import Method from "$components/Method.svelte";
 	import Histogram from "$components/Histogram.svelte";
+	import Rules from "$components/Rules.svelte";
 
-	const components = { Hero, Byline, Video, Image, Table, Method, Histogram };
+	const components = {
+		Hero,
+		Byline,
+		Video,
+		Image,
+		Table,
+		Method,
+		Histogram,
+		Rules
+	};
 
 	const copy = getContext("copy");
 	$: body = copy.body;

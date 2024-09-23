@@ -18,7 +18,7 @@
 	let y = 0;
 
 	let turn = 0;
-	let rangeValue;
+	let rangeValue = [0];
 	let phase = "place";
 
 	function onMousedown(event) {
@@ -180,6 +180,8 @@
 	.c {
 		position: relative;
 		display: flex;
+		width: 100%;
+		height: 100%;
 		justify-content: center;
 		--color-line: var(--color-gray-200);
 		--color-board: var(--color-white);
