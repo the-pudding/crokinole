@@ -4,7 +4,7 @@
 	import * as S from "$data/specs.js";
 	import Slider from "$components/Crokinole.Slider.svelte";
 	import Button from "$components/Crokinole.Button.svelte";
-
+	import scenarios from "$data/scenarios.json";
 	export let width;
 	export let ui;
 	export let dev;
@@ -85,14 +85,6 @@
 		crokinole.flickDisc({ target: { x: 0.5, y: 0.5 }, speed: 0.4 });
 	}
 
-	function onScenario() {
-		[
-			{ x: 0.7, y: 0.5, player: "player1" },
-			{ x: 0.45, y: 0.48, player: "player2" },
-			{ state: "shoot" }
-		].forEach(crokinole.addDisc);
-	}
-
 	function onShotComplete(data) {
 		console.log(data);
 	}
@@ -130,12 +122,15 @@
 
 	function updateTutorial() {
 		crokinole.removeDiscs();
-		uiVisible = true;
-		if (tutorial !== "regions") addDisc();
-		else uiVisible = false;
+		crokinole.setState("place");
+		uiVisible = tutorial !== "regions";
+
+		if (scenarios[tutorial]) {
+			scenarios[tutorial][0].forEach(crokinole.addDisc);
+		}
 	}
 
-	$: buttonText = phase === "place" ? "Place" : "Aim";
+	$: buttonText = phase === "place" ? "Place Disc" : "lock Aim";
 	$: x = target ? (target.x / width).toFixed(2) : 0;
 	$: y = target ? (target.y / width).toFixed(2) : 0;
 	$: if (width) crokinole.init({ element, width });
@@ -218,8 +213,9 @@
 			{:else}<button on:click={onPhaseClick}>{buttonText}</button>
 			{/if}
 		</div>
-		{#if ["place", "aim"].includes(phase)}
-			<div class="bottom">
+
+		<div class="bottom">
+			{#if ["place", "aim"].includes(phase)}
 				<Slider
 					{phase}
 					min={rangeDefault[phase]?.min}
@@ -227,8 +223,10 @@
 					step={rangeDefault[phase]?.step}
 					bind:value={rangeValue}
 				></Slider>
-			</div>
-		{/if}
+			{:else}
+				<p><em>Press for power and release to shoot</em></p>
+			{/if}
+		</div>
 	</div>
 {/if}
 
@@ -355,25 +353,32 @@
 	}
 
 	.ui > div {
-		height: 32px;
 		display: flex;
 		justify-content: center;
 		width: 100%;
 		margin: 8px 0 4px 0;
 	}
 
-	:global(.ui button) {
-		padding: 0;
-		width: 12em;
-		text-transform: uppercase;
-		height: 100%;
+	.ui .top {
+		height: 40px;
 	}
 
-	.bottom p {
+	.ui .bottom {
+		height: 32px;
+	}
+
+	.ui .bottom p {
+		margin: 0;
+		font-family: var(--sans);
 		text-align: center;
 		font-size: var(--14px);
+	}
+
+	:global(.ui button) {
+		padding: 0;
+		width: 10em;
 		text-transform: uppercase;
-		font-weight: bold;
+		height: 100%;
 	}
 
 	span {

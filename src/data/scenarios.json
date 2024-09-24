@@ -1,0 +1,6 @@
+{
+	"open": [[{ "state": "place" }]],
+	"opponent": [
+		[{ "x": 0.34, "y": 0.62, "player": "player2" }, { "state": "place" }]
+	]
+}

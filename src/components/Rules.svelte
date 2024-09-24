@@ -15,6 +15,7 @@
 	function updateTutorial() {
 		if (step === 0) tutorial = "regions";
 		else if (step === 1) tutorial = "open";
+		else tutorial = "opponent";
 	}
 
 	$: width = el?.offsetWidth;

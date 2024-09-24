@@ -8,7 +8,7 @@
 	let interval;
 
 	function onStart() {
-		let dir = 1;
+		let dir = -1;
 		interval = setInterval(() => {
 			if (value >= 1) dir = -1;
 			else if (value <= 0) dir = 1;
@@ -24,4 +24,4 @@
 	}
 </script>
 
-<button on:mousedown={onStart} on:mouseup={onStop}> Hold &amp; Release </button>
+<button on:mousedown={onStart} on:mouseup={onStop}>Flick</button>
