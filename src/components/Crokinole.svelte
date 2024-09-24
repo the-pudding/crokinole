@@ -6,7 +6,6 @@
 	import Button from "$components/Crokinole.Button.svelte";
 	import scenarios from "$data/scenarios.json";
 	export let width;
-	export let ui;
 	export let dev;
 	export let tutorial;
 
@@ -40,7 +39,6 @@
 	let target;
 	let x = 0;
 	let y = 0;
-	let uiVisible;
 
 	let turn = 0;
 	let rangeValue = rangeDefault.position.value;
@@ -48,6 +46,10 @@
 	let phase = "position";
 	let degrees;
 	let disabled;
+	let replayDisabled;
+	let replay;
+	let uiVisible;
+	let autoplayTimeout;
 
 	// just for dev
 	function onClick(event) {
@@ -62,9 +64,12 @@
 		console.log({ scores, valid });
 
 		disabled = false;
+
 		if (tutorial) {
 			crokinole.removeDiscs();
 			phase = "position";
+
+			if (replay) replayDisabled = false;
 		}
 	}
 
@@ -96,13 +101,28 @@
 		}
 	}
 
-	function updateTutorial() {
+	function onReplay() {
 		crokinole.removeDiscs();
-		uiVisible = tutorial.includes("try");
+		updateTutorial();
+	}
+
+	function updateTutorial() {
+		clearTimeout(autoplayTimeout);
+		crokinole.removeDiscs();
+		replay = !tutorial.includes("try");
+		replayDisabled = true;
+		uiVisible = !["regions", "score"].includes(tutorial);
 
 		if (scenarios[tutorial]) {
 			scenarios[tutorial].forEach(crokinole.addDisc);
 			phase = scenarios[tutorial][scenarios[tutorial].length - 1].state;
+		}
+
+		if (replay) {
+			autoplayTimeout = setTimeout(() => {
+				crokinole.aimDisc({ degrees: 0.5, power: 0.25 });
+				crokinole.flickDisc();
+			}, 1000);
 		}
 	}
 
@@ -173,16 +193,19 @@
 	<div class="fg" bind:this={element} on:click={onClick}></div>
 </div>
 
-{#if ui}
-	<div class="ui" class:visible={uiVisible}>
-		<div class="top">
-			{#if phase === "shoot"}
-				<Button {disabled} bind:value={power} on:release={onRelease}></Button>
-			{:else}<button on:click={onPhaseClick}>{buttonText}</button>
-			{/if}
-		</div>
+<div class="ui" class:visible={uiVisible || !tutorial}>
+	<div class="top">
+		{#if replay}
+			<button disabled={replayDisabled} on:click={onReplay}>Replay</button>
+		{:else if phase === "shoot"}
+			<Button {disabled} bind:value={power} on:release={onRelease}></Button>
+		{:else}
+			<button on:click={onPhaseClick}>{buttonText}</button>
+		{/if}
+	</div>
 
-		<div class="bottom">
+	<div class="bottom">
+		{#if !replay}
 			<Slider
 				label={phase === "shoot" ? "aim" : phase}
 				min={rangeDefault[phase]?.min}
@@ -190,10 +213,10 @@
 				step={rangeDefault[phase]?.step}
 				bind:value={rangeValue}
 			></Slider>
-			<!-- <p><em>Press for power and release to shoot</em></p> -->
-		</div>
+		{/if}
+		<!-- <p><em>Press for power and release to shoot</em></p> -->
 	</div>
-{/if}
+</div>
 
 {#if dev}
 	<p>x: {x}, y: {y}</p>
