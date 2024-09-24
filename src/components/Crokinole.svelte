@@ -1,5 +1,5 @@
 <script>
-	import { onMount } from "svelte";
+	import { tick, onMount } from "svelte";
 	import C from "$utils/crokinole.js";
 	import * as S from "$data/specs.js";
 	import Slider from "$components/Crokinole.Slider.svelte";
@@ -19,6 +19,9 @@
 		fifteen: "15",
 		twenty: "20"
 	};
+
+	const powerDefault = 0.25;
+
 	const rangeDefault = {
 		position: {
 			value: [0.5],
@@ -42,7 +45,7 @@
 
 	let turn = 0;
 	let rangeValue = rangeDefault.position.value;
-	let power = 0.5;
+	let power = 0.25;
 	let phase = "position";
 	let degrees;
 	let disabled;
@@ -54,27 +57,24 @@
 	// just for dev
 	function onClick(event) {
 		if (!dev) return;
-		const x = event.offsetX;
-		const y = event.offsetY;
+		x = event.offsetX / width;
+		y = event.offsetY / width;
 
 		// crokinole.select({ x, y });
 	}
 
 	function onShotComplete({ scores, valid }) {
-		console.log({ scores, valid });
+		power = powerDefault;
+		// console.log(scores, valid);
+
+		if (tutorial && !replay) updateTutorial();
 
 		disabled = false;
-
-		if (tutorial) {
-			crokinole.removeDiscs();
-			phase = "position";
-
-			if (replay) replayDisabled = false;
-		}
+		replayDisabled = false;
 	}
 
 	function onRelease() {
-		crokinole.flickDisc({ degrees, power });
+		crokinole.flickDisc();
 	}
 
 	function updateRange() {
@@ -83,47 +83,66 @@
 			degrees = Math.round(rangeValue[0]);
 			crokinole.aimDisc({
 				degrees,
-				power: 0.5,
+				power: 0.25,
 				visible: tutorial.includes("try")
 			});
 		}
 	}
 
 	function updatePower() {
-		crokinole.aimDisc({ degrees, power });
+		crokinole.aimDisc({ degrees, power, visible: tutorial.includes("try") });
 	}
 
 	function onPhaseClick() {
 		if (phase === "position") {
 			phase = "shoot";
 			rangeValue = rangeDefault.shoot.value;
+			power = powerDefault;
 			crokinole.setState("shoot");
 		}
 	}
 
 	function onReplay() {
 		crokinole.removeDiscs();
-		updateTutorial();
+		updateTutorial(tutorial, 1);
 	}
 
-	function updateTutorial() {
+	async function updateTutorial(_, timeout = 2000) {
 		clearTimeout(autoplayTimeout);
 		crokinole.removeDiscs();
 		replay = !tutorial.includes("try");
 		replayDisabled = true;
 		uiVisible = !["regions", "score"].includes(tutorial);
 
-		if (scenarios[tutorial]) {
-			scenarios[tutorial].forEach(crokinole.addDisc);
-			phase = scenarios[tutorial][scenarios[tutorial].length - 1].state;
+		const s = scenarios[tutorial];
+		if (s) {
+			s.forEach(crokinole.addDisc);
+			phase = s[s.length - 1].state;
 		}
 
-		if (replay) {
+		if (phase === "shoot" && !replay) crokinole.setIndicatorVisible(true);
+
+		if (replay && s) {
+			const shooter = s[s.length - 1];
+			// const d = isYou ? Math.random() * 3 + -1.5 : 184;
+			// const p = isYou ? Math.random() * 0.07 + 0.23 : 0.3;
+			const rd = shooter.random ? Math.random() * 3 - 1.5 : 0;
+			const d = shooter.degrees + rd;
+			const rp = shooter.random ? Math.random() * 0.07 - 0.035 : 0;
+			const p = shooter.power + rp;
+			console.log({ d, p });
+
 			autoplayTimeout = setTimeout(() => {
-				crokinole.aimDisc({ degrees: 0.5, power: 0.25 });
+				crokinole.aimDisc({
+					degrees: d,
+					power: p
+				});
 				crokinole.flickDisc();
-			}, 1000);
+			}, timeout);
 		}
+
+		await tick();
+		rangeValue = rangeDefault[phase].value;
 	}
 
 	$: buttonText = phase === "position" ? "Place Disc" : "";
@@ -235,6 +254,7 @@
 		--color-rim: var(--color-gray-400);
 		--color-peg: var(--color-gray-600);
 		--outline-width: 2px;
+		user-select: none;
 	}
 
 	.bg {
@@ -326,6 +346,7 @@
 		opacity: 0;
 		pointer-events: none;
 		transition: opacity 0.2s;
+		user-select: none;
 	}
 
 	.ui.visible {
@@ -389,10 +410,6 @@
 
 	.tutorial-regions .fifteen,
 	.tutorial-fifteen .fifteen {
-		border-color: var(--color-purple-aaa);
-	}
-
-	.tutorial-opponent .fifteen {
 		border-color: var(--color-purple-aaa);
 	}
 

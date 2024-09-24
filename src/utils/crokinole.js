@@ -517,11 +517,13 @@ export default function createCrokinoleSimulation() {
 				.some((d) => d.intersect15);
 			discs.forEach((d) => {
 				// opponent on board
-				if (hasOpps.length) {
+				if (hasOpps) {
 					// same as shooter
-					if (d.player === activeDisc.player) {
+					const samePlayer = d.player === activeDisc.player;
+					if (samePlayer) {
 						// if shooter
-						if (d.id === activeDisc.id) {
+						const isShooter = d.id === activeDisc.id;
+						if (isShooter) {
 							d.valid = collidedOpp;
 						} else {
 							// if non-shooter (if it collided, one disc must have opp collided)
@@ -568,8 +570,12 @@ export default function createCrokinoleSimulation() {
 				d.in20 = undefined;
 			});
 
-			emitter.emit("shotComplete", { scores, valid });
 			setState("idle");
+			// console.log(
+			// 	discs[0].position.x / (mid * 2),
+			// 	discs[0].position.y / (mid * 2)
+			// );
+			emitter.emit("shotComplete", { scores, valid });
 		}
 		// TODO fire event that says shot all done and provide disc status
 		// discs.map(d => d)
@@ -641,7 +647,8 @@ export default function createCrokinoleSimulation() {
 				frictionAir,
 				render: {
 					fillStyle: COLOR[player],
-					strokeStyle: COLOR.active
+					strokeStyle: "#fff",
+					lineWidth: 1
 				},
 				label: "disc",
 				collisionFilter: {
@@ -731,7 +738,7 @@ export default function createCrokinoleSimulation() {
 	}
 
 	function aimDisc({ degrees, power, visible }) {
-		if (!activeDisc || !["aim", "shoot"].includes(state)) return;
+		if (!activeDisc || state !== "shoot") return;
 
 		const v = visible === undefined ? true : visible;
 		setIndicatorVisible(v);

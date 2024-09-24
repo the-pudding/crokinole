@@ -42,10 +42,6 @@
 </div>
 
 <style>
-	.rules {
-		padding-top: 16px;
-	}
-
 	figure {
 		--width: calc(min(100svw, 100svh) * 0.66);
 		width: var(--width);
@@ -54,6 +50,8 @@
 
 	.stepper {
 		display: flex;
+		padding-top: 32px;
+		padding-bottom: 16px;
 	}
 
 	button {

@@ -1,8 +1,56 @@
 {
-	"open": [{ "state": "shoot" }],
-	"opentry": [{ "state": "shoot" }],
+	"open": [
+		{
+			"state": "shoot",
+			"player": "player1",
+			"random": true,
+			"power": 0.23,
+			"degrees": 0
+		}
+	],
+	"opentry": [{ "state": "shoot", "player": "player1" }],
+	"fifteen": [
+		{ "state": "shoot", "player": "player2", "power": 0.3, "degrees": 184 }
+	],
+
 	"opponent": [
-		{ "x": 0.34, "y": 0.62, "player": "player2" },
-		{ "state": "position" }
+		{
+			"x": 0.5304521798504799,
+			"y": 0.5607950399638847,
+			"player": "player2"
+		},
+		{
+			"x": 0.43462246777163904,
+			"y": 0.8876611418047882,
+
+			"state": "shoot",
+			"player": "player1",
+			"power": 0.45,
+			"degrees": 15
+		}
+	],
+	"opponenttry": [
+		{
+			"x": 0.5304521798504799,
+			"y": 0.5607950399638847,
+			"player": "player2"
+		},
+		{
+			"state": "position",
+			"player": "player1"
+		}
+	],
+	"invalid": [
+		{
+			"x": 0.5304521798504799,
+			"y": 0.5607950399638847,
+			"player": "player2"
+		},
+		{
+			"state": "shoot",
+			"player": "player1",
+			"power": 0.15,
+			"degrees": -3
+		}
 	]
 }
