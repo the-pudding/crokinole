@@ -50,11 +50,6 @@
 		position: relative;
 	}
 
-	h2 {
-		font-family: var(--serif);
-		margin-top: 0;
-	}
-
 	.bins {
 		aspect-ratio: 1.5;
 		display: flex;
