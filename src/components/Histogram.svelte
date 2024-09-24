@@ -14,14 +14,15 @@
 	<div class="chart">
 		<!-- css histogram -->
 		<div class="bins">
-			{#each data as { bin, count, percent }}
-				{@const height = format("%")(count / maximum)}
+			{#each data as { bin, count, percent }, i}
+				{@const height = `${Math.round((count / maximum) * 100)}%`}
 				{@const label = bin === 17 ? "&nbsp;" : bin}
 				<div class="bin">
-					<p class="percent" class:hide={percent < 0.03}>
-						{format(".0%")(percent)}
-					</p>
-					<div class="bar" style:height />
+					<div class="bar" style:height>
+						<p class="percent" class:hide={percent < 0.03}>
+							{format(".0%")(percent).replace(i > 0 ? "%" : "", "")}
+						</p>
+					</div>
 					<p class="label"><strong>{@html label}</strong></p>
 				</div>
 			{/each}
@@ -71,6 +72,7 @@
 		background: var(--color-fg);
 		border: 1px solid var(--color-bg);
 		width: 100%;
+		position: relative;
 	}
 
 	.label,
@@ -78,6 +80,13 @@
 		text-align: center;
 		font-size: var(--14px);
 		margin: 0;
+	}
+
+	.percent {
+		position: absolute;
+		top: 0;
+		left: 50%;
+		transform: translate(-50%, -100%);
 	}
 
 	.annotation {
@@ -98,5 +107,12 @@
 
 	.note {
 		font-size: var(--14px);
+	}
+
+	@media only screen and (max-width: 640px) {
+		.label,
+		.percent {
+			font-size: var(--12px);
+		}
 	}
 </style>
