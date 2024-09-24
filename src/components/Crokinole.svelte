@@ -21,13 +21,13 @@
 		twenty: "20"
 	};
 	const rangeDefault = {
-		place: {
+		position: {
 			value: [0.5],
 			min: 0.22,
 			max: 0.78,
 			step: 0.01
 		},
-		aim: {
+		shoot: {
 			value: [0],
 			min: -90,
 			max: 90,
@@ -43,30 +43,11 @@
 	let uiVisible;
 
 	let turn = 0;
-	let rangeValue = rangeDefault.place.value;
+	let rangeValue = rangeDefault.position.value;
 	let power = 0.5;
-	let phase = "place";
+	let phase = "position";
 	let degrees;
-
-	function onMousedown(event) {
-		if (!dev) return;
-
-		// if (!activeDisc) return;
-		isDragging = true;
-		// target = { x: event.offsetX, y: event.offsetY };
-	}
-
-	function onMousemove(event) {
-		if (!isDragging) return;
-		target = { x: event.offsetX, y: event.offsetY };
-		crokinole.drag(target);
-	}
-
-	function onMouseup() {
-		isDragging = false;
-		crokinole.flickDisc();
-		// if (!activeDisc) return;
-	}
+	let disabled;
 
 	// just for dev
 	function onClick(event) {
@@ -77,20 +58,14 @@
 		// crokinole.select({ x, y });
 	}
 
-	function addDisc() {
-		crokinole.addDisc({ player: "player1", state: "place" });
-	}
+	function onShotComplete({ scores, valid }) {
+		console.log({ scores, valid });
 
-	function onFlick() {
-		crokinole.flickDisc({ target: { x: 0.5, y: 0.5 }, speed: 0.4 });
-	}
-
-	function onShotComplete(data) {
-		console.log(data);
-	}
-
-	function onAim() {
-		crokinole.setState("shoot");
+		disabled = false;
+		if (tutorial) {
+			crokinole.removeDiscs();
+			phase = "position";
+		}
 	}
 
 	function onRelease() {
@@ -98,10 +73,14 @@
 	}
 
 	function updateRange() {
-		if (phase === "place") crokinole.placeDisc(rangeValue[0] * width);
-		else if (phase === "aim") {
+		if (phase === "position") crokinole.positionDisc(rangeValue[0] * width);
+		else if (phase === "shoot") {
 			degrees = Math.round(rangeValue[0]);
-			crokinole.aimDisc({ degrees, power: 0.5 });
+			crokinole.aimDisc({
+				degrees,
+				power: 0.5,
+				visible: tutorial.includes("try")
+			});
 		}
 	}
 
@@ -110,37 +89,33 @@
 	}
 
 	function onPhaseClick() {
-		if (phase === "place") {
-			phase = "aim";
-			rangeValue = rangeDefault.aim.value;
-			crokinole.setState("aim");
-		} else if (phase === "aim") {
+		if (phase === "position") {
 			phase = "shoot";
+			rangeValue = rangeDefault.shoot.value;
 			crokinole.setState("shoot");
 		}
 	}
 
 	function updateTutorial() {
 		crokinole.removeDiscs();
-		crokinole.setState("place");
-		uiVisible = tutorial !== "regions";
+		uiVisible = tutorial.includes("try");
 
 		if (scenarios[tutorial]) {
-			scenarios[tutorial][0].forEach(crokinole.addDisc);
+			scenarios[tutorial].forEach(crokinole.addDisc);
+			phase = scenarios[tutorial][scenarios[tutorial].length - 1].state;
 		}
 	}
 
-	$: buttonText = phase === "place" ? "Place Disc" : "lock Aim";
+	$: buttonText = phase === "position" ? "Place Disc" : "";
 	$: x = target ? (target.x / width).toFixed(2) : 0;
 	$: y = target ? (target.y / width).toFixed(2) : 0;
 	$: if (width) crokinole.init({ element, width });
 	$: if (width) updateRange(rangeValue);
 	$: if (width) updatePower(power);
 	$: if (width) updateTutorial(tutorial);
-	$: tutorialClass = tutorial ? `tutorial-${tutorial}` : "";
+	$: tutorialClass = tutorial ? `tutorial tutorial-${tutorial}` : "";
 
 	onMount(() => {
-		// crokinole.on("ready", addDisc);
 		crokinole.on("shotComplete", onShotComplete);
 	});
 </script>
@@ -195,50 +170,33 @@
 			></div>
 		{/each}
 	</div>
-	<div
-		class="fg"
-		bind:this={element}
-		on:click={onClick}
-		on:mousedown={onMousedown}
-		on:mousemove={onMousemove}
-		on:mouseup={onMouseup}
-	></div>
+	<div class="fg" bind:this={element} on:click={onClick}></div>
 </div>
 
 {#if ui}
 	<div class="ui" class:visible={uiVisible}>
 		<div class="top">
 			{#if phase === "shoot"}
-				<Button bind:value={power} on:release={onRelease}></Button>
+				<Button {disabled} bind:value={power} on:release={onRelease}></Button>
 			{:else}<button on:click={onPhaseClick}>{buttonText}</button>
 			{/if}
 		</div>
 
 		<div class="bottom">
-			{#if ["place", "aim"].includes(phase)}
-				<Slider
-					{phase}
-					min={rangeDefault[phase]?.min}
-					max={rangeDefault[phase]?.max}
-					step={rangeDefault[phase]?.step}
-					bind:value={rangeValue}
-				></Slider>
-			{:else}
-				<p><em>Press for power and release to shoot</em></p>
-			{/if}
+			<Slider
+				label={phase === "shoot" ? "aim" : phase}
+				min={rangeDefault[phase]?.min}
+				max={rangeDefault[phase]?.max}
+				step={rangeDefault[phase]?.step}
+				bind:value={rangeValue}
+			></Slider>
+			<!-- <p><em>Press for power and release to shoot</em></p> -->
 		</div>
 	</div>
 {/if}
 
 {#if dev}
 	<p>x: {x}, y: {y}</p>
-
-	<!-- <div>
-		<button on:click={onFlick}>Flick Disc</button>
-		<button on:click={onAdd}>Add Disc</button>
-		<button on:click={onScenario}>Scenario</button>
-		<button on:click={onAim}>Aim/Shoot</button>
-	</div> -->
 {/if}
 
 <style>
@@ -388,9 +346,10 @@
 		top: var(--w);
 		left: 50%;
 		transform: translate(-50%, 8px);
+		color: var(--color-fg-light);
 	}
 
-	.tutorial-regions span {
+	.tutorial span {
 		opacity: 1;
 		font-family: var(--sans);
 		font-weight: bold;
@@ -405,20 +364,31 @@
 		border-color: var(--color-teal-aa);
 	}
 
-	.tutorial-regions .fifteen {
+	.tutorial-regions .fifteen,
+	.tutorial-fifteen .fifteen {
 		border-color: var(--color-purple-aaa);
 	}
 
-	span.text-fifteen {
-		color: var(--color-bg);
+	.tutorial-opponent .fifteen {
+		border-color: var(--color-purple-aaa);
 	}
 
-	span.text-twenty {
+	.tutorial span {
+		color: var(--color-fg-light);
+	}
+
+	.tutorial span.text-twenty {
 		transform: translate(-50%, calc(var(--d) + 4px));
-		color: var(--color-bg);
 	}
 
-	.tutorial-open .fifteen {
-		border-color: var(--color-purple-aaa);
+	.tutorial-regions span {
+		color: var(--color-fg-dark);
+	}
+
+	.tutorial-regions span.text-fifteen,
+	.tutorial-regions span.text-twenty,
+	.tutorial-fifteen span.text-fifteen,
+	.tutorial-fifteen span.text-twenty {
+		color: var(--color-bg);
 	}
 </style>

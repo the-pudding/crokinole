@@ -1,6 +1,7 @@
 <script>
 	import { Slider } from "bits-ui";
 
+	export let label;
 	export let value;
 	export let min;
 	export let max;
@@ -8,6 +9,7 @@
 </script>
 
 <div class="c">
+	<p class="label">{label}</p>
 	<Slider.Root bind:value let:thumbs {min} {max} {step}>
 		<span class="bg">
 			<Slider.Range />
@@ -25,6 +27,18 @@
 		height: var(--h);
 		width: calc(100% - var(--m) * 2);
 		margin: 0 auto;
+		position: relative;
+	}
+
+	.label {
+		position: absolute;
+		font-family: var(--sans);
+		text-transform: uppercase;
+		font-size: var(--12px);
+		margin: 0;
+		top: 50%;
+		left: -16px;
+		transform: translate(-100%, -50%);
 	}
 
 	:global([data-slider-root]) {

@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from "svelte";
 
 	export let value;
+	export let disabled;
 
 	const dispatch = createEventDispatcher();
 
@@ -24,4 +25,4 @@
 	}
 </script>
 
-<button on:mousedown={onStart} on:mouseup={onStop}>Flick</button>
+<button {disabled} on:pointerdown={onStart} on:pointerup={onStop}>Flick</button>

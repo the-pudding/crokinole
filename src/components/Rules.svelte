@@ -6,35 +6,28 @@
 	let step = 0;
 	let offsetWidth;
 	let heights = [];
-	let tutorial;
 
 	function onStep(n) {
+		// scroll .rules into view
+		const rules = document.querySelector(".rules");
+		rules.scrollIntoView({ behavior: "smooth" });
 		step += n;
 	}
-
-	function updateTutorial() {
-		if (step === 0) tutorial = "regions";
-		else if (step === 1) tutorial = "open";
-		else tutorial = "opponent";
-	}
-
 	$: width = el?.offsetWidth;
-	$: text = steps[step];
-	$: num = step + 1;
 	$: longestIndex = steps.reduce(
 		(acc, cur, i) => (cur.length > steps[acc].length ? i : acc),
 		0
 	);
 	$: height = heights.length ? `${heights[longestIndex]}px` : 0;
-	$: updateTutorial(step);
+	$: tutorial = steps[step].id;
 </script>
 
-<div class="c">
+<div class="c rules">
 	<div class="stepper">
 		<button disabled={step === 0} on:click={() => onStep(-1)}>PREV</button>
 		<div class="steps" style:height>
-			{#each steps as text, i}
-				{@const visible = step === i}
+			{#each steps as { id, text }, i}
+				{@const visible = i === step}
 				<p class:visible bind:offsetHeight={heights[i]}>{@html text}</p>
 			{/each}
 		</div>
@@ -49,8 +42,12 @@
 </div>
 
 <style>
+	.rules {
+		padding-top: 16px;
+	}
+
 	figure {
-		--width: calc(min(100svw, 100svh) * 0.7);
+		--width: calc(min(100svw, 100svh) * 0.66);
 		width: var(--width);
 		margin: 32px auto;
 	}
@@ -84,7 +81,7 @@
 		/* border-top: 4px solid var(--color-fg); */
 		/* background: var(--color-mark); */
 		/* box-shadow: 4px 4px 0 2px var(--color-pink-aa); */
-		background: var(--color-bg2);
+		background: var(--color-bg-dark);
 		box-shadow: 6px 6px 0 0px var(--color-gray-300);
 		font-size: var(--20px);
 	}
@@ -106,5 +103,17 @@
 	:global(span.fifteen) {
 		color: var(--color-purple-aaa);
 		font-weight: bold;
+	}
+
+	@media only screen and (max-width: 800px) {
+		p {
+			font-size: var(--16px);
+		}
+	}
+
+	@media only screen and (max-width: 600px) {
+		p {
+			font-size: var(--14px);
+		}
 	}
 </style>

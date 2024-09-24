@@ -1,6 +1,8 @@
 {
-	"open": [[{ "state": "place" }]],
+	"open": [{ "state": "shoot" }],
+	"opentry": [{ "state": "shoot" }],
 	"opponent": [
-		[{ "x": 0.34, "y": 0.62, "player": "player2" }, { "state": "place" }]
+		{ "x": 0.34, "y": 0.62, "player": "player2" },
+		{ "state": "position" }
 	]
 }

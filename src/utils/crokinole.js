@@ -56,7 +56,7 @@ export default function createCrokinoleSimulation() {
 
 	// things to carry over on resize
 	let discs = [];
-	let state; // idle, place, shoot, play
+	let state; // idle, position, shoot, play
 	let activeDisc;
 
 	function updateDiscColors() {
@@ -242,14 +242,32 @@ export default function createCrokinoleSimulation() {
 		const normalizedVector = Matter.Vector.normalise(indicatorVector);
 
 		// Shift the starting point to the edge of the disc by moving in the direction of the normalized vector
-		const startX = activeDisc.position.x + normalizedVector.x;
-		const startY = activeDisc.position.y + normalizedVector.y;
+		// start from outer edge of disc
+		// old
+		// const startX = activeDisc.position.x + normalizedVector.x;
+		// const startY = activeDisc.position.y + normalizedVector.y;
+		// new
+		const startX =
+			activeDisc.position.x + normalizedVector.x * discRadius * 1.25;
+		const startY =
+			activeDisc.position.y + normalizedVector.y * discRadius * 1.25;
 
-		// Calculate the end points for the main line and the opposite dashed line
-		const endX = activeDisc.position.x + indicatorVector.x;
-		const endY = activeDisc.position.y + indicatorVector.y;
-		const mirrorX = activeDisc.position.x - indicatorVector.x;
-		const mirrorY = activeDisc.position.y - indicatorVector.y;
+		// Calculate the end points for the main line and the opposite dashed line (min should be 0, or the same as the start)
+		// old
+		// const endX = activeDisc.position.x + indicatorVector.x;
+		// const endY = activeDisc.position.y + indicatorVector.y;
+		// new
+		const endX =
+			activeDisc.position.x +
+			normalizedVector.x * discRadius * 1.5 +
+			indicatorVector.x;
+		const endY =
+			activeDisc.position.y +
+			normalizedVector.y * discRadius * 1.5 +
+			indicatorVector.y;
+
+		// const mirrorX = activeDisc.position.x - indicatorVector.x;
+		// const mirrorY = activeDisc.position.y - indicatorVector.y;
 
 		// Start drawing the main indicator line
 		ctx.beginPath();
@@ -283,17 +301,17 @@ export default function createCrokinoleSimulation() {
 		ctx.stroke();
 
 		// Draw the dashed line in the mirror opposite direction, also starting from the disc's edge
-		const mirrorStartX =
-			activeDisc.position.x - normalizedVector.x * discRadius;
-		const mirrorStartY =
-			activeDisc.position.y - normalizedVector.y * discRadius;
+		// const mirrorStartX =
+		// 	activeDisc.position.x - normalizedVector.x * discRadius;
+		// const mirrorStartY =
+		// 	activeDisc.position.y - normalizedVector.y * discRadius;
 
-		ctx.setLineDash([5, 5]); // Define the dash pattern [dash length, space length]
-		ctx.beginPath();
-		ctx.moveTo(mirrorStartX, mirrorStartY);
-		ctx.lineTo(mirrorX, mirrorY);
-		ctx.stroke();
-		ctx.setLineDash([]); // Reset to solid lines for future drawing
+		// ctx.setLineDash([5, 5]); // Define the dash pattern [dash length, space length]
+		// ctx.beginPath();
+		// ctx.moveTo(mirrorStartX, mirrorStartY);
+		// ctx.lineTo(mirrorX, mirrorY);
+		// ctx.stroke();
+		// ctx.setLineDash([]); // Reset to solid lines for future drawing
 
 		ctx.closePath();
 	}
@@ -525,6 +543,9 @@ export default function createCrokinoleSimulation() {
 				if (!d.valid || !d.score) Matter.World.remove(world, d);
 			});
 
+			// was active disc valid?
+			const valid = discs.find((d) => d.id === activeDisc.id).valid;
+
 			// clean up
 			discs = discs.filter((d) => d.score > 0 && d.valid);
 
@@ -547,7 +568,7 @@ export default function createCrokinoleSimulation() {
 				d.in20 = undefined;
 			});
 
-			emitter.emit("shotComplete", scores);
+			emitter.emit("shotComplete", { scores, valid });
 			setState("idle");
 		}
 		// TODO fire event that says shot all done and provide disc status
@@ -598,7 +619,7 @@ export default function createCrokinoleSimulation() {
 
 	function addDisc(opts = {}) {
 		const player = opts.player || "player1";
-		const m = opts.state || "place";
+		const m = opts.state || "position";
 		const x = opts.x ? opts.x * mid * 2 : mid;
 		const y = opts.y
 			? opts.y * mid * 2
@@ -646,71 +667,8 @@ export default function createCrokinoleSimulation() {
 		setState(m);
 	}
 
-	function drag(mouse) {
-		if (!activeDisc || state === "idle" || state === "play") return;
-
-		if (state === "place") {
-			const buffer = 2;
-			const angles = [45 - buffer, 135 + buffer];
-			// Set the radius of the five circle
-			const fiveCircleRadius = mid * S.five;
-
-			// Calculate the difference in x from the center (mid)
-			let diffX = mouse.x - mid;
-
-			// Clamp diffX to be within the bounds of the five circle's radius
-			diffX = Math.max(-fiveCircleRadius, Math.min(fiveCircleRadius, diffX));
-
-			const p1 = activeDisc.player === "player1";
-			const mult = p1 ? -1 : 1;
-			const minAngle = angles[p1 ? 0 : 1] * mult * -1;
-			const maxAngle = angles[p1 ? 1 : 0] * mult * -1;
-			// Calculate the y-coordinate based on the clamped diffX
-			const y =
-				mid -
-				Math.sqrt(
-					Math.max(0, Math.pow(fiveCircleRadius, 2) - Math.pow(diffX, 2))
-				) *
-					mult;
-
-			// Set the disc's position to the clamped x and calculated y
-			const newPosition = { x: mid + diffX, y };
-			const center = { x: mid, y: mid };
-			const radians = Matter.Vector.angle(center, newPosition);
-			const degrees = (radians * 180) / Math.PI;
-			if (degrees > minAngle && degrees < maxAngle) {
-				Matter.Body.setPosition(activeDisc, newPosition);
-			} else if (degrees <= minAngle) {
-				const radiansClamped = (minAngle * Math.PI) / 180;
-				const a = Math.cos(radiansClamped) * fiveCircleRadius;
-				const b = Math.sin(radiansClamped) * fiveCircleRadius;
-				const x = mid + a;
-				const y = mid + b;
-				Matter.Body.setPosition(activeDisc, { x, y });
-			} else if (degrees >= maxAngle) {
-				const radiansClamped = (maxAngle * Math.PI) / 180;
-				const a = Math.cos(radiansClamped) * fiveCircleRadius;
-				const b = Math.sin(radiansClamped) * fiveCircleRadius;
-				const x = mid + a;
-				const y = mid + b;
-				Matter.Body.setPosition(activeDisc, { x, y });
-			}
-		} else if (state === "aim") {
-			console.log(mouse);
-		} else if (state === "shoot") {
-			setIndicatorVisible(true);
-			// Calculate the inverse of the mouse position from the active disc position
-			// This will be the target for the flick
-			const diffX = activeDisc.position.x - mouse.x;
-			const diffY = activeDisc.position.y - mouse.y;
-			const x = activeDisc.position.x + diffX;
-			const y = activeDisc.position.y + diffY;
-			updateShotVector({ target: { x, y } });
-		}
-	}
-
-	function placeDisc(mouseX) {
-		if (!activeDisc || state !== "place") return;
+	function positionDisc(mouseX) {
+		if (!activeDisc || state !== "position") return;
 		const buffer = 2;
 		const angles = [45 - buffer, 135 + buffer];
 		// Set the radius of the five circle
@@ -772,12 +730,13 @@ export default function createCrokinoleSimulation() {
 		return target;
 	}
 
-	function aimDisc({ degrees, power }) {
+	function aimDisc({ degrees, power, visible }) {
 		if (!activeDisc || !["aim", "shoot"].includes(state)) return;
 
-		setIndicatorVisible(true);
+		const v = visible === undefined ? true : visible;
+		setIndicatorVisible(v);
 
-		const speed = power * shotMaxIndicatorMagnitude;
+		const speed = Math.max(0.01, power) * shotMaxIndicatorMagnitude;
 		const target = getTarget({ degrees, speed });
 		updateShotVector({ target });
 	}
@@ -887,9 +846,8 @@ export default function createCrokinoleSimulation() {
 	return {
 		removeDiscs,
 		addDisc,
-		placeDisc,
+		positionDisc,
 		aimDisc,
-		drag,
 		release,
 		flickDisc,
 		setState,

@@ -21,8 +21,10 @@
 	--font-body: var(--serif);
 	--font-form: var(--sans);
 	--color-bg: var(--color-white);
-	--color-bg2: var(--color-gray-100);
+	--color-bg-dark: var(--color-gray-100);
 	--color-fg: var(--color-gray-800);
+	--color-fg-dark: var(--color-black);
+	--color-fg-light: var(--color-gray-600);
 	--color-primary: var(--color-pink-aa);
 	--color-secondary: var(--color-teal-aa);
 	--color-link: var(--color-fg);
@@ -30,7 +32,7 @@
 	--color-mark: var(--color-primary);
 	--color-selection: var(--color-gray-300);
 	--color-border: var(--color-gray-300);
-	--color-button-bg: var(--color-bg2);
+	--color-button-bg: var(--color-bg-dark);
 	--color-button-fg: var(--color-fg);
 	--color-button-hover: var(--color-gray-gray-300);
 	--color-input-bg: var(--color-gray-50);
@@ -98,7 +100,7 @@ section > div.c {
 	margin-bottom: 64px;
 }
 
-section > figure, section > video {
+section > figure, section > video, section > .rules {
 	max-width: 800px;
 	margin: 0 auto;
 }
