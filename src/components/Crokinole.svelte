@@ -20,7 +20,7 @@
 		twenty: "20"
 	};
 
-	const powerDefault = 0.25;
+	const powerDefault = 0;
 
 	const rangeDefault = {
 		position: {
@@ -45,11 +45,11 @@
 
 	let turn = 0;
 	let rangeValue = rangeDefault.position.value;
-	let power = 0.25;
+	let power = powerDefault;
 	let phase = "position";
 	let degrees;
 	let disabled;
-	let replayDisabled;
+	// let replayDisabled;
 	let replay;
 	let uiVisible;
 	let autoplayTimeout;
@@ -67,10 +67,11 @@
 		power = powerDefault;
 		// console.log(scores, valid);
 
-		if (tutorial && !replay) updateTutorial();
+		if (tutorial) updateTutorial();
+		// else if (tutorial && replay) onReplay();
 
 		disabled = false;
-		replayDisabled = false;
+		// replayDisabled = false;
 	}
 
 	function onRelease() {
@@ -102,43 +103,44 @@
 		}
 	}
 
-	function onReplay() {
-		crokinole.removeDiscs();
-		updateTutorial(tutorial, 1);
-	}
+	// function onReplay() {
+	// crokinole.removeDiscs();
+	// updateTutorial(tutorial, 2000);
+	// }
 
-	async function updateTutorial(_, timeout = 2000) {
+	async function updateTutorial() {
 		clearTimeout(autoplayTimeout);
-		crokinole.removeDiscs();
 		replay = !tutorial.includes("try");
-		replayDisabled = true;
 		uiVisible = !["regions", "score"].includes(tutorial);
-
+		power = powerDefault;
 		const s = scenarios[tutorial];
-		if (s) {
-			s.forEach(crokinole.addDisc);
-			phase = s[s.length - 1].state;
-		}
 
-		if (phase === "shoot" && !replay) crokinole.setIndicatorVisible(true);
+		crokinole.removeDiscs();
+		if (s) s.forEach(crokinole.addDisc);
 
 		if (replay && s) {
 			const shooter = s[s.length - 1];
-			// const d = isYou ? Math.random() * 3 + -1.5 : 184;
-			// const p = isYou ? Math.random() * 0.07 + 0.23 : 0.3;
 			const rd = shooter.random ? Math.random() * 3 - 1.5 : 0;
 			const d = shooter.degrees + rd;
 			const rp = shooter.random ? Math.random() * 0.07 - 0.035 : 0;
 			const p = shooter.power + rp;
-			console.log({ d, p });
 
 			autoplayTimeout = setTimeout(() => {
+				phase = s[s.length - 1].state;
 				crokinole.aimDisc({
 					degrees: d,
 					power: p
 				});
 				crokinole.flickDisc();
-			}, timeout);
+			}, 2000);
+		} else {
+			autoplayTimeout = null;
+			crokinole.removeDiscs();
+			if (s) {
+				s.forEach(crokinole.addDisc);
+				phase = s[s.length - 1].state;
+			}
+			if (phase === "shoot") crokinole.setIndicatorVisible(true);
 		}
 
 		await tick();
@@ -214,12 +216,14 @@
 
 <div class="ui" class:visible={uiVisible || !tutorial}>
 	<div class="top">
-		{#if replay}
-			<button disabled={replayDisabled} on:click={onReplay}>Replay</button>
-		{:else if phase === "shoot"}
-			<Button {disabled} bind:value={power} on:release={onRelease}></Button>
-		{:else}
-			<button on:click={onPhaseClick}>{buttonText}</button>
+		<!-- {#if replay}
+			<button disabled={replayDisabled} on:click={onReplay}>Replay</button> -->
+		{#if !replay}
+			{#if phase === "shoot"}
+				<Button {disabled} bind:value={power} on:release={onRelease}></Button>
+			{:else}
+				<button on:click={onPhaseClick}>{buttonText}</button>
+			{/if}
 		{/if}
 	</div>
 
@@ -358,11 +362,12 @@
 		display: flex;
 		justify-content: center;
 		width: 100%;
-		margin: 8px 0 4px 0;
 	}
 
 	.ui .top {
 		height: 40px;
+		margin-top: 8px;
+		margin-bottom: 8px;
 	}
 
 	.ui .bottom {

@@ -7,9 +7,11 @@
 	const dispatch = createEventDispatcher();
 
 	let interval;
+	let started;
 
 	function onStart() {
 		let dir = -1;
+		started = true;
 		interval = setInterval(() => {
 			if (value >= 1) dir = -1;
 			else if (value <= 0) dir = 1;
@@ -19,10 +21,18 @@
 	}
 
 	function onStop() {
-		clearInterval(interval);
-		dispatch("release", value);
-		value = 0;
+		if (started) {
+			clearInterval(interval);
+			dispatch("release", value);
+			value = 0;
+			started = false;
+		}
 	}
 </script>
 
-<button {disabled} on:pointerdown={onStart} on:pointerup={onStop}>Flick</button>
+<button
+	{disabled}
+	on:pointerdown={onStart}
+	on:pointerup={onStop}
+	on:pointerleave={onStop}>Shoot</button
+>

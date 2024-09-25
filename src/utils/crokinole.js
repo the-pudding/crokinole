@@ -233,93 +233,120 @@ export default function createCrokinoleSimulation() {
 		Matter.World.add(world, pegBodies);
 	}
 
-	function drawIndicator(ctx) {
-		if (!activeDisc || !indicatorVector) return;
+	function drawArrow(ctx, fromX, fromY, toX, toY, arrowLength) {
+		const angle = Math.atan2(toY - fromY, toX - fromX);
 
-		const discRadius = activeDisc.circleRadius; // Get the radius of the disc
+		// Calculate the points for the arrowhead
+		const arrowX1 = toX - arrowLength * Math.cos(angle - Math.PI / 4);
+		const arrowY1 = toY - arrowLength * Math.sin(angle - Math.PI / 4);
 
-		// Calculate the direction of the vector (normalized)
-		const normalizedVector = Matter.Vector.normalise(indicatorVector);
-
-		// Shift the starting point to the edge of the disc by moving in the direction of the normalized vector
-		// start from outer edge of disc
-		// old
-		// const startX = activeDisc.position.x + normalizedVector.x;
-		// const startY = activeDisc.position.y + normalizedVector.y;
-		// new
-		const startX =
-			activeDisc.position.x + normalizedVector.x * discRadius * 1.25;
-		const startY =
-			activeDisc.position.y + normalizedVector.y * discRadius * 1.25;
-
-		// Calculate the end points for the main line and the opposite dashed line (min should be 0, or the same as the start)
-		// old
-		// const endX = activeDisc.position.x + indicatorVector.x;
-		// const endY = activeDisc.position.y + indicatorVector.y;
-		// new
-		const endX =
-			activeDisc.position.x +
-			normalizedVector.x * discRadius * 1.5 +
-			indicatorVector.x;
-		const endY =
-			activeDisc.position.y +
-			normalizedVector.y * discRadius * 1.5 +
-			indicatorVector.y;
-
-		// const mirrorX = activeDisc.position.x - indicatorVector.x;
-		// const mirrorY = activeDisc.position.y - indicatorVector.y;
-
-		// Start drawing the main indicator line
-		ctx.beginPath();
-		ctx.strokeStyle = COLOR.vector;
-		ctx.lineWidth = 2;
-
-		// Draw the solid line starting from the outer edge of the disc
-		ctx.moveTo(startX, startY);
-		ctx.lineTo(endX, endY);
-		ctx.stroke();
-
-		// Draw the arrow at the end of the line
-		const arrowLength = mid * 0.03; // Length of the arrowhead
-		const arrowAngle = Math.PI / 4; // Angle for the arrowhead
-
-		// Calculate direction of the arrow based on the indicatorVector
-		const angle = Math.atan2(indicatorVector.y, indicatorVector.x);
+		const arrowX2 = toX - arrowLength * Math.cos(angle + Math.PI / 4);
+		const arrowY2 = toY - arrowLength * Math.sin(angle + Math.PI / 4);
 
 		// Draw the two lines of the arrowhead
-		ctx.beginPath();
-		ctx.moveTo(endX, endY);
-		ctx.lineTo(
-			endX - arrowLength * Math.cos(angle - arrowAngle),
-			endY - arrowLength * Math.sin(angle - arrowAngle)
-		);
-		ctx.moveTo(endX, endY);
-		ctx.lineTo(
-			endX - arrowLength * Math.cos(angle + arrowAngle),
-			endY - arrowLength * Math.sin(angle + arrowAngle)
-		);
-		ctx.stroke();
+		ctx.moveTo(toX, toY);
+		ctx.lineTo(arrowX1, arrowY1);
 
-		// Draw the dashed line in the mirror opposite direction, also starting from the disc's edge
-		// const mirrorStartX =
-		// 	activeDisc.position.x - normalizedVector.x * discRadius;
-		// const mirrorStartY =
-		// 	activeDisc.position.y - normalizedVector.y * discRadius;
+		ctx.moveTo(toX, toY);
+		ctx.lineTo(arrowX2, arrowY2);
+	}
 
-		// ctx.setLineDash([5, 5]); // Define the dash pattern [dash length, space length]
-		// ctx.beginPath();
-		// ctx.moveTo(mirrorStartX, mirrorStartY);
-		// ctx.lineTo(mirrorX, mirrorY);
-		// ctx.stroke();
-		// ctx.setLineDash([]); // Reset to solid lines for future drawing
+	function drawIndicator(ctx) {
+		if (!activeDisc) return;
 
-		ctx.closePath();
+		const discR = activeDisc.circleRadius;
+		const discP = activeDisc.position;
+
+		if (indicatorVector && indicatorVisible) {
+			// Calculate the direction of the vector (normalized)
+			const normalizedVector = Matter.Vector.normalise(indicatorVector);
+
+			const startX = discP.x + normalizedVector.x * discR * 1.25;
+			const startY = discP.y + normalizedVector.y * discR * 1.25;
+
+			const endX =
+				discP.x + normalizedVector.x * discR * 1.5 + indicatorVector.x;
+			const endY =
+				discP.y + normalizedVector.y * discR * 1.5 + indicatorVector.y;
+
+			// Start drawing the main indicator line
+			ctx.beginPath();
+			ctx.strokeStyle = COLOR.vector;
+			ctx.lineWidth = 2;
+
+			// Draw the solid line starting from the outer edge of the disc
+			ctx.moveTo(startX, startY);
+			ctx.lineTo(endX, endY);
+			ctx.stroke();
+
+			// Draw the arrow at the end of the line
+			const arrowLength = mid * 0.03; // Length of the arrowhead
+			const arrowAngle = Math.PI / 4; // Angle for the arrowhead
+
+			// Calculate direction of the arrow based on the indicatorVector
+			const angle = Math.atan2(indicatorVector.y, indicatorVector.x);
+
+			// Draw the two lines of the arrowhead
+			ctx.beginPath();
+			ctx.moveTo(endX, endY);
+			ctx.lineTo(
+				endX - arrowLength * Math.cos(angle - arrowAngle),
+				endY - arrowLength * Math.sin(angle - arrowAngle)
+			);
+			ctx.moveTo(endX, endY);
+			ctx.lineTo(
+				endX - arrowLength * Math.cos(angle + arrowAngle),
+				endY - arrowLength * Math.sin(angle + arrowAngle)
+			);
+			ctx.stroke();
+			ctx.closePath();
+		}
+
+		if (state === "position") {
+			ctx.beginPath();
+			ctx.strokeStyle = COLOR.vector;
+			ctx.lineWidth = 2;
+
+			ctx.moveTo(discP.x - discR * 2.5, discP.y);
+			ctx.lineTo(discP.x - discR * 1.25, discP.y);
+
+			ctx.moveTo(discP.x + discR * 2.5, discP.y);
+			ctx.lineTo(discP.x + discR * 1.25, discP.y);
+
+			ctx.stroke();
+			ctx.closePath();
+
+			ctx.lineDashOffset = 0;
+			ctx.beginPath();
+			// ctx.strokeStyle = COLOR.vector;
+			// ctx.lineWidth = 2;
+
+			// draw arrows at each end
+			drawArrow(
+				ctx,
+				discP.x - discR * 1.25,
+				discP.y,
+				discP.x - discR * 2.5,
+				discP.y,
+				discR * 0.75
+			);
+			drawArrow(
+				ctx,
+				discP.x + discR * 1.25,
+				discP.y,
+				discP.x + discR * 2.5,
+				discP.y,
+				discR * 0.75
+			);
+
+			ctx.stroke();
+			ctx.closePath();
+		}
 	}
 
 	function afterRender() {
 		const ctx = render.context;
-		// renderQuadrantLines(ctx);
-		if (indicatorVisible) drawIndicator(ctx);
+		drawIndicator(ctx);
 	}
 
 	function collisionActive(event) {
@@ -655,7 +682,7 @@ export default function createCrokinoleSimulation() {
 					category: DISC_CATEGORY,
 					mask: DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY
 				},
-				sleepThreshold: 60,
+				sleepThreshold: 100,
 				isSleeping: true
 			},
 			64
