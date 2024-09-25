@@ -53,6 +53,7 @@ export default function createCrokinoleSimulation() {
 	let shotVector;
 	let indicatorVector;
 	let indicatorVisible;
+	let manual;
 
 	// things to carry over on resize
 	let discs = [];
@@ -578,7 +579,13 @@ export default function createCrokinoleSimulation() {
 			// clean up
 			discs = discs.filter((d) => d.score > 0 && d.valid);
 
-			const scores = discs.map((d) => ({ player: d.player, score: d.score }));
+			if (manual) emmitter.emit("shotCompleteManual", { discs, valid });
+
+			const scores = discs.map((d) => ({
+				id: d.id,
+				player: d.player,
+				score: d.score
+			}));
 
 			// remove 20
 			discs.forEach((d) => {
@@ -821,7 +828,9 @@ export default function createCrokinoleSimulation() {
 		indicatorVisible = v;
 	}
 
-	function init({ element, width }) {
+	function init({ element, width, tutorial }) {
+		manual = !!tutorial;
+
 		let prevMid;
 
 		if (engine) {

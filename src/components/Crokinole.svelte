@@ -5,6 +5,7 @@
 	import Slider from "$components/Crokinole.Slider.svelte";
 	import Button from "$components/Crokinole.Button.svelte";
 	import scenarios from "$data/scenarios.json";
+
 	export let width;
 	export let dev;
 	export let tutorial;
@@ -49,7 +50,6 @@
 	let phase = "position";
 	let degrees;
 	let disabled;
-	// let replayDisabled;
 	let replay;
 	let uiVisible;
 	let autoplayTimeout;
@@ -65,13 +65,12 @@
 
 	function onShotComplete({ scores, valid }) {
 		power = powerDefault;
-		// console.log(scores, valid);
+	}
 
+	function onShotCompleteManual({ discs, valid }) {
+		console.log(discs);
 		if (tutorial) updateTutorial();
-		// else if (tutorial && replay) onReplay();
-
 		disabled = false;
-		// replayDisabled = false;
 	}
 
 	function onRelease() {
@@ -150,7 +149,7 @@
 	$: buttonText = phase === "position" ? "Place Disc" : "";
 	$: x = target ? (target.x / width).toFixed(2) : 0;
 	$: y = target ? (target.y / width).toFixed(2) : 0;
-	$: if (width) crokinole.init({ element, width });
+	$: if (width) crokinole.init({ element, width, tutorial });
 	$: if (width) updateRange(rangeValue);
 	$: if (width) updatePower(power);
 	$: if (width) updateTutorial(tutorial);
@@ -158,6 +157,7 @@
 
 	onMount(() => {
 		crokinole.on("shotComplete", onShotComplete);
+		crokinole.on("shotCompleteManual", onShotCompleteManual);
 	});
 </script>
 
