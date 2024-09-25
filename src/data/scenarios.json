@@ -52,5 +52,43 @@
 			"power": 0.15,
 			"degrees": -3
 		}
+	],
+	"score": [
+		{
+			"x": 0.45,
+			"y": 0.44,
+			"player": "player1",
+			"score": 15,
+			"valid": true
+		},
+		{
+			"x": 0.7,
+			"y": 0.4,
+			"player": "player1",
+			"score": 10,
+			"valid": true
+		},
+		{
+			"x": 0.8,
+			"y": 0.4,
+			"player": "player2",
+			"score": 5,
+			"valid": true
+		},
+		{
+			"x": 0.2,
+			"y": 0.4,
+			"player": "player2",
+			"score": 5,
+			"valid": true
+		},
+		{
+			"x": 0.3,
+			"y": 0.6,
+			"player": "player2",
+			"score": 10,
+			"valid": true,
+			"state": "idle"
+		}
 	]
 }

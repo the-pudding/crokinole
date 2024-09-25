@@ -1,5 +1,6 @@
 <script>
 	import { tick, onMount } from "svelte";
+	import { fade } from "svelte/transition";
 	// import { range } from "d3";
 	import C from "$utils/crokinole.js";
 	import * as S from "$data/specs.js";
@@ -59,7 +60,9 @@
 	let uiVisible;
 	let autoplayTimeout;
 	let replayTimeout;
-	let showScore = true;
+	let scoreVisible = true;
+	let holderVisible = true;
+	let winner;
 
 	// just for dev
 	function onClick(event) {
@@ -76,6 +79,14 @@
 
 	function react() {}
 
+	function endRound() {
+		phase = "end";
+		winner = score.player1 > score.player2 ? "You" : "Opp.";
+		setTimeout(() => {
+			phase = "idle";
+		}, 3000);
+	}
+
 	function updateScore({ discs, valid }) {
 		// add discs to score
 
@@ -87,15 +98,6 @@
 				holder[disc.player]++;
 			}
 		});
-
-		const net = Math.abs(score.player1 - score.player2);
-		const l =
-			score.player1 > score.player2
-				? "You"
-				: score.player2 > score.player1
-					? "Opp."
-					: "Tied";
-		score.leader = l === "Tied" ? l : `${l} by ${net}`;
 	}
 
 	function onShotCompleteManual({ discs, valid }) {
@@ -142,7 +144,6 @@
 		holder.player2 = 0;
 		score.player1 = 0;
 		score.player2 = 0;
-		score.leader = "";
 	}
 
 	// function onReplay() {
@@ -157,27 +158,37 @@
 		clearTimeout(replayTimeout);
 		replay = !tutorial.includes("try");
 		uiVisible = !["regions", "score"].includes(tutorial);
-		showScore = tutorial === "score";
+		const end = tutorial === "score";
+		scoreVisible = tutorial === "score";
+		holderVisible = tutorial !== "regions";
 		power = powerDefault;
 		const s = scenarios[tutorial];
 
 		crokinole.removeDiscs();
 		if (s) s.forEach(crokinole.addDisc);
 
-		if (replay && s) {
+		if ((replay || end) && s) {
 			const shooter = s[s.length - 1];
 			const rd = shooter.random ? Math.random() * 3 - 1.5 : 0;
 			const d = shooter.degrees + rd;
 			const rp = shooter.random ? Math.random() * 0.07 - 0.035 : 0;
 			const p = shooter.power + rp;
 
+			if (end) {
+				scoreVisible = true;
+				updateScore({ discs: s, valid: true });
+			}
+
 			autoplayTimeout = setTimeout(() => {
-				phase = s[s.length - 1].state;
-				crokinole.aimDisc({
-					degrees: d,
-					power: p
-				});
-				onRelease();
+				if (end) endRound();
+				else {
+					phase = s[s.length - 1].state;
+					crokinole.aimDisc({
+						degrees: d,
+						power: p
+					});
+					onRelease();
+				}
 			}, 2000);
 		} else {
 			autoplayTimeout = null;
@@ -213,13 +224,24 @@
 <div class="score">
 	<!-- <p>Player 1: {score.player1}</p> -->
 	<!-- <p>Player 2: {score.player2}</p> -->
-	<p class="you" class:animate={animate.player1}>
+	<p
+		class="holder you"
+		class:animate={animate.player1}
+		class:visible={holderVisible}
+	>
 		<strong>Your 20s: <span>{holder.player1}</span></strong>
 	</p>
-	<p class="net" class:visible={showScore}>
-		<strong><span>{score.leader}</span></strong>
+	<p class="points" class:visible={scoreVisible}>
+		<strong
+			><span class="you">{score.player1}</span> -
+			<span class="opp">{score.player2}</span></strong
+		>
 	</p>
-	<p class="opp" class:animate={animate.player2}>
+	<p
+		class="holder opp"
+		class:animate={animate.player2}
+		class:visible={holderVisible}
+	>
 		<strong>Opp. 20s: <span>{holder.player2}</span></strong>
 	</p>
 </div>
@@ -271,7 +293,15 @@
 			></div>
 		{/each}
 	</div>
-	<div class="fg" bind:this={element} on:click={onClick}></div>
+	<div class="fg" bind:this={element}></div>
+
+	<div class="end">
+		{#if phase === "end"}
+			<p transition:fade class="text-outline">
+				<strong>{winner} won the round</strong>
+			</p>
+		{/if}
+	</div>
 </div>
 
 <div class="ui" class:visible={uiVisible || !tutorial}>
@@ -507,17 +537,28 @@
 
 	.score p {
 		margin: 0;
-		color: var(--color-fg-light);
 	}
 
-	.score .you {
+	.holder {
+		visibility: hidden;
+	}
+
+	.holder.visible {
+		visibility: visible;
+	}
+
+	.holder.you {
 		color: var(--color-you-text);
 		text-align: left;
 	}
 
-	.score .opp {
+	.holder.opp {
 		color: var(--color-opp-text);
 		text-align: right;
+	}
+
+	.points {
+		color: var(--color-fg-light);
 	}
 
 	.score span {
@@ -529,13 +570,34 @@
 		animation: zoom 0.5s ease-in-out;
 	}
 
-	.net {
+	.points {
 		visibility: hidden;
 		text-align: center;
 	}
 
-	.net.visible {
+	.points.visible {
 		visibility: visible;
+	}
+
+	.end {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.end p {
+		margin: 0;
+		line-height: 1;
+		width: 100%;
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		font-size: var(--24px);
+		text-align: center;
+		text-transform: uppercase;
 	}
 
 	@keyframes zoom {
