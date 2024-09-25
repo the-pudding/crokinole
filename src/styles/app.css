@@ -42,6 +42,9 @@
 	--color-opp-text: var(--color-teal-aaa);
 	--color-you-text: var(--color-pink-aaa);
 
+	--color-opp-bg: var(--color-teal-aa);
+	--color-you-bg: var(--color-pink-aa);
+
 	/* "1" second duration */
 	--1s: 1ms;
 }

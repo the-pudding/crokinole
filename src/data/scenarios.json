@@ -4,7 +4,7 @@
 			"state": "shoot",
 			"player": "player1",
 			"random": true,
-			"power": 0.23,
+			"power": 0.235,
 			"degrees": 0
 		}
 	],

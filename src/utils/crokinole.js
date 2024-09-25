@@ -579,37 +579,37 @@ export default function createCrokinoleSimulation() {
 			// clean up
 			discs = discs.filter((d) => d.score > 0 && d.valid);
 
-			if (manual) emmitter.emit("shotCompleteManual", { discs, valid });
+			if (manual) {
+				emitter.emit("shotCompleteManual", { discs, valid });
+			} else {
+				const scores = discs.map((d) => ({
+					id: d.id,
+					player: d.player,
+					score: d.score
+				}));
 
-			const scores = discs.map((d) => ({
-				id: d.id,
-				player: d.player,
-				score: d.score
-			}));
+				// remove 20
+				discs.forEach((d) => {
+					if (d.score === 20) Matter.World.remove(world, d);
+				});
 
-			// remove 20
-			discs.forEach((d) => {
-				if (d.score === 20) Matter.World.remove(world, d);
-			});
-
-			discs = discs.filter((d) => d.score !== 20);
+				discs = discs.filter((d) => d.score !== 20);
+				emitter.emit("shotComplete", { discs: scores, valid });
+				discs.forEach((d) => {
+					d.valid = undefined;
+					d.collided = undefined;
+					d.collidedOpp = undefined;
+					d.intersect15 = undefined;
+					d.in20 = undefined;
+				});
+			}
 
 			activeDisc = null;
-
-			discs.forEach((d) => {
-				d.valid = undefined;
-				d.collided = undefined;
-				d.collidedOpp = undefined;
-				d.intersect15 = undefined;
-				d.in20 = undefined;
-			});
-
 			setState("idle");
 			// console.log(
 			// 	discs[0].position.x / (mid * 2),
 			// 	discs[0].position.y / (mid * 2)
 			// );
-			emitter.emit("shotComplete", { scores, valid });
 		}
 		// TODO fire event that says shot all done and provide disc status
 		// discs.map(d => d)
@@ -689,7 +689,7 @@ export default function createCrokinoleSimulation() {
 					category: DISC_CATEGORY,
 					mask: DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY
 				},
-				sleepThreshold: 100,
+				sleepThreshold: 60,
 				isSleeping: true
 			},
 			64
