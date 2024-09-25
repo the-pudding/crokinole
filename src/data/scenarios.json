@@ -8,7 +8,10 @@
 			"degrees": 0
 		}
 	],
-	"opentry": [{ "state": "shoot", "player": "player1" }],
+	"opentry": [
+		{ "x": 0.3, "y": 0.6, "player": "player1" },
+		{ "state": "position", "player": "player1" }
+	],
 	"fifteen": [
 		{ "state": "shoot", "player": "player2", "power": 0.3, "degrees": 184 }
 	],
@@ -25,7 +28,7 @@
 
 			"state": "shoot",
 			"player": "player1",
-			"power": 0.45,
+			"power": 0.35,
 			"degrees": 15
 		}
 	],
