@@ -60,7 +60,7 @@
 	let uiVisible;
 	let autoplayTimeout;
 	let replayTimeout;
-	let scoreVisible = true;
+	let pointsVisible = true;
 	let holderVisible = true;
 	let winner;
 
@@ -159,7 +159,7 @@
 		replay = !tutorial.includes("try");
 		uiVisible = !["regions", "score"].includes(tutorial);
 		const end = tutorial === "score";
-		scoreVisible = tutorial === "score";
+		pointsVisible = tutorial !== "regions";
 		holderVisible = tutorial !== "regions";
 		power = powerDefault;
 		const s = scenarios[tutorial];
@@ -175,7 +175,7 @@
 			const p = shooter.power + rp;
 
 			if (end) {
-				scoreVisible = true;
+				pointsVisible = true;
 				updateScore({ discs: s, valid: true });
 			}
 
@@ -221,7 +221,7 @@
 <!-- svelte-ignore missing-declaration -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="score">
+<div class="score" style:width="{width}px">
 	<!-- <p>Player 1: {score.player1}</p> -->
 	<!-- <p>Player 2: {score.player2}</p> -->
 	<p
@@ -229,9 +229,11 @@
 		class:animate={animate.player1}
 		class:visible={holderVisible}
 	>
-		<strong>Your 20s: <span>{holder.player1}</span></strong>
+		<span class="label">20s</span>
+		<strong>{holder.player1}</strong>
 	</p>
-	<p class="points" class:visible={scoreVisible}>
+	<p class="points" class:visible={pointsVisible}>
+		<span class="label">POINTS</span>
 		<strong
 			><span class="you">{score.player1}</span> -
 			<span class="opp">{score.player2}</span></strong
@@ -242,7 +244,8 @@
 		class:animate={animate.player2}
 		class:visible={holderVisible}
 	>
-		<strong>Opp. 20s: <span>{holder.player2}</span></strong>
+		<span class="label">20s</span>
+		<strong>{holder.player2}</strong>
 	</p>
 </div>
 
@@ -532,7 +535,7 @@
 		font-family: var(--sans);
 		font-size: var(--14px);
 		pointer-events: none;
-		margin-bottom: 8px;
+		margin: 0 auto 8px auto;
 	}
 
 	.score p {
@@ -541,6 +544,9 @@
 
 	.holder {
 		visibility: hidden;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
 	.holder.visible {
@@ -559,11 +565,13 @@
 
 	.points {
 		color: var(--color-fg-light);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
-	.score span {
-		transform-origin: 50% 50%;
-		display: inline-block;
+	.score .label {
+		font-size: var(--12px);
 	}
 
 	.score p.animate {

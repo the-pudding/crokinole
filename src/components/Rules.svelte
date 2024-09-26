@@ -1,8 +1,13 @@
 <script>
 	import Crokinole from "$components/Crokinole.svelte";
+	import viewport from "$stores/viewport.js";
 	export let steps;
 
-	let el;
+	const uiHeight = 88;
+	const scoreHeight = 39;
+	const marginBottom = 32;
+	const stepperPadding = 32;
+
 	let step = 0;
 	let offsetWidth;
 	let heights = [];
@@ -13,44 +18,55 @@
 		rules.scrollIntoView({ behavior: "smooth" });
 		step += n;
 	}
-	$: width = el?.offsetWidth;
 	$: longestIndex = steps.reduce(
 		(acc, cur, i) => (cur.length > steps[acc].length ? i : acc),
 		0
 	);
-	$: height = heights.length ? `${heights[longestIndex]}px` : 0;
+	$: stepHeight = heights.length ? heights[longestIndex] : 0;
 	$: tutorial = steps[step].id;
+	$: totalHeight =
+		stepHeight + uiHeight + scoreHeight + marginBottom + stepperPadding;
+	$: maxHeight = $viewport.height - totalHeight;
+	$: width = Math.min(offsetWidth, maxHeight);
+	$: console.log({ offsetWidth, stepHeight, totalHeight, maxHeight, width });
 </script>
 
 <div class="c rules">
 	<div class="stepper">
-		<button disabled={step === 0} on:click={() => onStep(-1)}>PREV</button>
-		<div class="steps" style:height>
+		<button class="prev" disabled={step === 0} on:click={() => onStep(-1)}
+			>PREV</button
+		>
+		<div class="steps" style:height="{stepHeight}px">
 			{#each steps as { id, text }, i}
 				{@const visible = i === step}
 				<p class:visible bind:offsetHeight={heights[i]}>{@html text}</p>
 			{/each}
 		</div>
-		<button disabled={step === steps.length - 1} on:click={() => onStep(1)}
-			>NEXT</button
+		<button
+			class="next"
+			disabled={step === steps.length - 1}
+			on:click={() => onStep(1)}>NEXT</button
 		>
 	</div>
 
-	<figure bind:this={el} bind:offsetWidth>
+	<figure bind:offsetWidth>
 		<Crokinole {width} ui={true} {tutorial}></Crokinole>
 	</figure>
 </div>
 
 <style>
+	.c {
+		margin-bottom: 128px;
+	}
+
 	figure {
-		--width: calc(min(100svw, 100svh) * 0.66);
-		width: var(--width);
-		margin: 32px auto;
+		margin: 0 auto 32px;
+		width: 100%;
 	}
 
 	.stepper {
 		display: flex;
-		padding-top: 32px;
+		padding-top: 16px;
 		padding-bottom: 16px;
 	}
 
@@ -106,6 +122,34 @@
 	@media only screen and (max-width: 800px) {
 		p {
 			font-size: var(--16px);
+		}
+
+		/* put the buttons above .steps */
+		.stepper {
+			flex-wrap: wrap;
+			justify-content: space-between;
+			padding-top: 16px;
+		}
+
+		.prev {
+			order: 1;
+			margin-bottom: 16px;
+		}
+
+		.next {
+			order: 2;
+			margin-bottom: 16px;
+		}
+
+		.steps {
+			order: 3;
+			min-width: 100%;
+			padding: 0;
+		}
+
+		.steps p {
+			width: 100%;
+			left: 0;
 		}
 	}
 
