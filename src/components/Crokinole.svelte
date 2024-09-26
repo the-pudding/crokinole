@@ -105,7 +105,7 @@
 		reactTimeout = setTimeout(() => {
 			reactText = null;
 			updateTutorial();
-		}, 3000);
+		}, 2000);
 	}
 
 	function endRound() {

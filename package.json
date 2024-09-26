@@ -19,6 +19,7 @@
 		"autoprefixer": "^10.4.19",
 		"bits-ui": "^0.21.10",
 		"d3": "^7.9.0",
+		"howler": "^2.2.4",
 		"lodash.debounce": "^4.0.8",
 		"lucide-svelte": "^0.397.0",
 		"matter-js": "^0.20.0",

@@ -1,6 +1,7 @@
 import Matter from "matter-js";
 import * as S from "$data/specs.js";
 import variables from "$data/variables.json";
+import { Howl } from "howler";
 
 const DISC_CATEGORY = 0x0001;
 const PEG_CATEGORY = 0x0002;
@@ -18,6 +19,23 @@ const COLOR = {
 	active: variables.color["black"],
 	vector: variables.color["black"]
 };
+
+// Create a new sound
+const DISC_SOUND = new Howl({
+	src: ["assets/audio/disc.mp3"]
+});
+
+const RIM_SOUND = new Howl({
+	src: ["assets/audio/rim.mp3"]
+});
+
+const FLICK_SOUND = new Howl({
+	src: ["assets/audio/flick.mp3"]
+});
+
+const CENTER_SOUND = new Howl({
+	src: ["assets/audio/center.mp3"]
+});
 
 // Define a simple event emitter class
 class EventEmitter {
@@ -375,6 +393,7 @@ export default function createCrokinoleSimulation() {
 				const enableTrap = isClose && isSlow;
 
 				if (enableTrap) {
+					CENTER_SOUND.play();
 					disc.in20 = true;
 					disc.collisionFilter.mask =
 						DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY | TRAP_CATEGORY;
@@ -410,10 +429,12 @@ export default function createCrokinoleSimulation() {
 						: null;
 
 			if (disc && rim) {
+				RIM_SOUND.play();
 				disc.frictionAir = 0.3;
 				disc.collisionFilter.mask =
 					DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY | SURFACE_CATEGORY;
 			} else if (disc && otherDisc) {
+				DISC_SOUND.play();
 				disc.collided = true;
 				otherDisc.collided = true;
 				const opp = disc.player !== otherDisc.player;
@@ -792,6 +813,8 @@ export default function createCrokinoleSimulation() {
 
 		Matter.Body.applyForce(activeDisc, activeDisc.position, shotVector);
 		updateDiscColors();
+
+		FLICK_SOUND.play();
 	}
 
 	// function flickDisc(opts) {
