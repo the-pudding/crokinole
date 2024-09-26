@@ -6,6 +6,9 @@
 	export let min;
 	export let max;
 	export let step;
+	export let animate;
+
+	$: animateClass = animate ? "animate" : "";
 </script>
 
 <div class="c">
@@ -15,7 +18,7 @@
 			<Slider.Range />
 		</span>
 		{#each thumbs as thumb}
-			<Slider.Thumb {thumb} />
+			<Slider.Thumb {thumb} class={animateClass} />
 		{/each}
 	</Slider.Root>
 </div>
@@ -39,6 +42,7 @@
 		top: 50%;
 		left: -16px;
 		transform: translate(-100%, -50%);
+		color: var(--color-fg-light);
 	}
 
 	:global([data-slider-root]) {
@@ -49,8 +53,9 @@
 
 	.bg {
 		display: block;
-		height: 2px;
-		background: var(--color-fg);
+		height: 4px;
+		background: var(--color-fg-lightest);
+		transform: translateY(2px);
 	}
 
 	:global([data-slider-range]) {
@@ -64,6 +69,25 @@
 		width: 32px;
 		height: 32px;
 		transform: translateY(-50%);
-		cursor: pointer;
+		cursor: ew-resize;
+	}
+
+	:global([data-slider-thumb].animate) {
+		animation: pulse 1s ease-in-out infinite;
+	}
+
+	@keyframes pulse {
+		0% {
+			transform: translateY(-50%) scale(1);
+			box-shadow: 0 0 0 0 transparent;
+		}
+		50% {
+			transform: translateY(-50%) scale(1.2);
+			box-shadow: 0 0 4px 4px var(--color-mark);
+		}
+		100% {
+			transform: translateY(-50%) scale(1);
+			box-shadow: 0 0 0 0 transparent;
+		}
 	}
 </style>

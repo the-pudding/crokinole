@@ -10,6 +10,7 @@ const SURFACE_CATEGORY = 0x0010;
 const DISC_RESTITUTION = 0.9;
 const DISC_DENSITY = 0.05;
 const DISC_FRICTIONAIR = 0.05;
+const PEG_RESTITUTION = 1;
 
 const COLOR = {
 	player1: variables.color["pink-aa"],
@@ -220,7 +221,7 @@ export default function createCrokinoleSimulation() {
 
 			const peg = Matter.Bodies.circle(x, y, r, {
 				isStatic: true,
-				restitution: 0.9,
+				restitution: PEG_RESTITUTION,
 				render: { visible: false },
 				collisionFilter: {
 					category: PEG_CATEGORY,

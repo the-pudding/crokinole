@@ -50,6 +50,9 @@
 
 	<figure bind:offsetWidth>
 		<Crokinole {width} ui={true} {tutorial}></Crokinole>
+		<p class="continue" class:visible={step === steps.length - 1}>
+			&darr; Keep scrolling &darr;
+		</p>
 	</figure>
 </div>
 
@@ -61,6 +64,27 @@
 	figure {
 		margin: 0 auto 32px;
 		width: 100%;
+		position: relative;
+		min-height: 280px;
+	}
+
+	.continue {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		text-align: center;
+		text-transform: uppercase;
+		color: var(--color-fg-light);
+		margin: 0;
+		font-family: var(--sans);
+		font-size: var(--16px);
+		font-weight: bold;
+		visibility: hidden;
+	}
+
+	.continue.visible {
+		visibility: visible;
 	}
 
 	.stepper {
@@ -80,7 +104,7 @@
 		padding: 0 16px;
 	}
 
-	p {
+	.steps p {
 		margin: 0;
 		position: absolute;
 		top: 50%;

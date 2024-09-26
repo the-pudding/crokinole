@@ -13,7 +13,7 @@
 		{ "state": "position", "player": "player1" }
 	],
 	"fifteen": [
-		{ "state": "shoot", "player": "player2", "power": 0.3, "degrees": 184 }
+		{ "state": "shoot", "player": "player2", "power": 0.17, "degrees": 177 }
 	],
 
 	"opponent": [

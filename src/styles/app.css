@@ -25,13 +25,14 @@
 	--color-fg: var(--color-gray-800);
 	--color-fg-dark: var(--color-black);
 	--color-fg-light: var(--color-gray-600);
+	--color-fg-lightest: var(--color-gray-500);
 	--color-primary: var(--color-pink-aa);
 	--color-secondary: var(--color-teal-aa);
 	--color-link: var(--color-fg);
 	--color-focus: var(--color-primary);
 	--color-mark: var(--color-primary);
 	--color-selection: var(--color-gray-300);
-	--color-border: var(--color-gray-300);
+	--color-border: var(--color-fg-lightest);
 	--color-button-bg: var(--color-bg-dark);
 	--color-button-fg: var(--color-fg);
 	--color-button-hover: var(--color-gray-gray-300);

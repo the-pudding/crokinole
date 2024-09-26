@@ -60,9 +60,12 @@
 	let uiVisible;
 	let autoplayTimeout;
 	let replayTimeout;
+	let reactTimeout;
 	let pointsVisible = true;
 	let holderVisible = true;
-	let winner;
+	let animateSlider;
+	let sliderAnimated;
+	let reactText;
 
 	// just for dev
 	function onClick(event) {
@@ -77,14 +80,29 @@
 		power = powerDefault;
 	}
 
-	function react() {}
+	function react({ discs, valid }) {
+		if (valid) {
+			// scored 20
+			const scored20 = discs.some((disc) => disc.score === 20);
+			const goal20 = tutorial.includes("open");
+			const custom = goal20
+				? scored20
+					? "Nice 20!"
+					: "But not a 20 :("
+				: "Well done!";
+			reactText = `Valid shot. ${custom}`;
+		} else {
+			reactText = "Invalid shot. Try again.";
+		}
+		reactTimeout = setTimeout(() => {
+			reactText = null;
+			updateTutorial();
+		}, 3000);
+	}
 
 	function endRound() {
 		phase = "end";
-		winner = score.player1 > score.player2 ? "You" : "Opp.";
-		setTimeout(() => {
-			phase = "idle";
-		}, 3000);
+		reactText = `${score.player1 > score.player2 ? "You" : "Opp."} win the round`;
 	}
 
 	function updateScore({ discs, valid }) {
@@ -93,7 +111,6 @@
 		discs.forEach((disc) => {
 			if (disc.valid && disc.score) score[disc.player] += disc.score;
 			if (disc.valid && disc.score === 20) {
-				react(disc.player);
 				animate[disc.player] = true;
 				holder[disc.player]++;
 			}
@@ -102,9 +119,9 @@
 
 	function onShotCompleteManual({ discs, valid }) {
 		updateScore({ discs, valid });
-		react({ discs, valid });
 		power = powerDefault;
-		if (tutorial) replayTimeout = setTimeout(updateTutorial, 1000);
+		if (tutorial.includes("try")) react({ discs, valid });
+		else if (tutorial) replayTimeout = setTimeout(updateTutorial, 2000);
 	}
 
 	function onRelease() {
@@ -115,6 +132,10 @@
 	}
 
 	function updateRange() {
+		if (!sliderAnimated) {
+			sliderAnimated = rangeValue[0] !== rangeDefault.position.value[0];
+			animateSlider = !sliderAnimated;
+		}
 		if (phase === "position") crokinole.positionDisc(rangeValue[0] * width);
 		else if (phase === "shoot") {
 			degrees = Math.round(rangeValue[0]);
@@ -156,11 +177,15 @@
 		resetScore();
 		clearTimeout(autoplayTimeout);
 		clearTimeout(replayTimeout);
+		clearTimeout(reactTimeout);
+		reactText = null;
 		replay = !tutorial.includes("try");
 		uiVisible = !["regions", "score"].includes(tutorial);
 		const end = tutorial === "score";
 		pointsVisible = tutorial !== "regions";
 		holderVisible = tutorial !== "regions";
+		animateSlider = tutorial === "opponenttry" && !sliderAnimated;
+		// console.log({ tutorial, sliderAnimated, animateSlider });
 		power = powerDefault;
 		const s = scenarios[tutorial];
 
@@ -298,10 +323,10 @@
 	</div>
 	<div class="fg" bind:this={element}></div>
 
-	<div class="end">
-		{#if phase === "end"}
+	<div class="message">
+		{#if reactText}
 			<p transition:fade class="text-outline">
-				<strong>{winner} won the round</strong>
+				<strong>{reactText}</strong>
 			</p>
 		{/if}
 	</div>
@@ -327,6 +352,7 @@
 				min={rangeDefault[phase]?.min}
 				max={rangeDefault[phase]?.max}
 				step={rangeDefault[phase]?.step}
+				animate={animateSlider}
 				bind:value={rangeValue}
 			></Slider>
 		{/if}
@@ -595,7 +621,7 @@
 		height: 100%;
 	}
 
-	.end p {
+	.message p {
 		margin: 0;
 		line-height: 1;
 		width: 100%;
