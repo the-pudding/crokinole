@@ -19,7 +19,7 @@
 
 <div class="c">
 	<figure bind:offsetWidth>
-		<Crokinole {width} tutorial={scenario}></Crokinole>
+		<Crokinole {width} dev={true} tutorial={scenario}></Crokinole>
 	</figure>
 </div>
 

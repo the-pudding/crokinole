@@ -36,7 +36,7 @@
 			value: [0],
 			min: -90,
 			max: 90,
-			step: 1
+			step: 0.5
 		}
 	};
 
@@ -147,7 +147,7 @@
 		if (phase === "position") crokinole.positionDisc(rangeValue[0] * width);
 		else if (phase === "shoot") {
 			const visible = tutorial ? tutorial.includes("try") : true;
-			degrees = Math.round(rangeValue[0]);
+			degrees = rangeValue[0];
 			crokinole.aimDisc({
 				degrees,
 				power: 0.25,
