@@ -93,5 +93,26 @@
 			"valid": true,
 			"state": "idle"
 		}
+	],
+	"tripletry": [
+		{
+			"x": 0.50347,
+			"y": 0.28819,
+			"player": "player2"
+		},
+		{
+			"x": 0.54513,
+			"y": 0.19965,
+			"player": "player2"
+		},
+		{
+			"x": 0.6163,
+			"y": 0.324,
+			"player": "player2"
+		},
+		{
+			"player": "player1",
+			"state": "position"
+		}
 	]
 }

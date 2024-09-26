@@ -5,6 +5,7 @@
 	export let value;
 	export let min;
 	export let max;
+	export let disabled;
 	export let step;
 	export let animate;
 
@@ -13,7 +14,7 @@
 
 <div class="c">
 	<p class="label">{label}</p>
-	<Slider.Root bind:value let:thumbs {min} {max} {step}>
+	<Slider.Root bind:value let:thumbs {min} {max} {step} {disabled}>
 		<span class="bg">
 			<Slider.Range />
 		</span>
@@ -49,6 +50,11 @@
 		display: block;
 		height: 100%;
 		transform: translateY(50%);
+	}
+
+	:global([data-slider-root][disabled]) {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.bg {

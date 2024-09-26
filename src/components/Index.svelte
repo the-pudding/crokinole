@@ -11,6 +11,7 @@
 	import Method from "$components/Method.svelte";
 	import Histogram from "$components/Histogram.svelte";
 	import Rules from "$components/Rules.svelte";
+	import Play from "$components/Play.svelte";
 
 	const components = {
 		Hero,
@@ -20,7 +21,8 @@
 		Table,
 		Method,
 		Histogram,
-		Rules
+		Rules,
+		Play
 	};
 
 	const copy = getContext("copy");

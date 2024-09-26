@@ -84,12 +84,20 @@
 		if (valid) {
 			// scored 20
 			const scored20 = discs.some((disc) => disc.score === 20);
+			const allOpp0 = discs
+				.filter((d) => d.player === "player2")
+				.every((disc) => disc.score === 0);
 			const goal20 = tutorial.includes("open");
+			const goalTriple = tutorial.includes("triple");
 			const custom = goal20
 				? scored20
 					? "Nice 20!"
 					: "But not a 20 :("
-				: "Well done!";
+				: goalTriple
+					? allOpp0
+						? "Triple takeout!"
+						: "But not a triple takeout :("
+					: "Well done!";
 			reactText = `Valid shot. ${custom}`;
 		} else {
 			reactText = "Invalid shot. Try again.";
@@ -138,17 +146,19 @@
 		}
 		if (phase === "position") crokinole.positionDisc(rangeValue[0] * width);
 		else if (phase === "shoot") {
+			const visible = tutorial ? tutorial.includes("try") : true;
 			degrees = Math.round(rangeValue[0]);
 			crokinole.aimDisc({
 				degrees,
 				power: 0.25,
-				visible: tutorial.includes("try")
+				visible
 			});
 		}
 	}
 
 	function updatePower() {
-		crokinole.aimDisc({ degrees, power, visible: tutorial.includes("try") });
+		const visible = tutorial ? tutorial.includes("try") : true;
+		crokinole.aimDisc({ degrees, power, visible });
 	}
 
 	function onPhaseClick() {
@@ -182,8 +192,8 @@
 		replay = !tutorial.includes("try");
 		uiVisible = !["regions", "score"].includes(tutorial);
 		const end = tutorial === "score";
-		pointsVisible = tutorial !== "regions";
-		holderVisible = tutorial !== "regions";
+		pointsVisible = !["regions", "tripletry"].includes(tutorial);
+		holderVisible = pointsVisible;
 		animateSlider = tutorial === "opponenttry" && !sliderAnimated;
 		// console.log({ tutorial, sliderAnimated, animateSlider });
 		power = powerDefault;
@@ -234,7 +244,7 @@
 	$: if (width) crokinole.init({ element, width, tutorial });
 	$: if (width) updateRange(rangeValue);
 	$: if (width) updatePower(power);
-	$: if (width) updateTutorial(tutorial);
+	$: if (width && tutorial) updateTutorial(tutorial);
 	$: tutorialClass = tutorial ? `tutorial tutorial-${tutorial}` : "";
 
 	onMount(() => {
@@ -321,7 +331,7 @@
 			></div>
 		{/each}
 	</div>
-	<div class="fg" bind:this={element}></div>
+	<div class="fg" bind:this={element} on:click={onClick}></div>
 
 	<div class="message">
 		{#if reactText}
@@ -353,6 +363,7 @@
 				max={rangeDefault[phase]?.max}
 				step={rangeDefault[phase]?.step}
 				animate={animateSlider}
+				{disabled}
 				bind:value={rangeValue}
 			></Slider>
 		{/if}
@@ -361,6 +372,7 @@
 </div>
 
 {#if dev}
+	<p>slider: {rangeValue[0]}</p>
 	<p>x: {x}, y: {y}</p>
 {/if}
 
@@ -629,7 +641,7 @@
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		font-size: var(--24px);
+		font-size: var(--20px);
 		text-align: center;
 		text-transform: uppercase;
 	}
