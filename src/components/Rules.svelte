@@ -28,7 +28,6 @@
 		stepHeight + uiHeight + scoreHeight + marginBottom + stepperPadding;
 	$: maxHeight = $viewport.height - totalHeight;
 	$: width = Math.min(offsetWidth, maxHeight);
-	$: console.log({ offsetWidth, stepHeight, totalHeight, maxHeight, width });
 </script>
 
 <div class="c rules">
