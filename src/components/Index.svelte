@@ -29,7 +29,16 @@
 	};
 
 	const copy = getContext("copy");
+	let globalMute;
 	$: body = copy.body;
+
+	onMount(() => {
+		document.addEventListener("visibilitychange", () => {
+			const hidden = document.hidden;
+			if (hidden) globalMute = $muted;
+			$muted = globalMute || hidden;
+		});
+	});
 </script>
 
 <button on:click={() => ($muted = !$muted)}>
