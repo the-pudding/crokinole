@@ -78,6 +78,11 @@
 		cursor: ew-resize;
 	}
 
+	:global([data-slider-thumb]:focus) {
+		outline: 2px solid var(--color-focus);
+		outline-offset: 2px;
+	}
+
 	:global([data-slider-thumb].animate) {
 		animation: pulse 1s ease-in-out infinite;
 	}
