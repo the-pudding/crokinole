@@ -1,6 +1,7 @@
 <script>
 	import Crokinole from "$components/Crokinole.svelte";
 	import viewport from "$stores/viewport.js";
+	import inView from "$actions/inView.js";
 	export let steps;
 
 	const uiHeight = 88;
@@ -11,6 +12,7 @@
 	let step = 0;
 	let offsetWidth;
 	let heights = [];
+	let notInView = true;
 
 	function onStep(n) {
 		// scroll .rules into view
@@ -48,8 +50,13 @@
 		>
 	</div>
 
-	<figure bind:offsetWidth>
-		<Crokinole {width} ui={true} {tutorial}></Crokinole>
+	<figure
+		bind:offsetWidth
+		use:inView
+		on:enter={() => (notInView = false)}
+		on:exit={() => (notInView = true)}
+	>
+		<Crokinole {width} {tutorial} autoMute={notInView}></Crokinole>
 		<p class="continue" class:visible={step === steps.length - 1}>
 			&darr; Keep scrolling &darr;
 		</p>

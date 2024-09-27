@@ -11,6 +11,7 @@
 	export let width;
 	export let dev;
 	export let tutorial;
+	export let autoMute;
 
 	const crokinole = C();
 	const angles = [45, 135, 225, 315];
@@ -28,15 +29,15 @@
 	const rangeDefault = {
 		position: {
 			value: [0.5],
-			min: 0.22,
-			max: 0.78,
+			min: 0.21,
+			max: 0.79,
 			step: 0.01
 		},
 		shoot: {
 			value: [0],
 			min: -90,
 			max: 90,
-			step: 0.5
+			step: 0.2
 		}
 	};
 
@@ -126,6 +127,7 @@
 	}
 
 	function onShotCompleteManual({ discs, valid }) {
+		// console.log(discs[0].position.x / width, discs[0].position.y / width);
 		updateScore({ discs, valid });
 		power = powerDefault;
 		if (tutorial.includes("try")) react({ discs, valid });
@@ -245,6 +247,7 @@
 	$: if (width) updateRange(rangeValue);
 	$: if (width) updatePower(power);
 	$: if (width && tutorial) updateTutorial(tutorial);
+	$: if (width) crokinole.autoMute(autoMute);
 	$: tutorialClass = tutorial ? `tutorial tutorial-${tutorial}` : "";
 
 	onMount(() => {

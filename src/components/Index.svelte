@@ -12,6 +12,9 @@
 	import Histogram from "$components/Histogram.svelte";
 	import Rules from "$components/Rules.svelte";
 	import Play from "$components/Play.svelte";
+	import { muted } from "$stores/misc.js";
+	import Volume2 from "lucide-svelte/icons/volume-2";
+	import VolumeX from "lucide-svelte/icons/volume-x";
 
 	const components = {
 		Hero,
@@ -29,8 +32,26 @@
 	$: body = copy.body;
 </script>
 
+<button on:click={() => ($muted = !$muted)}>
+	{#if $muted}
+		<VolumeX></VolumeX>
+	{:else}
+		<Volume2></Volume2>
+	{/if}
+</button>
 <MicroCMS {body} {components}></MicroCMS>
-<!-- 
-{#if browser}
-	<Crokinole />
-{/if} -->
+
+<style>
+	button {
+		position: fixed;
+		bottom: 8px;
+		right: 8px;
+		z-index: var(--z-top);
+		border: none;
+		background: var(--color-bg);
+		padding: 4px;
+	}
+	button:hover {
+		background: var(--color-bg);
+	}
+</style>

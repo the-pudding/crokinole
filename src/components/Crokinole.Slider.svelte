@@ -27,7 +27,7 @@
 <style>
 	.c {
 		--h: 32px;
-		--m: 22%;
+		--m: 21%;
 		height: var(--h);
 		width: calc(100% - var(--m) * 2);
 		margin: 0 auto;

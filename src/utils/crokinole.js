@@ -2,16 +2,18 @@ import Matter from "matter-js";
 import * as S from "$data/specs.js";
 import variables from "$data/variables.json";
 import { Howl } from "howler";
+import { muted } from "$stores/misc.js";
 
 const DISC_CATEGORY = 0x0001;
 const PEG_CATEGORY = 0x0002;
 const TRAP_CATEGORY = 0x0004;
 const RIM_CATEGORY = 0x0008;
 const SURFACE_CATEGORY = 0x0010;
-const DISC_RESTITUTION = 0.9;
+const DISC_RESTITUTION = 1;
 const DISC_DENSITY = 0.05;
 const DISC_FRICTIONAIR = 0.05;
 const PEG_RESTITUTION = 1;
+const MAX_RATE = 0.2;
 
 const COLOR = {
 	player1: variables.color["pink-aa"],
@@ -19,6 +21,8 @@ const COLOR = {
 	active: variables.color["black"],
 	vector: variables.color["black"]
 };
+
+let isMuted;
 
 // Create a new sound
 const DISC_SOUND = new Howl({
@@ -35,6 +39,10 @@ const FLICK_SOUND = new Howl({
 
 const CENTER_SOUND = new Howl({
 	src: ["assets/audio/center.mp3"]
+});
+
+muted.subscribe((value) => {
+	isMuted = value;
 });
 
 // Define a simple event emitter class
@@ -73,6 +81,7 @@ export default function createCrokinoleSimulation() {
 	let indicatorVector;
 	let indicatorVisible;
 	let manual;
+	let muteOverride;
 
 	// things to carry over on resize
 	let discs = [];
@@ -393,7 +402,7 @@ export default function createCrokinoleSimulation() {
 				const enableTrap = isClose && isSlow;
 
 				if (enableTrap) {
-					CENTER_SOUND.play();
+					if (!isMuted && !muteOverride) CENTER_SOUND.play();
 					disc.in20 = true;
 					disc.collisionFilter.mask =
 						DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY | TRAP_CATEGORY;
@@ -429,12 +438,12 @@ export default function createCrokinoleSimulation() {
 						: null;
 
 			if (disc && rim) {
-				RIM_SOUND.play();
+				if (!isMuted && !muteOverride) RIM_SOUND.play();
 				disc.frictionAir = 0.3;
 				disc.collisionFilter.mask =
 					DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY | SURFACE_CATEGORY;
 			} else if (disc && otherDisc) {
-				DISC_SOUND.play();
+				if (!isMuted && !muteOverride) DISC_SOUND.play();
 				disc.collided = true;
 				otherDisc.collided = true;
 				const opp = disc.player !== otherDisc.player;
@@ -725,7 +734,7 @@ export default function createCrokinoleSimulation() {
 		Matter.World.add(world, disc);
 
 		updateDiscColors();
-		shotMaxMagnitude = activeDisc.mass * mid * 0.0007;
+		shotMaxMagnitude = activeDisc.mass * MAX_RATE;
 
 		setState(m);
 	}
@@ -814,7 +823,7 @@ export default function createCrokinoleSimulation() {
 		Matter.Body.applyForce(activeDisc, activeDisc.position, shotVector);
 		updateDiscColors();
 
-		FLICK_SOUND.play();
+		if (!isMuted && !muteOverride) FLICK_SOUND.play();
 	}
 
 	// function flickDisc(opts) {
@@ -846,6 +855,10 @@ export default function createCrokinoleSimulation() {
 
 	function setState(v) {
 		state = v;
+	}
+
+	function autoMute(v) {
+		muteOverride = v;
 	}
 
 	function setIndicatorVisible(v) {
@@ -919,6 +932,7 @@ export default function createCrokinoleSimulation() {
 		flickDisc,
 		setState,
 		setIndicatorVisible,
+		autoMute,
 		init,
 		on: (event, listener) => emitter.on(event, listener)
 	};
