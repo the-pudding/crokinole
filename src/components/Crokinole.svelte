@@ -1,7 +1,7 @@
 <script>
 	import { tick, onMount } from "svelte";
 	import { fade } from "svelte/transition";
-	// import { range } from "d3";
+	import { format } from "d3";
 	import C from "$utils/crokinole.js";
 	import * as S from "$data/specs.js";
 	import Slider from "$components/Crokinole.Slider.svelte";
@@ -243,7 +243,7 @@
 
 	$: x = target ? (target.x / width).toFixed(2) : 0;
 	$: y = target ? (target.y / width).toFixed(2) : 0;
-	$: if (width) crokinole.init({ element, width, tutorial });
+	$: if (width) crokinole.resize(width);
 	$: if (width) updateRange(rangeValue);
 	$: if (width) updatePower(power);
 	$: if (width && tutorial) updateTutorial(tutorial);
@@ -251,8 +251,11 @@
 	$: tutorialClass = tutorial ? `tutorial tutorial-${tutorial}` : "";
 
 	onMount(() => {
+		crokinole.init({ element });
 		crokinole.on("shotComplete", onShotComplete);
 		crokinole.on("shotCompleteManual", onShotCompleteManual);
+		// TODO remove
+		crokinole.addDisc({ player: "player1" });
 	});
 </script>
 
@@ -297,13 +300,9 @@
 		<div class="surface" style="--w: {S.surface * width}px;"></div>
 
 		{#each regions.slice(0, 3) as region, i}
-			<div
-				class={region}
-				style="--w: {Math.floor(S[region] * width)}px; --b: {((S[region] -
-					S[regions[i + 1]]) /
-					2) *
-					width}px"
-			></div>
+			{@const outer = (S[`${region}R`] / S.center) * width}
+			{@const inner = (S[`${regions[i + 1]}R`] / S.center) * width}
+			<div class={region} style="--w: {outer}px; --b: {outer - inner}px"></div>
 		{/each}
 
 		<div class="twenty" style="--w: {Math.floor(S.twenty * width)}px;"></div>
@@ -402,6 +401,7 @@
 		left: 50%;
 		transform: translateX(-50%);
 		pointer-events: none;
+		display: none;
 	}
 
 	.fg {

@@ -21,8 +21,8 @@
 
 <style>
 	div {
-		width: calc(min(100svw, 100svh) * 0.7);
-		height: calc(min(100svw, 100svh) * 0.7);
+		width: calc(min(100svw, 100svh) * 0.6);
+		height: calc(min(100svw, 100svh) * 0.6);
 		margin: 32px auto;
 	}
 </style>

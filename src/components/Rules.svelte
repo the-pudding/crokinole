@@ -9,7 +9,7 @@
 	const marginBottom = 32;
 	const stepperPadding = 32;
 
-	let step = 0;
+	let step = 1;
 	let offsetWidth;
 	let heights = [];
 	let notInView = true;
