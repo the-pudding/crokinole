@@ -692,7 +692,7 @@ export default function createCrokinoleSimulation() {
 
 	function addDisc(opts = {}) {
 		const player = opts.player || "player1";
-		const m = opts.state || "position";
+		const s = opts.state || "position";
 		const x = opts.x ? opts.x * S.center * 2 : S.center;
 		const y = opts.y
 			? opts.y * S.center * 2
@@ -737,20 +737,16 @@ export default function createCrokinoleSimulation() {
 
 		shotMaxMagnitude = activeDisc.mass * MAX_RATE;
 		// TODO why is this mad
-		// setState(m);
+		setState(s);
 	}
 
-	function positionDisc(mouseX) {
+	function positionDisc(inputX) {
 		if (!activeDisc || state !== "position") return;
 		const buffer = 2;
 		const angles = [45 - buffer, 135 + buffer];
-		// Set the radius of the five circle
-		const fiveCircleRadius = S.fiveR;
-
-		let diffX = mouseX - S.center;
 
 		// Clamp diffX to be within the bounds of the five circle's radius
-		diffX = Math.max(-fiveCircleRadius, Math.min(fiveCircleRadius, diffX));
+		const diffX = Math.max(-S.fiveR, Math.min(S.fiveR, inputX - S.center));
 
 		const p1 = activeDisc.player === "player1";
 		const mult = p1 ? -1 : 1;
@@ -759,10 +755,7 @@ export default function createCrokinoleSimulation() {
 		// Calculate the y-coordinate based on the clamped diffX
 		const y =
 			S.center -
-			Math.sqrt(
-				Math.max(0, Math.pow(fiveCircleRadius, 2) - Math.pow(diffX, 2))
-			) *
-				mult;
+			Math.sqrt(Math.max(0, Math.pow(S.fiveR, 2) - Math.pow(diffX, 2))) * mult;
 
 		// Set the disc's position to the clamped x and calculated y
 		const newPosition = { x: S.center + diffX, y };
@@ -775,15 +768,15 @@ export default function createCrokinoleSimulation() {
 			Matter.Body.setPosition(activeDisc, newPosition);
 		} else if (degrees <= minAngle) {
 			const radiansClamped = (minAngle * Math.PI) / 180;
-			const a = Math.cos(radiansClamped) * fiveCircleRadius;
-			const b = Math.sin(radiansClamped) * fiveCircleRadius;
+			const a = Math.cos(radiansClamped) * S.fiveR;
+			const b = Math.sin(radiansClamped) * S.fiveR;
 			const x = S.center + a;
 			const y = S.center + b;
 			Matter.Body.setPosition(activeDisc, { x, y });
 		} else if (degrees >= maxAngle) {
 			const radiansClamped = (maxAngle * Math.PI) / 180;
-			const a = Math.cos(radiansClamped) * fiveCircleRadius;
-			const b = Math.sin(radiansClamped) * fiveCircleRadius;
+			const a = Math.cos(radiansClamped) * S.fiveR;
+			const b = Math.sin(radiansClamped) * S.fiveR;
 			const x = S.center + a;
 			const y = S.center + b;
 			Matter.Body.setPosition(activeDisc, { x, y });
@@ -816,6 +809,8 @@ export default function createCrokinoleSimulation() {
 	}
 
 	function flickDisc() {
+		// TODO
+		return;
 		if (!activeDisc || state !== "shoot") return;
 
 		setState("play");
@@ -825,11 +820,6 @@ export default function createCrokinoleSimulation() {
 		Matter.Body.applyForce(activeDisc, activeDisc.position, shotVector);
 
 		if (!globalMuted && !muteOverride) FLICK_SOUND.play();
-	}
-
-	function release() {
-		if (!activeDisc || state !== "shoot") return;
-		flickDisc();
 	}
 
 	function setState(v) {
@@ -915,7 +905,6 @@ export default function createCrokinoleSimulation() {
 		addDisc,
 		positionDisc,
 		aimDisc,
-		release,
 		flickDisc,
 		setState,
 		setIndicatorVisible,

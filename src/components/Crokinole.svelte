@@ -28,10 +28,10 @@
 
 	const rangeDefault = {
 		position: {
-			value: [0.5],
-			min: 0.21,
-			max: 0.79,
-			step: 0.01
+			value: [0.5 * S.boardR * 2],
+			min: 0.21 * S.boardR * 2,
+			max: 0.79 * S.boardR * 2,
+			step: 1
 		},
 		shoot: {
 			value: [0],
@@ -146,7 +146,7 @@
 			sliderAnimated = rangeValue[0] !== rangeDefault.position.value[0];
 			animateSlider = !sliderAnimated;
 		}
-		if (phase === "position") crokinole.positionDisc(rangeValue[0] * width);
+		if (phase === "position") crokinole.positionDisc(rangeValue[0]);
 		else if (phase === "shoot") {
 			const visible = tutorial ? tutorial.includes("try") : true;
 			degrees = rangeValue[0];
