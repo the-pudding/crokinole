@@ -88,6 +88,54 @@ export default function createCrokinoleSimulation() {
 	let activeDisc;
 
 	function createZones() {
+		const board = Matter.Bodies.circle(
+			S.center,
+			S.center,
+			S.boardR,
+			{
+				isStatic: true,
+				render: {
+					visible: true,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
+				},
+				label: "surface"
+			},
+			64
+		);
+
+		const rim = Matter.Bodies.circle(
+			S.center,
+			S.center,
+			S.boardR - S.rimW,
+			{
+				isStatic: true,
+				render: {
+					visible: true,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
+				},
+				label: "surface"
+			},
+			64
+		);
+
+		const surface = Matter.Bodies.circle(
+			S.center,
+			S.center,
+			S.surfaceR,
+			{
+				isStatic: true,
+				render: {
+					visible: true,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
+				},
+				label: "surface"
+			},
+			64
+		);
+
 		const zone20 = Matter.Bodies.circle(
 			S.center,
 			S.center,
@@ -96,7 +144,9 @@ export default function createCrokinoleSimulation() {
 				isStatic: true,
 				isSensor: true,
 				render: {
-					visible: true
+					visible: true,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
 				},
 				label: "20"
 			},
@@ -111,7 +161,9 @@ export default function createCrokinoleSimulation() {
 				isStatic: true,
 				isSensor: true,
 				render: {
-					visible: true
+					visible: true,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
 				},
 				label: "15"
 			},
@@ -126,7 +178,9 @@ export default function createCrokinoleSimulation() {
 				isStatic: true,
 				isSensor: true,
 				render: {
-					visible: true
+					visible: true,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
 				},
 				label: "10"
 			},
@@ -141,14 +195,24 @@ export default function createCrokinoleSimulation() {
 				isStatic: true,
 				isSensor: true,
 				render: {
-					visible: true
+					visible: true,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
 				},
 				label: "5"
 			},
 			64
 		);
 
-		Matter.Composite.add(world, [zone20, zone15, zone10, zone5]);
+		Matter.Composite.add(world, [
+			rim,
+			board,
+			surface,
+			zone20,
+			zone15,
+			zone10,
+			zone5
+		]);
 	}
 
 	function createTrap20() {
@@ -713,9 +777,7 @@ export default function createCrokinoleSimulation() {
 				restitution,
 				frictionAir,
 				render: {
-					fillStyle: COLOR[player],
-					strokeStyle: "#fff",
-					lineWidth: 1
+					fillStyle: COLOR[player]
 				},
 				label: "disc",
 				collisionFilter: {
@@ -736,7 +798,7 @@ export default function createCrokinoleSimulation() {
 		Matter.Composite.add(world, disc);
 
 		shotMaxMagnitude = activeDisc.mass * MAX_RATE;
-		// TODO why is this mad
+
 		setState(s);
 	}
 
@@ -809,8 +871,6 @@ export default function createCrokinoleSimulation() {
 	}
 
 	function flickDisc() {
-		// TODO
-		return;
 		if (!activeDisc || state !== "shoot") return;
 
 		setState("play");
@@ -874,7 +934,7 @@ export default function createCrokinoleSimulation() {
 			options: {
 				width: S.boardR * 2,
 				height: S.boardR * 2,
-				wireframes: true,
+				wireframes: false,
 				pixelRatio: "auto",
 				background: "transparent",
 				showSleeping: false,

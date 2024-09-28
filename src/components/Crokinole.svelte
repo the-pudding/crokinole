@@ -37,7 +37,7 @@
 			value: [0],
 			min: -90,
 			max: 90,
-			step: 0.2
+			step: 0.25
 		}
 	};
 
@@ -163,12 +163,13 @@
 		crokinole.aimDisc({ degrees, power, visible });
 	}
 
-	function onPhaseClick() {
+	async function onPhaseClick() {
 		if (phase === "position") {
 			phase = "shoot";
-			rangeValue = rangeDefault.shoot.value;
 			power = powerDefault;
 			crokinole.setState("shoot");
+			await tick();
+			rangeValue = rangeDefault.shoot.value;
 		}
 	}
 
@@ -346,8 +347,6 @@
 
 <div class="ui" class:visible={uiVisible || !tutorial}>
 	<div class="top">
-		<!-- {#if replay}
-			<button disabled={replayDisabled} on:click={onReplay}>Replay</button> -->
 		{#if !replay}
 			{#if phase === "shoot"}
 				<Button {disabled} bind:value={power} on:release={onRelease}></Button>
