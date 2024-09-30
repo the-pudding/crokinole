@@ -81,6 +81,7 @@ export default function createCrokinoleSimulation() {
 	let indicatorVisible;
 	let manual;
 	let muteOverride;
+	let canvasWidth;
 
 	// things to carry over on resize
 	let discs = [];
@@ -393,18 +394,19 @@ export default function createCrokinoleSimulation() {
 
 		const discR = activeDisc.circleRadius;
 		const discP = activeDisc.position;
+		const s = canvasWidth / (S.boardR * 2);
 
-		if (indicatorVector && indicatorVisible) {
+		if (state === "shoot" && indicatorVector && indicatorVisible) {
 			// Calculate the direction of the vector (normalized)
 			const normalizedVector = Matter.Vector.normalise(indicatorVector);
 
-			const startX = discP.x + normalizedVector.x * discR * 1.25;
-			const startY = discP.y + normalizedVector.y * discR * 1.25;
+			const startX = (discP.x + normalizedVector.x * discR * 1.25) * s;
+			const startY = (discP.y + normalizedVector.y * discR * 1.25) * s;
 
 			const endX =
-				discP.x + normalizedVector.x * discR * 1.5 + indicatorVector.x;
+				(discP.x + normalizedVector.x * discR * 1.5 + indicatorVector.x) * s;
 			const endY =
-				discP.y + normalizedVector.y * discR * 1.5 + indicatorVector.y;
+				(discP.y + normalizedVector.y * discR * 1.5 + indicatorVector.y) * s;
 
 			// Start drawing the main indicator line
 			ctx.beginPath();
@@ -427,53 +429,52 @@ export default function createCrokinoleSimulation() {
 			ctx.beginPath();
 			ctx.moveTo(endX, endY);
 			ctx.lineTo(
-				endX - arrowLength * Math.cos(angle - arrowAngle),
-				endY - arrowLength * Math.sin(angle - arrowAngle)
+				endX - arrowLength * Math.cos(angle - arrowAngle) * s,
+				endY - arrowLength * Math.sin(angle - arrowAngle) * s
 			);
 			ctx.moveTo(endX, endY);
 			ctx.lineTo(
-				endX - arrowLength * Math.cos(angle + arrowAngle),
-				endY - arrowLength * Math.sin(angle + arrowAngle)
+				endX - arrowLength * Math.cos(angle + arrowAngle) * s,
+				endY - arrowLength * Math.sin(angle + arrowAngle) * s
 			);
 			ctx.stroke();
 			ctx.closePath();
-		}
+		} else if (state === "position") {
+			// draw a rect in the middle of the screen
+			ctx.beginPath();
+			ctx.strokeStyle = COLOR.vector;
+			ctx.stroke();
 
-		if (state === "position") {
 			ctx.beginPath();
 			ctx.strokeStyle = COLOR.vector;
 			ctx.lineWidth = 2;
 
-			ctx.moveTo(discP.x - discR * 2.5, discP.y);
-			ctx.lineTo(discP.x - discR * 1.25, discP.y);
+			ctx.moveTo((discP.x - discR * 2.5) * s, discP.y * s);
+			ctx.lineTo((discP.x - discR * 1.25) * s, discP.y * s);
 
-			ctx.moveTo(discP.x + discR * 2.5, discP.y);
-			ctx.lineTo(discP.x + discR * 1.25, discP.y);
+			ctx.moveTo((discP.x + discR * 2.5) * s, discP.y * s);
+			ctx.lineTo((discP.x + discR * 1.25) * s, discP.y * s);
 
 			ctx.stroke();
 			ctx.closePath();
 
-			ctx.lineDashOffset = 0;
 			ctx.beginPath();
-			// ctx.strokeStyle = COLOR.vector;
-			// ctx.lineWidth = 2;
-
 			// draw arrows at each end
 			drawArrow(
 				ctx,
-				discP.x - discR * 1.25,
-				discP.y,
-				discP.x - discR * 2.5,
-				discP.y,
-				discR * 0.75
+				(discP.x - discR * 1.25) * s,
+				discP.y * s,
+				(discP.x - discR * 2.5) * s,
+				discP.y * s,
+				discR * 0.75 * s
 			);
 			drawArrow(
 				ctx,
-				discP.x + discR * 1.25,
-				discP.y,
-				discP.x + discR * 2.5,
-				discP.y,
-				discR * 0.75
+				(discP.x + discR * 1.25) * s,
+				discP.y * s,
+				(discP.x + discR * 2.5) * s,
+				discP.y * s,
+				discR * 0.75 * s
 			);
 
 			ctx.stroke();
@@ -599,11 +600,6 @@ export default function createCrokinoleSimulation() {
 		render.bounds.min.y = disc.position.y - render.options.height / 2 + margin;
 		render.bounds.max.x = disc.position.x + render.options.width / 2 - margin;
 		render.bounds.max.y = disc.position.y + render.options.height / 2 - margin;
-	}
-
-	function afterUpdate() {
-		// const threshold = 0.1;
-		// const stillMoving = discs.some((d) => d.speed >= threshold);
 	}
 
 	function getZoneForDisc(disc) {
@@ -896,10 +892,12 @@ export default function createCrokinoleSimulation() {
 
 	function resize(w) {
 		if (render) {
+			canvasWidth = w;
 			render.canvas.width = w;
 			render.canvas.height = w;
 
 			Matter.Render.setSize(render, w, w);
+			Matter.Render;
 
 			Matter.Render.lookAt(render, {
 				min: { x: 0, y: 0 },
@@ -953,10 +951,11 @@ export default function createCrokinoleSimulation() {
 
 		resize(element.clientWidth);
 
-		// Matter.Events.on(render, "afterRender", afterRender);
-		// ÷		Matter.Events.on(engine, "collisionActive", collisionActive);
-		// Matter.Events.on(engine, "collisionStart", collisionStart);
+		Matter.Events.on(render, "afterRender", afterRender);
+		Matter.Events.on(engine, "collisionActive", collisionActive);
+		Matter.Events.on(engine, "collisionStart", collisionStart);
 
+		// TODO need this?
 		// if (!discs.length) emitter.emit("ready");
 	}
 
