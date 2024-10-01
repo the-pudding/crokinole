@@ -73,15 +73,6 @@
 	let sliderAnimated;
 	let reactText;
 
-	// just for dev
-	function onClick(event) {
-		if (!dev) return;
-		x = event.offsetX / width;
-		y = event.offsetY / width;
-
-		// crokinole.select({ x, y });
-	}
-
 	function onShotComplete({ discs, valid }) {
 		power = powerDefault;
 	}
@@ -244,8 +235,6 @@
 		disabled = false;
 	}
 
-	$: x = target ? (target.x / width).toFixed(2) : 0;
-	$: y = target ? (target.y / width).toFixed(2) : 0;
 	$: tutorialClass = tutorial ? `tutorial tutorial-${tutorial}` : "";
 	$: if (ready) crokinole.resize(width);
 	$: if (ready) updateRangePosition(rangeValuePosition, width);
@@ -259,7 +248,7 @@
 		crokinole.on("shotCompleteManual", onShotCompleteManual);
 		crokinole.on("ready", () => (ready = true));
 		crokinole.init({ element, width, tutorial });
-		if (dev) crokinole.addDisc();
+		if (dev && !tutorial) crokinole.addDisc();
 	});
 </script>
 
@@ -396,7 +385,6 @@
 {#if dev}
 	<p>sliderPosition: {rangeValuePosition[0]}</p>
 	<p>sliderShoot: {rangeValueShoot[0]}</p>
-	<p>x: {x}, y: {y}</p>
 {/if}
 
 <style>
