@@ -11,7 +11,7 @@
 	import Method from "$components/Method.svelte";
 	import Histogram from "$components/Histogram.svelte";
 	import Rules from "$components/Rules.svelte";
-	import Play from "$components/Play.svelte";
+	import Situation from "$components/Situation.svelte";
 	import { muted } from "$stores/misc.js";
 	import Volume2 from "lucide-svelte/icons/volume-2";
 	import VolumeX from "lucide-svelte/icons/volume-x";
@@ -25,7 +25,7 @@
 		Method,
 		Histogram,
 		Rules,
-		Play
+		Situation
 	};
 
 	const copy = getContext("copy");

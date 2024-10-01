@@ -22,7 +22,8 @@ const COLOR = {
 	vector: variables.color["black"]
 };
 
-let isMuted;
+let visible = false;
+let globalMuted;
 
 // Create a new sound
 const DISC_SOUND = new Howl({
@@ -37,12 +38,12 @@ const FLICK_SOUND = new Howl({
 	src: ["assets/audio/flick.mp3"]
 });
 
-const CENTER_SOUND = new Howl({
-	src: ["assets/audio/center.mp3"]
+const HOLE_SOUND = new Howl({
+	src: ["assets/audio/hole.mp3"]
 });
 
 muted.subscribe((value) => {
-	isMuted = value;
+	globalMuted = value;
 });
 
 // Define a simple event emitter class
@@ -74,7 +75,6 @@ export default function createCrokinoleSimulation() {
 	let world;
 	let runner;
 	let render;
-	let mid;
 	let shotMaxMagnitude;
 	let shotMaxIndicatorMagnitude;
 	let shotVector;
@@ -82,41 +82,153 @@ export default function createCrokinoleSimulation() {
 	let indicatorVisible;
 	let manual;
 	let muteOverride;
+	let canvasWidth;
 
 	// things to carry over on resize
 	let discs = [];
 	let state; // idle, position, shoot, play
 	let activeDisc;
 
-	function updateDiscColors() {
-		// discs.forEach((d) => {
-		// 	d.render.lineWidth = d.id === activeDisc?.id ? 3 : 0;
-		// });
+	function scale(v) {
+		const s = canvasWidth / (S.boardR * 2);
+		return v * s;
 	}
 
 	function createZones() {
-		const zone20 = Matter.Bodies.circle(
-			mid,
-			mid,
-			mid * S.twenty,
+		const board = Matter.Bodies.circle(
+			S.center,
+			S.center,
+			S.boardR,
 			{
 				isStatic: true,
 				isSensor: true,
 				render: {
-					visible: false
+					visible,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
+				},
+				label: "surface"
+			},
+			64
+		);
+
+		const rim = Matter.Bodies.circle(
+			S.center,
+			S.center,
+			S.boardR - S.rimW,
+			{
+				isStatic: true,
+				isSensor: true,
+				render: {
+					visible,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
+				},
+				label: "surface"
+			},
+			64
+		);
+
+		const surface = Matter.Bodies.circle(
+			S.center,
+			S.center,
+			S.surfaceR,
+			{
+				isStatic: true,
+				isSensor: true,
+				render: {
+					visible,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
+				},
+				label: "surface"
+			},
+			64
+		);
+
+		const zone20 = Matter.Bodies.circle(
+			S.center,
+			S.center,
+			S.twentyR,
+			{
+				isStatic: true,
+				isSensor: true,
+				render: {
+					visible,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
 				},
 				label: "20"
 			},
 			64
 		);
 
-		Matter.World.add(world, [zone20]);
+		const zone15 = Matter.Bodies.circle(
+			S.center,
+			S.center,
+			S.fifteenR,
+			{
+				isStatic: true,
+				isSensor: true,
+				render: {
+					visible,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
+				},
+				label: "15"
+			},
+			64
+		);
+
+		const zone10 = Matter.Bodies.circle(
+			S.center,
+			S.center,
+			S.tenR,
+			{
+				isStatic: true,
+				isSensor: true,
+				render: {
+					visible,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
+				},
+				label: "10"
+			},
+			64
+		);
+
+		const zone5 = Matter.Bodies.circle(
+			S.center,
+			S.center,
+			S.fiveR,
+			{
+				isStatic: true,
+				isSensor: true,
+				render: {
+					visible,
+					fillStyle: "rgba(0,0,0,0)",
+					lineWidth: 1
+				},
+				label: "5"
+			},
+			64
+		);
+
+		Matter.Composite.add(world, [
+			rim,
+			board,
+			surface,
+			zone20,
+			zone15,
+			zone10,
+			zone5
+		]);
 	}
 
 	function createTrap20() {
 		const wallCount = 16;
-		const wallThickness = Math.max(2, mid * 0.05);
-		const wallRadius = S.twenty * mid + wallThickness / 2 - 1;
+		const wallThickness = Math.max(2, S.twentyR);
+		const wallRadius = S.twentyR + wallThickness / 2 - 1;
 
 		const trap = [];
 
@@ -124,9 +236,9 @@ export default function createCrokinoleSimulation() {
 			// Calculate angle for each wall
 			const angle = (i / wallCount) * 2 * Math.PI;
 
-			// Calculate the wall position around the center
-			const wallX = mid + Math.cos(angle) * wallRadius;
-			const wallY = mid + Math.sin(angle) * wallRadius;
+			// Calculate the wall position around the S.center
+			const wallX = S.center + Math.cos(angle) * wallRadius;
+			const wallY = S.center + Math.sin(angle) * wallRadius;
 			const wallLength = (2 * Math.PI * wallRadius) / wallCount;
 
 			// Create the wall as a small static rectangle
@@ -151,13 +263,13 @@ export default function createCrokinoleSimulation() {
 			trap.push(wall);
 		}
 
-		Matter.World.add(world, trap);
+		Matter.Composite.add(world, trap);
 	}
 
 	function createTrapRim() {
 		const wallCount = 32;
-		const wallThickness = Math.max(8, mid * 0.2);
-		const wallRadius = S.base * mid + wallThickness / 2 - 1;
+		const wallThickness = S.twentyR * 4;
+		const wallRadius = S.baseR + wallThickness / 2 - 1;
 
 		const trap = [];
 
@@ -165,9 +277,9 @@ export default function createCrokinoleSimulation() {
 			// Calculate angle for each wall
 			const angle = (i / wallCount) * 2 * Math.PI;
 
-			// Calculate the wall position around the center
-			const wallX = mid + Math.cos(angle) * wallRadius;
-			const wallY = mid + Math.sin(angle) * wallRadius;
+			// Calculate the wall position around the S.center
+			const wallX = S.center + Math.cos(angle) * wallRadius;
+			const wallY = S.center + Math.sin(angle) * wallRadius;
 			const wallLength = (2 * Math.PI * wallRadius) / wallCount;
 
 			// Create the wall as a small static rectangle
@@ -192,13 +304,13 @@ export default function createCrokinoleSimulation() {
 			trap.push(wall);
 		}
 
-		Matter.World.add(world, trap);
+		Matter.Composite.add(world, trap);
 	}
 
 	function createTrapSurface() {
 		const wallCount = 32;
-		const wallThickness = Math.max(8, mid * 0.1);
-		const wallRadius = S.surface * mid - wallThickness / 2 + 1;
+		const wallThickness = S.twentyR;
+		const wallRadius = S.surfaceR - wallThickness / 2 + 1;
 
 		const trap = [];
 
@@ -206,9 +318,9 @@ export default function createCrokinoleSimulation() {
 			// Calculate angle for each wall
 			const angle = (i / wallCount) * 2 * Math.PI;
 
-			// Calculate the wall position around the center
-			const wallX = mid + Math.cos(angle) * wallRadius;
-			const wallY = mid + Math.sin(angle) * wallRadius;
+			// Calculate the wall position around the S.center
+			const wallX = S.center + Math.cos(angle) * wallRadius;
+			const wallY = S.center + Math.sin(angle) * wallRadius;
 			const wallLength = (2 * Math.PI * wallRadius) / wallCount;
 
 			// Create the wall as a small static rectangle
@@ -233,33 +345,39 @@ export default function createCrokinoleSimulation() {
 			trap.push(wall);
 		}
 
-		Matter.World.add(world, trap);
+		Matter.Composite.add(world, trap);
 	}
 
 	function createPegs() {
 		const pegBodies = [];
-		const r = S.peg * mid;
+		const r = S.pegR;
 
 		// Loop through 8 pegs
 		for (let i = 0; i < 8; i++) {
 			const angle = 3 / 8 + (i / 8) * Math.PI * 2;
-			const x = mid + Math.cos(angle) * mid * S.fifteen;
-			const y = mid + Math.sin(angle) * mid * S.fifteen;
+			const x = S.center + Math.cos(angle) * S.fifteenR;
+			const y = S.center + Math.sin(angle) * S.fifteenR;
 
-			const peg = Matter.Bodies.circle(x, y, r, {
-				isStatic: true,
-				restitution: PEG_RESTITUTION,
-				render: { visible: false },
-				collisionFilter: {
-					category: PEG_CATEGORY,
-					mask: DISC_CATEGORY
-				}
-			});
+			const peg = Matter.Bodies.circle(
+				x,
+				y,
+				r,
+				{
+					isStatic: true,
+					restitution: PEG_RESTITUTION,
+					render: { visible },
+					collisionFilter: {
+						category: PEG_CATEGORY,
+						mask: DISC_CATEGORY
+					}
+				},
+				32
+			);
 
 			pegBodies.push(peg);
 		}
 
-		Matter.World.add(world, pegBodies);
+		Matter.Composite.add(world, pegBodies);
 	}
 
 	function drawArrow(ctx, fromX, fromY, toX, toY, arrowLength) {
@@ -286,22 +404,24 @@ export default function createCrokinoleSimulation() {
 		const discR = activeDisc.circleRadius;
 		const discP = activeDisc.position;
 
-		if (indicatorVector && indicatorVisible) {
+		if (state === "shoot" && indicatorVector && indicatorVisible) {
 			// Calculate the direction of the vector (normalized)
 			const normalizedVector = Matter.Vector.normalise(indicatorVector);
 
-			const startX = discP.x + normalizedVector.x * discR * 1.25;
-			const startY = discP.y + normalizedVector.y * discR * 1.25;
+			const startX = scale(discP.x + normalizedVector.x * discR * 1.25);
+			const startY = scale(discP.y + normalizedVector.y * discR * 1.25);
 
-			const endX =
-				discP.x + normalizedVector.x * discR * 1.5 + indicatorVector.x;
-			const endY =
-				discP.y + normalizedVector.y * discR * 1.5 + indicatorVector.y;
+			const endX = scale(
+				discP.x + normalizedVector.x * discR * 1.5 + indicatorVector.x
+			);
+			const endY = scale(
+				discP.y + normalizedVector.y * discR * 1.5 + indicatorVector.y
+			);
 
 			// Start drawing the main indicator line
 			ctx.beginPath();
 			ctx.strokeStyle = COLOR.vector;
-			ctx.lineWidth = 2;
+			ctx.lineWidth = canvasWidth < 480 ? 1 : 2;
 
 			// Draw the solid line starting from the outer edge of the disc
 			ctx.moveTo(startX, startY);
@@ -309,65 +429,51 @@ export default function createCrokinoleSimulation() {
 			ctx.stroke();
 
 			// Draw the arrow at the end of the line
-			const arrowLength = mid * 0.03; // Length of the arrowhead
+			const arrowLength = scale(discR * 0.75);
 			const arrowAngle = Math.PI / 4; // Angle for the arrowhead
 
 			// Calculate direction of the arrow based on the indicatorVector
 			const angle = Math.atan2(indicatorVector.y, indicatorVector.x);
+			const x1 = endX - arrowLength * Math.cos(angle - arrowAngle);
+			const y1 = endY - arrowLength * Math.sin(angle - arrowAngle);
+			const x2 = endX - arrowLength * Math.cos(angle + arrowAngle);
+			const y2 = endY - arrowLength * Math.sin(angle + arrowAngle);
 
 			// Draw the two lines of the arrowhead
 			ctx.beginPath();
 			ctx.moveTo(endX, endY);
-			ctx.lineTo(
-				endX - arrowLength * Math.cos(angle - arrowAngle),
-				endY - arrowLength * Math.sin(angle - arrowAngle)
-			);
+			ctx.lineTo(x1, y1);
 			ctx.moveTo(endX, endY);
-			ctx.lineTo(
-				endX - arrowLength * Math.cos(angle + arrowAngle),
-				endY - arrowLength * Math.sin(angle + arrowAngle)
-			);
+			ctx.lineTo(x2, y2);
 			ctx.stroke();
 			ctx.closePath();
-		}
-
-		if (state === "position") {
+		} else if (state === "position") {
 			ctx.beginPath();
 			ctx.strokeStyle = COLOR.vector;
-			ctx.lineWidth = 2;
+			ctx.stroke();
 
-			ctx.moveTo(discP.x - discR * 2.5, discP.y);
-			ctx.lineTo(discP.x - discR * 1.25, discP.y);
+			ctx.beginPath();
+			ctx.strokeStyle = COLOR.vector;
+			ctx.lineWidth = canvasWidth < 480 ? 1 : 2;
 
-			ctx.moveTo(discP.x + discR * 2.5, discP.y);
-			ctx.lineTo(discP.x + discR * 1.25, discP.y);
+			const x1 = scale(discP.x - discR * 2.5);
+			const x2 = scale(discP.x - discR * 1.25);
+			const x3 = scale(discP.x + discR * 2.5);
+			const x4 = scale(discP.x + discR * 1.25);
+			const y = scale(discP.y);
+			const r = scale(discR * 0.75);
+
+			ctx.moveTo(x1, y);
+			ctx.lineTo(x2, y);
+			ctx.moveTo(x3, y);
+			ctx.lineTo(x4, y);
 
 			ctx.stroke();
 			ctx.closePath();
 
-			ctx.lineDashOffset = 0;
 			ctx.beginPath();
-			// ctx.strokeStyle = COLOR.vector;
-			// ctx.lineWidth = 2;
-
-			// draw arrows at each end
-			drawArrow(
-				ctx,
-				discP.x - discR * 1.25,
-				discP.y,
-				discP.x - discR * 2.5,
-				discP.y,
-				discR * 0.75
-			);
-			drawArrow(
-				ctx,
-				discP.x + discR * 1.25,
-				discP.y,
-				discP.x + discR * 2.5,
-				discP.y,
-				discR * 0.75
-			);
-
+			drawArrow(ctx, x2, y, x1, y, r);
+			drawArrow(ctx, x4, y, x3, y, r);
 			ctx.stroke();
 			ctx.closePath();
 		}
@@ -402,16 +508,10 @@ export default function createCrokinoleSimulation() {
 				const enableTrap = isClose && isSlow;
 
 				if (enableTrap) {
-					if (!isMuted && !muteOverride) CENTER_SOUND.play();
+					if (!globalMuted && !muteOverride) HOLE_SOUND.play();
 					disc.in20 = true;
 					disc.collisionFilter.mask =
 						DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY | TRAP_CATEGORY;
-
-					// Matter.Body.setVelocity(disc, {
-					// 	x: disc.velocity.x * 0.5,
-					// 	y: disc.velocity.y * 0.5
-					// });
-
 					disc.restitution = 0.4;
 				}
 			}
@@ -438,12 +538,12 @@ export default function createCrokinoleSimulation() {
 						: null;
 
 			if (disc && rim) {
-				if (!isMuted && !muteOverride) RIM_SOUND.play();
+				if (!globalMuted && !muteOverride) RIM_SOUND.play();
 				disc.frictionAir = 0.3;
 				disc.collisionFilter.mask =
 					DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY | SURFACE_CATEGORY;
 			} else if (disc && otherDisc) {
-				if (!isMuted && !muteOverride) DISC_SOUND.play();
+				if (!globalMuted && !muteOverride) DISC_SOUND.play();
 				disc.collided = true;
 				otherDisc.collided = true;
 				const opp = disc.player !== otherDisc.player;
@@ -453,7 +553,7 @@ export default function createCrokinoleSimulation() {
 		});
 	}
 
-	function updateShotVector({ target, speed }) {
+	function updateShotVector(target) {
 		if (!activeDisc) return;
 		const vector = {
 			x: target.x - activeDisc.position.x,
@@ -462,77 +562,35 @@ export default function createCrokinoleSimulation() {
 
 		const normalizedVector = Matter.Vector.normalise(vector);
 
-		if (speed) {
-			// preset flick - if its just a speed and a target
-			const shotVectorMagnitude = speed * shotMaxMagnitude;
-			shotVector = Matter.Vector.mult(normalizedVector, shotVectorMagnitude);
-		} else {
-			// user flick
-			const currentMagnitude = Matter.Vector.magnitude(vector);
-			const indicatorMagnitude = Math.min(
-				currentMagnitude,
-				shotMaxIndicatorMagnitude
-			);
+		const currentMagnitude = Matter.Vector.magnitude(vector);
+		const indicatorMagnitude = Math.min(
+			currentMagnitude,
+			shotMaxIndicatorMagnitude
+		);
 
-			const shotVectorMagnitude =
-				(indicatorMagnitude / shotMaxIndicatorMagnitude) * shotMaxMagnitude;
+		const shotVectorMagnitude =
+			(indicatorMagnitude / shotMaxIndicatorMagnitude) * shotMaxMagnitude;
 
-			// update vector based on clamped vector length
-			shotVector = Matter.Vector.mult(normalizedVector, shotVectorMagnitude);
+		// update vector based on clamped vector length
+		shotVector = Matter.Vector.mult(normalizedVector, shotVectorMagnitude);
 
-			// visual version
-			indicatorVector = Matter.Vector.mult(
-				normalizedVector,
-				indicatorMagnitude
-			);
-		}
-	}
-
-	function panCameraToFollowDisc(disc) {
-		// Define how much margin you want around the disc when following
-		const margin = 100; // Adjust this value to control how much margin around the disc
-
-		// Calculate the bounds to center the camera on the disc
-		render.bounds.min.x = disc.position.x - render.options.width / 2 + margin;
-		render.bounds.min.y = disc.position.y - render.options.height / 2 + margin;
-		render.bounds.max.x = disc.position.x + render.options.width / 2 - margin;
-		render.bounds.max.y = disc.position.y + render.options.height / 2 - margin;
-	}
-
-	function zoomCamera(scale) {
-		const centerX = (render.bounds.min.x + render.bounds.max.x) / 2;
-		const centerY = (render.bounds.min.y + render.bounds.max.y) / 2;
-
-		// Apply zoom by scaling the bounds
-		const newWidth = render.options.width * scale;
-		const newHeight = render.options.height * scale;
-
-		render.bounds.min.x = centerX - newWidth / 2;
-		render.bounds.min.y = centerY - newHeight / 2;
-		render.bounds.max.x = centerX + newWidth / 2;
-		render.bounds.max.y = centerY + newHeight / 2;
-	}
-
-	function afterUpdate() {
-		// const threshold = 0.1;
-		// const stillMoving = discs.some((d) => d.speed >= threshold);
+		// visual version
+		indicatorVector = Matter.Vector.mult(normalizedVector, indicatorMagnitude);
 	}
 
 	function getZoneForDisc(disc) {
-		const center = { x: mid, y: mid };
-
 		const discR = disc.circleRadius;
 		const discP = disc.position;
 
 		const distance = Math.sqrt(
-			Math.pow(discP.x - center.x, 2) + Math.pow(discP.y - center.y, 2)
+			Math.pow(discP.x - S.center, 2) + Math.pow(discP.y - S.center, 2)
 		);
 
 		const zones = [
-			{ r: mid * S.twenty, score: 20 },
-			{ r: mid * S.fifteen, score: 15 },
-			{ r: mid * S.ten, score: 10 },
-			{ r: mid * S.five, score: 5 }
+			{ r: S.twentyR, score: 20 },
+			{ r: S.fifteenR, score: 15 },
+			{ r: S.tenR, score: 10 },
+			{ r: S.fiveR, score: 5 }
 		];
 
 		// see if it is outside, if not move on
@@ -542,16 +600,14 @@ export default function createCrokinoleSimulation() {
 	}
 
 	function getIntersect15(disc) {
-		const center = { x: mid, y: mid };
-
 		const discR = disc.circleRadius;
 		const discP = disc.position;
 
 		const distance = Math.sqrt(
-			Math.pow(discP.x - center.x, 2) + Math.pow(discP.y - center.y, 2)
+			Math.pow(discP.x - S.center, 2) + Math.pow(discP.y - S.center, 2)
 		);
 
-		const zoneR = mid * S.fifteen;
+		const zoneR = S.fifteenR;
 
 		if (distance - discR < zoneR) return true;
 	}
@@ -601,7 +657,7 @@ export default function createCrokinoleSimulation() {
 						d.valid = d.collided ? intersected15 : true;
 					}
 				}
-				if (!d.valid || !d.score) Matter.World.remove(world, d);
+				if (!d.valid || !d.score) Matter.Composite.remove(world, d);
 			});
 
 			// was active disc valid?
@@ -621,7 +677,7 @@ export default function createCrokinoleSimulation() {
 
 				// remove 20
 				discs.forEach((d) => {
-					if (d.score === 20) Matter.World.remove(world, d);
+					if (d.score === 20) Matter.Composite.remove(world, d);
 				});
 
 				discs = discs.filter((d) => d.score !== 20);
@@ -637,18 +693,12 @@ export default function createCrokinoleSimulation() {
 
 			activeDisc = null;
 			setState("idle");
-			// console.log(
-			// 	discs[0].position.x / (mid * 2),
-			// 	discs[0].position.y / (mid * 2)
-			// );
 		}
-		// TODO fire event that says shot all done and provide disc status
-		// discs.map(d => d)
 	}
 
 	function clearInstance() {
 		// Clear the world bodies
-		Matter.Composite.clear(world, false);
+		Matter.Matter.Composite.clear(world, false);
 
 		// Remove engine events
 		Matter.Events.off(engine);
@@ -663,22 +713,12 @@ export default function createCrokinoleSimulation() {
 		Matter.Runner.stop(runner);
 	}
 
-	function reAddDiscs(prevMid) {
-		discs.forEach((disc) => {
-			// move position of discs scaled based on prevMid compared to mid
-			const s = mid / prevMid;
-			const x = disc.position.x * s;
-			const y = disc.position.y * s;
-			Matter.Body.setPosition(disc, { x, y });
-			Matter.Body.scale(disc, s, s);
-			Matter.World.add(world, disc);
-		});
-	}
-
 	// public methods
 	function removeDiscs() {
 		discs.forEach((disc) => {
-			Matter.World.remove(world, disc);
+			// remove invalid disc from composite (that haven't already been removed)
+			console.log(disc);
+			Matter.Composite.remove(world, disc);
 		});
 
 		discs = [];
@@ -690,14 +730,14 @@ export default function createCrokinoleSimulation() {
 
 	function addDisc(opts = {}) {
 		const player = opts.player || "player1";
-		const m = opts.state || "position";
-		const x = opts.x ? opts.x * mid * 2 : mid;
+		const s = opts.state || "position";
+		const x = opts.x ? opts.x : S.center;
 		const y = opts.y
-			? opts.y * mid * 2
+			? opts.y
 			: player === "player1"
-				? mid + mid * S.five
-				: mid - mid * S.five;
-		const r = mid * S.disc;
+				? S.center + S.fiveR
+				: S.center - S.fiveR;
+		const r = S.discR;
 		const density = DISC_DENSITY;
 		const restitution = DISC_RESTITUTION;
 		const frictionAir = DISC_FRICTIONAIR;
@@ -711,9 +751,7 @@ export default function createCrokinoleSimulation() {
 				restitution,
 				frictionAir,
 				render: {
-					fillStyle: COLOR[player],
-					strokeStyle: "#fff",
-					lineWidth: 1
+					fillStyle: COLOR[player]
 				},
 				label: "disc",
 				collisionFilter: {
@@ -731,26 +769,20 @@ export default function createCrokinoleSimulation() {
 		activeDisc = disc;
 
 		Matter.Events.on(disc, "sleepStart", sleepStart);
-		Matter.World.add(world, disc);
+		Matter.Composite.add(world, disc);
 
-		updateDiscColors();
 		shotMaxMagnitude = activeDisc.mass * MAX_RATE;
 
-		setState(m);
+		setState(s);
 	}
 
-	function positionDisc(mouseX) {
+	function positionDisc(inputX) {
 		if (!activeDisc || state !== "position") return;
 		const buffer = 2;
 		const angles = [45 - buffer, 135 + buffer];
-		// Set the radius of the five circle
-		const fiveCircleRadius = mid * S.five;
-
-		// Calculate the difference in x from the center (mid)
-		let diffX = mouseX - mid;
 
 		// Clamp diffX to be within the bounds of the five circle's radius
-		diffX = Math.max(-fiveCircleRadius, Math.min(fiveCircleRadius, diffX));
+		const diffX = Math.max(-S.fiveR, Math.min(S.fiveR, inputX - S.center));
 
 		const p1 = activeDisc.player === "player1";
 		const mult = p1 ? -1 : 1;
@@ -758,32 +790,31 @@ export default function createCrokinoleSimulation() {
 		const maxAngle = angles[p1 ? 1 : 0] * mult * -1;
 		// Calculate the y-coordinate based on the clamped diffX
 		const y =
-			mid -
-			Math.sqrt(
-				Math.max(0, Math.pow(fiveCircleRadius, 2) - Math.pow(diffX, 2))
-			) *
-				mult;
+			S.center -
+			Math.sqrt(Math.max(0, Math.pow(S.fiveR, 2) - Math.pow(diffX, 2))) * mult;
 
 		// Set the disc's position to the clamped x and calculated y
-		const newPosition = { x: mid + diffX, y };
-		const center = { x: mid, y: mid };
-		const radians = Matter.Vector.angle(center, newPosition);
+		const newPosition = { x: S.center + diffX, y };
+		const radians = Matter.Vector.angle(
+			{ x: S.center, y: S.center },
+			newPosition
+		);
 		const degrees = (radians * 180) / Math.PI;
 		if (degrees > minAngle && degrees < maxAngle) {
 			Matter.Body.setPosition(activeDisc, newPosition);
 		} else if (degrees <= minAngle) {
 			const radiansClamped = (minAngle * Math.PI) / 180;
-			const a = Math.cos(radiansClamped) * fiveCircleRadius;
-			const b = Math.sin(radiansClamped) * fiveCircleRadius;
-			const x = mid + a;
-			const y = mid + b;
+			const a = Math.cos(radiansClamped) * S.fiveR;
+			const b = Math.sin(radiansClamped) * S.fiveR;
+			const x = S.center + a;
+			const y = S.center + b;
 			Matter.Body.setPosition(activeDisc, { x, y });
 		} else if (degrees >= maxAngle) {
 			const radiansClamped = (maxAngle * Math.PI) / 180;
-			const a = Math.cos(radiansClamped) * fiveCircleRadius;
-			const b = Math.sin(radiansClamped) * fiveCircleRadius;
-			const x = mid + a;
-			const y = mid + b;
+			const a = Math.cos(radiansClamped) * S.fiveR;
+			const b = Math.sin(radiansClamped) * S.fiveR;
+			const x = S.center + a;
+			const y = S.center + b;
 			Matter.Body.setPosition(activeDisc, { x, y });
 		}
 	}
@@ -810,7 +841,7 @@ export default function createCrokinoleSimulation() {
 
 		const speed = Math.max(0.01, power) * shotMaxIndicatorMagnitude;
 		const target = getTarget({ degrees, speed });
-		updateShotVector({ target });
+		updateShotVector(target);
 	}
 
 	function flickDisc() {
@@ -821,36 +852,8 @@ export default function createCrokinoleSimulation() {
 		setIndicatorVisible(false);
 
 		Matter.Body.applyForce(activeDisc, activeDisc.position, shotVector);
-		updateDiscColors();
 
-		if (!isMuted && !muteOverride) FLICK_SOUND.play();
-	}
-
-	// function flickDisc(opts) {
-	// 	if (!activeDisc || state !== "shoot") return;
-	// 	if (opts && (!opts.target || !opts.speed)) return;
-
-	// 	setState("play");
-
-	// 	setIndicatorVisible(false);
-
-	// 	if (opts && opts.target && opts.speed) {
-	// 		const target = {
-	// 			x: opts.target.x * mid * 2,
-	// 			y: opts.target.y * mid * 2
-	// 		};
-
-	// 		const speed = opts.speed;
-	// 		updateShotVector({ target, speed });
-	// 	}
-
-	// 	Matter.Body.applyForce(activeDisc, activeDisc.position, shotVector);
-	// 	updateDiscColors();
-	// }
-
-	function release() {
-		if (!activeDisc || state !== "shoot") return;
-		flickDisc();
+		if (!globalMuted && !muteOverride) FLICK_SOUND.play();
 	}
 
 	function setState(v) {
@@ -865,21 +868,32 @@ export default function createCrokinoleSimulation() {
 		indicatorVisible = v;
 	}
 
+	function resize(w) {
+		if (render) {
+			canvasWidth = w;
+			render.canvas.width = w;
+			render.canvas.height = w;
+
+			Matter.Render.setSize(render, w, w);
+			Matter.Render;
+
+			Matter.Render.lookAt(render, {
+				min: { x: 0, y: 0 },
+				max: { x: S.boardR * 2, y: S.boardR * 2 }
+			});
+		}
+	}
+
 	function init({ element, width, tutorial }) {
 		manual = !!tutorial;
 
-		let prevMid;
-
 		if (engine) {
 			clearInstance();
-			prevMid = mid;
 		} else {
 			setState("idle");
 		}
 
-		const height = width;
-		mid = width / 2;
-		shotMaxIndicatorMagnitude = mid * 0.2;
+		shotMaxIndicatorMagnitude = S.center * 0.2;
 
 		engine = Matter.Engine.create({
 			enableSleeping: true
@@ -894,33 +908,32 @@ export default function createCrokinoleSimulation() {
 			element,
 			engine,
 			options: {
-				width,
-				height,
+				width: S.boardR * 2,
+				height: S.boardR * 2,
 				wireframes: false,
 				pixelRatio: "auto",
 				background: "transparent",
-				hasBounds: true,
-				showSleeping: false
+				showSleeping: false,
+				hasBounds: true
 			}
 		});
 
-		reAddDiscs(prevMid);
 		createZones();
 		createPegs();
 		createTrap20();
 		createTrapRim();
 		createTrapSurface();
 
-		Matter.Events.on(render, "afterRender", afterRender);
-
 		Matter.Runner.run(runner, engine);
 		Matter.Render.run(render);
 
+		resize(width);
+
+		Matter.Events.on(render, "afterRender", afterRender);
 		Matter.Events.on(engine, "collisionActive", collisionActive);
 		Matter.Events.on(engine, "collisionStart", collisionStart);
-		// Matter.Events.on(engine, "afterUpdate", afterUpdate);
 
-		if (!discs.length) emitter.emit("ready");
+		emitter.emit("ready");
 	}
 
 	return {
@@ -928,32 +941,12 @@ export default function createCrokinoleSimulation() {
 		addDisc,
 		positionDisc,
 		aimDisc,
-		release,
 		flickDisc,
 		setState,
 		setIndicatorVisible,
 		autoMute,
+		resize,
 		init,
 		on: (event, listener) => emitter.on(event, listener)
 	};
-	// 	if (activeDisc) {
-	// 		// Pan to follow the disc
-	// 		panCameraToFollowDisc(activeDisc);
-
-	// 		// Optionally, apply zoom based on the speed of the disc or other factors
-	// 		// For example, zoom in when the disc is moving fast and zoom out when it's slow
-	// 		const speed = Matter.Vector.magnitude(activeDisc.velocity);
-	// 		const zoomScale = 1;
-	// 		zoomCamera(zoomScale);
-	// 	}
-	// });
-
-	// export function select({ x, y }) {
-	// 	const clickedDiscs = Matter.Query.point(discs, { x, y });
-
-	// 	if (clickedDiscs.length > 0) {
-	// 		activeDisc = clickedDiscs[0];
-	// 		updateDiscColors();
-	// 	}
-	// }
 }

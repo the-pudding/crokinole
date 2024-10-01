@@ -2,12 +2,8 @@
 	import Crokinole from "$components/Crokinole.svelte";
 	import viewport from "$stores/viewport.js";
 	import inView from "$actions/inView.js";
+	import * as S from "$data/specs.js";
 	export let steps;
-
-	const uiHeight = 88;
-	const scoreHeight = 39;
-	const marginBottom = 32;
-	const stepperPadding = 32;
 
 	let step = 0;
 	let offsetWidth;
@@ -27,7 +23,7 @@
 	$: stepHeight = heights.length ? heights[longestIndex] : 0;
 	$: tutorial = steps[step].id;
 	$: totalHeight =
-		stepHeight + uiHeight + scoreHeight + marginBottom + stepperPadding;
+		stepHeight + S.uiHeight + S.scoreHeight + S.marginBottom + S.stepperPadding;
 	$: maxHeight = $viewport.height - totalHeight;
 	$: width = Math.min(offsetWidth, maxHeight);
 </script>
@@ -56,10 +52,12 @@
 		on:enter={() => (notInView = false)}
 		on:exit={() => (notInView = true)}
 	>
-		<Crokinole {width} {tutorial} autoMute={notInView}></Crokinole>
-		<p class="continue" class:visible={step === steps.length - 1}>
-			&darr; Keep scrolling &darr;
-		</p>
+		{#if offsetWidth}
+			<Crokinole {width} {tutorial} autoMute={notInView}></Crokinole>
+			<p class="continue" class:visible={step === steps.length - 1}>
+				&darr; Keep scrolling &darr;
+			</p>
+		{/if}
 	</figure>
 </div>
 
@@ -150,7 +148,7 @@
 	}
 
 	@media only screen and (max-width: 800px) {
-		p {
+		.steps p {
 			font-size: var(--16px);
 		}
 
@@ -184,7 +182,7 @@
 	}
 
 	@media only screen and (max-width: 600px) {
-		p {
+		.steps p {
 			font-size: var(--14px);
 		}
 	}

@@ -19,7 +19,9 @@
 
 <div class="c">
 	<figure bind:offsetWidth>
-		<Crokinole {width} dev={true} tutorial={scenario}></Crokinole>
+		{#if offsetWidth}
+			<Crokinole {width} tutorial={scenario}></Crokinole>
+		{/if}
 	</figure>
 </div>
 

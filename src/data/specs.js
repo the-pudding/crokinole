@@ -13,15 +13,22 @@
 		Peg Diameter: 3/8”
 	*/
 
-const rim = 8;
-const max = 381 + rim;
-export const rimWidth = rim / max;
-export const surface = 330 / max;
-export const ditchWidth = 51 / max;
-export const base = surface + ditchWidth;
-export const peg = 4.7625 / max;
-export const twenty = 17.5 / max;
-export const fifteen = 102 / max;
-export const ten = 203 / max;
-export const five = 305 / max;
-export const disc = 15 / max;
+// 774 total
+export const rimW = 6;
+export const surfaceR = 330;
+export const ditchW = 51;
+export const pegR = 4.7625;
+export const twentyR = 17.5;
+export const fifteenR = 102;
+export const tenR = 203;
+export const fiveR = 305;
+export const discR = 15;
+export const baseR = surfaceR + ditchW;
+export const boardR = baseR + rimW;
+export const center = boardR;
+
+export const uiHeight = 88;
+export const scoreHeight = 39;
+export const marginBottom = 32;
+export const stepperPadding = 32;
+export const marginSide = 0;

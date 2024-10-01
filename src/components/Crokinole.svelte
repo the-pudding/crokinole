@@ -1,7 +1,7 @@
 <script>
 	import { tick, onMount } from "svelte";
 	import { fade } from "svelte/transition";
-	// import { range } from "d3";
+	import { format } from "d3";
 	import C from "$utils/crokinole.js";
 	import * as S from "$data/specs.js";
 	import Slider from "$components/Crokinole.Slider.svelte";
@@ -28,16 +28,16 @@
 
 	const rangeDefault = {
 		position: {
-			value: [0.5],
-			min: 0.21,
-			max: 0.79,
-			step: 0.01
+			value: [0.5 * S.boardR * 2],
+			min: 0.21 * S.boardR * 2,
+			max: 0.79 * S.boardR * 2,
+			step: 1
 		},
 		shoot: {
 			value: [0],
 			min: -90,
 			max: 90,
-			step: 0.2
+			step: 0.25
 		}
 	};
 
@@ -51,11 +51,16 @@
 	let x = 0;
 	let y = 0;
 
+	let ready;
 	let turn = 0;
-	let rangeValue = rangeDefault.position.value;
+	let rangeValuePosition = rangeDefault.position.value;
+	let rangeValueShoot = rangeDefault.shoot.value;
+	// let rangeMin = rangeDefault.position.min;
+	// let rangeMax = rangeDefault.position.max;
+	// let rangeStep = rangeDefault.position.step;
 	let power = powerDefault;
 	let phase = "position";
-	let degrees;
+	let degrees = 0;
 	let disabled;
 	let replay;
 	let uiVisible;
@@ -103,6 +108,7 @@
 		} else {
 			reactText = "Invalid shot. Try again.";
 		}
+		clearTimeout(reactTimeout);
 		reactTimeout = setTimeout(() => {
 			reactText = null;
 			updateTutorial();
@@ -114,7 +120,7 @@
 		reactText = `${score.player1 > score.player2 ? "You" : "Opp."} win the round`;
 	}
 
-	function updateScore({ discs, valid }) {
+	function updateScore(discs) {
 		// add discs to score
 
 		discs.forEach((disc) => {
@@ -127,8 +133,8 @@
 	}
 
 	function onShotCompleteManual({ discs, valid }) {
-		// console.log(discs[0].position.x / width, discs[0].position.y / width);
-		updateScore({ discs, valid });
+		resetScore();
+		updateScore(discs);
 		power = powerDefault;
 		if (tutorial.includes("try")) react({ discs, valid });
 		else if (tutorial) replayTimeout = setTimeout(updateTutorial, 2000);
@@ -141,21 +147,29 @@
 		disabled = true;
 	}
 
-	function updateRange() {
+	function resetRanges() {
+		rangeValuePosition = rangeDefault.position.value;
+		rangeValueShoot = rangeDefault.shoot.value;
+	}
+
+	function updateRangePosition() {
+		if (phase !== "position") return;
 		if (!sliderAnimated) {
-			sliderAnimated = rangeValue[0] !== rangeDefault.position.value[0];
+			sliderAnimated = rangeValuePosition[0] !== rangeDefault.position.value[0];
 			animateSlider = !sliderAnimated;
 		}
-		if (phase === "position") crokinole.positionDisc(rangeValue[0] * width);
-		else if (phase === "shoot") {
-			const visible = tutorial ? tutorial.includes("try") : true;
-			degrees = rangeValue[0];
-			crokinole.aimDisc({
-				degrees,
-				power: 0.25,
-				visible
-			});
-		}
+		crokinole.positionDisc(rangeValuePosition[0]);
+	}
+
+	function updateRangeShoot() {
+		if (phase !== "shoot") return;
+		const visible = tutorial ? tutorial.includes("try") : true;
+		degrees = rangeValueShoot[0];
+		crokinole.aimDisc({
+			degrees,
+			power: 0.25,
+			visible
+		});
 	}
 
 	function updatePower() {
@@ -163,11 +177,11 @@
 		crokinole.aimDisc({ degrees, power, visible });
 	}
 
-	function onPhaseClick() {
+	async function onPhaseClick() {
 		if (phase === "position") {
 			phase = "shoot";
-			rangeValue = rangeDefault.shoot.value;
 			power = powerDefault;
+			resetRanges();
 			crokinole.setState("shoot");
 		}
 	}
@@ -179,13 +193,7 @@
 		score.player2 = 0;
 	}
 
-	// function onReplay() {
-	// crokinole.removeDiscs();
-	// updateTutorial(tutorial, 2000);
-	// }
-
 	async function updateTutorial() {
-		disabled = false;
 		resetScore();
 		clearTimeout(autoplayTimeout);
 		clearTimeout(replayTimeout);
@@ -197,12 +205,13 @@
 		pointsVisible = !["regions", "tripletry"].includes(tutorial);
 		holderVisible = pointsVisible;
 		animateSlider = tutorial === "opponenttry" && !sliderAnimated;
-		// console.log({ tutorial, sliderAnimated, animateSlider });
 		power = powerDefault;
 		const s = scenarios[tutorial];
 
 		crokinole.removeDiscs();
 		if (s) s.forEach(crokinole.addDisc);
+		s.forEach((s) => (s.valid = true));
+		updateScore(s);
 
 		if ((replay || end) && s) {
 			const shooter = s[s.length - 1];
@@ -210,11 +219,6 @@
 			const d = shooter.degrees + rd;
 			const rp = shooter.random ? Math.random() * 0.07 - 0.035 : 0;
 			const p = shooter.power + rp;
-
-			if (end) {
-				pointsVisible = true;
-				updateScore({ discs: s, valid: true });
-			}
 
 			autoplayTimeout = setTimeout(() => {
 				if (end) endRound();
@@ -229,30 +233,31 @@
 			}, 2000);
 		} else {
 			autoplayTimeout = null;
-			crokinole.removeDiscs();
-			if (s) {
-				s.forEach(crokinole.addDisc);
-				phase = s[s.length - 1].state;
-			}
+			if (s) phase = s[s.length - 1].state;
 			if (phase === "shoot") crokinole.setIndicatorVisible(true);
 		}
 
-		await tick();
-		rangeValue = rangeDefault[phase].value;
+		// reset ranges
+		resetRanges();
+		disabled = false;
 	}
 
 	$: x = target ? (target.x / width).toFixed(2) : 0;
 	$: y = target ? (target.y / width).toFixed(2) : 0;
-	$: if (width) crokinole.init({ element, width, tutorial });
-	$: if (width) updateRange(rangeValue);
-	$: if (width) updatePower(power);
-	$: if (width && tutorial) updateTutorial(tutorial);
-	$: if (width) crokinole.autoMute(autoMute);
 	$: tutorialClass = tutorial ? `tutorial tutorial-${tutorial}` : "";
+	$: if (ready) crokinole.resize(width);
+	$: if (ready) updateRangePosition(rangeValuePosition, width);
+	$: if (ready) updateRangeShoot(rangeValueShoot, width);
+	$: if (ready) updatePower(power, width);
+	$: if (ready) updateTutorial(tutorial);
+	$: crokinole.autoMute(autoMute);
 
 	onMount(() => {
 		crokinole.on("shotComplete", onShotComplete);
 		crokinole.on("shotCompleteManual", onShotCompleteManual);
+		crokinole.on("ready", () => (ready = true));
+		crokinole.init({ element, width, tutorial });
+		if (dev) crokinole.addDisc();
 	});
 </script>
 
@@ -260,8 +265,6 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="score" style:width="{width}px">
-	<!-- <p>Player 1: {score.player1}</p> -->
-	<!-- <p>Player 2: {score.player2}</p> -->
 	<p
 		class="holder you"
 		class:animate={animate.player1}
@@ -291,37 +294,41 @@
 	<div class="bg" style:width="{width}px" style:height="{width}px">
 		<div
 			class="base"
-			style="--w: {S.base * width}px; --b: {(S.rimWidth / 2) * width}px;"
+			style="--w: {((S.baseR - S.rimW) / S.boardR) * width}px; --b: {(S.rimW /
+				S.boardR) *
+				width}px;"
 		></div>
 
-		<div class="surface" style="--w: {S.surface * width}px;"></div>
+		<div
+			class="surface"
+			style="--w: {(S.surfaceR / S.boardR) * width}px;"
+		></div>
 
 		{#each regions.slice(0, 3) as region, i}
+			{@const regionW = S[`${region}R`]}
+			{@const nextRegionW = S[`${regions[i + 1]}R`]}
+			{@const outerW = (regionW / S.boardR) * width}
+			{@const innerW = (nextRegionW / S.boardR) * width}
 			<div
 				class={region}
-				style="--w: {Math.floor(S[region] * width)}px; --b: {((S[region] -
-					S[regions[i + 1]]) /
-					2) *
-					width}px"
+				style="--w: {outerW}px; --b: {(outerW - innerW) / 2}px"
 			></div>
 		{/each}
 
-		<div class="twenty" style="--w: {Math.floor(S.twenty * width)}px;"></div>
+		<div class="twenty" style="--w: {(S.twentyR / S.boardR) * width}px;"></div>
 
 		{#each regions as region}
 			{@const text = regionText[region]}
-			<span
-				class="text text-{region}"
-				style="--w: {Math.floor(
-					width / 2 - (S[region] * width) / 2
-				)}px; --d: {S[region] * width}px;">{text}</span
-			>
+			{@const y = (width - (S[`${region}R`] / S.boardR) * width) / 2}
+			{@const extra = region === "twenty" ? (S.twentyR / S.boardR) * width : 0}
+			<span class="text text-{region}" style="--y: {y + extra}px;">{text}</span>
 		{/each}
 
 		{#each angles as angle}
 			<div
 				class="quadrant-line"
-				style="--w: {((S.five - S.ten) * width) / 2}px; --x: {(S.ten * width) /
+				style="--w: {(((S.fiveR - S.tenR) / S.boardR) * width) /
+					2}px; --x: {((S.tenR / S.boardR) * width) /
 					2}px; --angle: {angle}deg;"
 			></div>
 		{/each}
@@ -329,12 +336,15 @@
 		{#each pegs as peg}
 			<div
 				class="peg"
-				style="--w: {S.peg * width}px; --x: {((S.fifteen - S.peg) * width + 1) /
-					2}px; --angle: {peg}deg;"
+				style="--w: {(S.pegR / S.boardR) * width}px; --x: {(((S.fifteenR -
+					S.pegR) /
+					S.boardR) *
+					width) /
+					2}px; --angle: {peg - 1}deg;"
 			></div>
 		{/each}
 	</div>
-	<div class="fg" bind:this={element} on:click={onClick}></div>
+	<div class="fg" bind:this={element}></div>
 
 	<div class="message">
 		{#if reactText}
@@ -347,8 +357,6 @@
 
 <div class="ui" class:visible={uiVisible || !tutorial}>
 	<div class="top">
-		<!-- {#if replay}
-			<button disabled={replayDisabled} on:click={onReplay}>Replay</button> -->
 		{#if !replay}
 			{#if phase === "shoot"}
 				<Button {disabled} bind:value={power} on:release={onRelease}></Button>
@@ -360,22 +368,32 @@
 
 	<div class="bottom">
 		{#if !replay}
-			<Slider
-				label={phase === "shoot" ? "aim" : phase}
-				min={rangeDefault[phase]?.min}
-				max={rangeDefault[phase]?.max}
-				step={rangeDefault[phase]?.step}
-				animate={animateSlider}
-				{disabled}
-				bind:value={rangeValue}
-			></Slider>
+			{#if phase === "position"}
+				<Slider
+					label="position"
+					min={rangeDefault.position.min}
+					max={rangeDefault.position.max}
+					step={rangeDefault.position.step}
+					{disabled}
+					bind:value={rangeValuePosition}
+				></Slider>
+			{:else if phase === "shoot"}
+				<Slider
+					label="aim"
+					min={rangeDefault.shoot.min}
+					max={rangeDefault.shoot.max}
+					step={rangeDefault.shoot.step}
+					{disabled}
+					bind:value={rangeValueShoot}
+				></Slider>
+			{/if}
 		{/if}
-		<!-- <p><em>Press for power and release to shoot</em></p> -->
 	</div>
 </div>
 
 {#if dev}
-	<p>slider: {rangeValue[0]}</p>
+	<p>sliderPosition: {rangeValuePosition[0]}</p>
+	<p>sliderShoot: {rangeValueShoot[0]}</p>
 	<p>x: {x}, y: {y}</p>
 {/if}
 
@@ -465,7 +483,7 @@
 	.bg .peg {
 		transform-origin: 0 0;
 		transform: rotate(var(--angle))
-			translate(calc(var(--x) - 1px), calc(var(--w) - 2px));
+			translate(calc(var(--x) - 0px), calc(var(--w) - 0px));
 		width: var(--w);
 		border: none;
 		background: var(--color-peg);
@@ -473,7 +491,7 @@
 
 	p {
 		margin: 0;
-		font-size: 14px;
+		font-size: var(--14px);
 		text-align: center;
 	}
 
@@ -523,19 +541,18 @@
 	}
 
 	span.text {
-		opacity: 0;
 		transition: opacity 0.2s;
 		position: absolute;
-		top: var(--w);
+		top: var(--y);
 		left: 50%;
 		transform: translate(-50%, 8px);
 		color: var(--color-fg-light);
+		font-weight: bold;
+		font-size: var(--14px);
 	}
 
-	.tutorial span {
+	.tutorial span.text {
 		opacity: 1;
-		font-weight: bold;
-		font-size: var(--16px);
 	}
 
 	.tutorial-regions .five {
@@ -555,9 +572,9 @@
 		color: var(--color-fg-light);
 	}
 
-	.tutorial span.text-twenty {
+	/* .tutorial span.text-twenty {
 		transform: translate(-50%, calc(var(--d) + 4px));
-	}
+	} */
 
 	.tutorial-regions span {
 		color: var(--color-fg-dark);
@@ -647,6 +664,12 @@
 		font-size: var(--20px);
 		text-align: center;
 		text-transform: uppercase;
+	}
+
+	@media only screen and (max-width: 600px) {
+		.message p {
+			font-size: var(--16px);
+		}
 	}
 
 	@keyframes zoom {
