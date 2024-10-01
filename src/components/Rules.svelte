@@ -180,10 +180,4 @@
 			left: 0;
 		}
 	}
-
-	@media only screen and (max-width: 600px) {
-		.steps p {
-			font-size: var(--14px);
-		}
-	}
 </style>

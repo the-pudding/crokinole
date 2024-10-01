@@ -54,6 +54,10 @@
 		font-size: var(--14px);
 	}
 
+	th {
+		line-height: 1.2;
+	}
+
 	td {
 		border: 1px solid var(--color-gray-300);
 	}
@@ -77,5 +81,17 @@
 
 	p {
 		font-size: var(--14px);
+	}
+
+	@media only screen and (max-width: 600px) {
+		td:nth-of-type(1),
+		th:nth-of-type(1) {
+			width: 14em;
+		}
+
+		td:nth-of-type(3),
+		th:nth-of-type(3) {
+			width: 10em;
+		}
 	}
 </style>
