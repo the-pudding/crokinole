@@ -9,11 +9,13 @@
 
 	$: totalHeight = S.uiHeight + S.scoreHeight + S.marginBottom;
 	$: maxHeight = $viewport.height - totalHeight;
-	$: width = Math.min(offsetWidth - S.marginSide, maxHeight);
+	$: width = offsetWidth ? Math.min(offsetWidth - S.marginSide, maxHeight) : 0;
 </script>
 
 <figure bind:this={el} bind:offsetWidth width="{width}px">
-	<Crokinole {width} dev={true} ui={true}></Crokinole>
+	{#if offsetWidth}
+		<Crokinole {width} dev={true}></Crokinole>
+	{/if}
 </figure>
 
 <style>

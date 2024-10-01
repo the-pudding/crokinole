@@ -1,42 +1,29 @@
 {
-	"open": [
-		{
-			"state": "shoot",
-			"player": "player1",
-			"random": true,
-			"power": 0.235,
-			"degrees": 0
-		}
-	],
-	"opentry": [
-		{ "x": 0.3, "y": 0.6, "player": "player1" },
-		{ "state": "position", "player": "player1" }
-	],
 	"fifteen": [
-		{ "state": "shoot", "player": "player2", "power": 0.21, "degrees": 177 }
+		{ "state": "shoot", "player": "player2", "power": 0.32, "degrees": 176 }
 	],
-
 	"opponent": [
 		{
-			"x": 0.5239184668140235,
-			"y": 0.5643606863100566,
-			"player": "player2"
+			"x": 411.7843742508332,
+			"y": 436.43306454273926,
+			"player": "player2",
+			"score": 15
 		},
 		{
-			"x": 0.43462246777163904,
-			"y": 0.8876611418047882,
-
+			"x": 341.53999999999996,
+			"y": 688.5930841382143,
 			"state": "shoot",
 			"player": "player1",
-			"power": 0.37,
-			"degrees": 14.7
+			"power": 0.38,
+			"degrees": 15
 		}
 	],
 	"opponenttry": [
 		{
-			"x": 0.5239184668140235,
-			"y": 0.5643606863100566,
-			"player": "player2"
+			"x": 411.7843742508332,
+			"y": 436.43306454273926,
+			"player": "player2",
+			"score": 15
 		},
 		{
 			"state": "position",
@@ -45,49 +32,65 @@
 	],
 	"invalid": [
 		{
-			"x": 0.5239184668140235,
-			"y": 0.5643606863100566,
-			"player": "player2"
+			"x": 150,
+			"y": 300,
+			"player": "player2",
+			"score": 5
 		},
 		{
 			"state": "shoot",
 			"player": "player1",
-			"power": 0.14,
-			"degrees": -3.5
+			"power": 0.21,
+			"degrees": 1
 		}
 	],
+
+	"open": [
+		{
+			"state": "shoot",
+			"player": "player1",
+			"random": true,
+			"power": 0.3,
+			"degrees": 0
+		}
+	],
+	"opentry": [
+		{ "x": 480, "y": 250, "player": "player1", "score": 10 },
+		{ "state": "position", "player": "player1" }
+	],
+
 	"score": [
 		{
-			"x": 0.45,
-			"y": 0.44,
+			"x": 350,
+			"y": 342,
 			"player": "player1",
 			"score": 15,
 			"valid": true
 		},
 		{
-			"x": 0.7,
-			"y": 0.4,
+			"x": 545,
+			"y": 311,
 			"player": "player1",
 			"score": 10,
 			"valid": true
 		},
 		{
-			"x": 0.8,
-			"y": 0.4,
+			"x": 622,
+			"y": 310,
 			"player": "player2",
 			"score": 5,
 			"valid": true
 		},
 		{
-			"x": 0.2,
-			"y": 0.4,
+			"x": 150,
+			"y": 305,
 			"player": "player2",
 			"score": 5,
 			"valid": true
 		},
 		{
-			"x": 0.3,
-			"y": 0.6,
+			"x": 233,
+			"y": 466,
 			"player": "player2",
 			"score": 10,
 			"valid": true,
@@ -96,18 +99,18 @@
 	],
 	"tripletry": [
 		{
-			"x": 0.51,
-			"y": 0.295,
+			"x": 394,
+			"y": 228,
 			"player": "player2"
 		},
 		{
-			"x": 0.52,
-			"y": 0.18,
+			"x": 402,
+			"y": 139,
 			"player": "player2"
 		},
 		{
-			"x": 0.61,
-			"y": 0.33,
+			"x": 472,
+			"y": 255,
 			"player": "player2"
 		},
 		{

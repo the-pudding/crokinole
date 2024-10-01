@@ -5,7 +5,7 @@
 	import * as S from "$data/specs.js";
 	export let steps;
 
-	let step = 1;
+	let step = 0;
 	let offsetWidth;
 	let heights = [];
 	let notInView = true;
@@ -52,10 +52,12 @@
 		on:enter={() => (notInView = false)}
 		on:exit={() => (notInView = true)}
 	>
-		<Crokinole {width} {tutorial} autoMute={notInView}></Crokinole>
-		<p class="continue" class:visible={step === steps.length - 1}>
-			&darr; Keep scrolling &darr;
-		</p>
+		{#if offsetWidth}
+			<Crokinole {width} {tutorial} autoMute={notInView}></Crokinole>
+			<p class="continue" class:visible={step === steps.length - 1}>
+				&darr; Keep scrolling &darr;
+			</p>
+		{/if}
 	</figure>
 </div>
 
@@ -146,7 +148,7 @@
 	}
 
 	@media only screen and (max-width: 800px) {
-		p {
+		.steps p {
 			font-size: var(--16px);
 		}
 
@@ -180,7 +182,7 @@
 	}
 
 	@media only screen and (max-width: 600px) {
-		p {
+		.steps p {
 			font-size: var(--14px);
 		}
 	}

@@ -26,21 +26,21 @@ let visible = false;
 let globalMuted;
 
 // Create a new sound
-// const DISC_SOUND = new Howl({
-// 	src: ["assets/audio/disc.mp3"]
-// });
+const DISC_SOUND = new Howl({
+	src: ["assets/audio/disc.mp3"]
+});
 
-// const RIM_SOUND = new Howl({
-// 	src: ["assets/audio/rim.mp3"]
-// });
+const RIM_SOUND = new Howl({
+	src: ["assets/audio/rim.mp3"]
+});
 
-// const FLICK_SOUND = new Howl({
-// 	src: ["assets/audio/flick.mp3"]
-// });
+const FLICK_SOUND = new Howl({
+	src: ["assets/audio/flick.mp3"]
+});
 
-// const HOLE_SOUND = new Howl({
-// 	src: ["assets/audio/hole.mp3"]
-// });
+const HOLE_SOUND = new Howl({
+	src: ["assets/audio/hole.mp3"]
+});
 
 muted.subscribe((value) => {
 	globalMuted = value;
@@ -716,7 +716,9 @@ export default function createCrokinoleSimulation() {
 	// public methods
 	function removeDiscs() {
 		discs.forEach((disc) => {
-			Matter.World.remove(world, disc);
+			// remove invalid disc from composite (that haven't already been removed)
+			console.log(disc);
+			Matter.Composite.remove(world, disc);
 		});
 
 		discs = [];
@@ -729,9 +731,9 @@ export default function createCrokinoleSimulation() {
 	function addDisc(opts = {}) {
 		const player = opts.player || "player1";
 		const s = opts.state || "position";
-		const x = opts.x ? opts.x * S.center * 2 : S.center;
+		const x = opts.x ? opts.x : S.center;
 		const y = opts.y
-			? opts.y * S.center * 2
+			? opts.y
 			: player === "player1"
 				? S.center + S.fiveR
 				: S.center - S.fiveR;
@@ -882,7 +884,7 @@ export default function createCrokinoleSimulation() {
 		}
 	}
 
-	function init({ element, tutorial }) {
+	function init({ element, width, tutorial }) {
 		manual = !!tutorial;
 
 		if (engine) {
@@ -925,14 +927,13 @@ export default function createCrokinoleSimulation() {
 		Matter.Runner.run(runner, engine);
 		Matter.Render.run(render);
 
-		resize(element.clientWidth);
+		resize(width);
 
 		Matter.Events.on(render, "afterRender", afterRender);
 		Matter.Events.on(engine, "collisionActive", collisionActive);
 		Matter.Events.on(engine, "collisionStart", collisionStart);
 
-		// TODO need this?
-		// if (!discs.length) emitter.emit("ready");
+		emitter.emit("ready");
 	}
 
 	return {

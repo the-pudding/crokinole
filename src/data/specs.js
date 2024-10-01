@@ -13,6 +13,7 @@
 		Peg Diameter: 3/8”
 	*/
 
+// 774 total
 export const rimW = 6;
 export const surfaceR = 330;
 export const ditchW = 51;
