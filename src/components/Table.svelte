@@ -84,14 +84,19 @@
 	}
 
 	@media only screen and (max-width: 600px) {
-		td:nth-of-type(1),
-		th:nth-of-type(1) {
-			width: 14em;
+		td,
+		th {
+			padding: 4px;
 		}
 
-		td:nth-of-type(3),
-		th:nth-of-type(3) {
-			width: 10em;
+		td {
+			vertical-align: middle;
+		}
+
+		td:nth-of-type(1),
+		th:nth-of-type(1) {
+			/* make it wider */
+			width: 11em;
 		}
 	}
 </style>

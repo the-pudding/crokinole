@@ -209,9 +209,11 @@
 		const s = scenarios[tutorial];
 
 		crokinole.removeDiscs();
-		if (s) s.forEach(crokinole.addDisc);
-		s.forEach((s) => (s.valid = true));
-		updateScore(s);
+		if (s) {
+			s.forEach(crokinole.addDisc);
+			s.forEach((s) => (s.valid = true));
+			updateScore(s);
+		}
 
 		if ((replay || end) && s) {
 			const shooter = s[s.length - 1];
