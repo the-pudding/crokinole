@@ -1,28 +1,4 @@
-<!doctype html>
-<html lang="en">
-
-<head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	
-		<link href="../_app/immutable/assets/0.BXULswOy.css" rel="stylesheet">
-		<link href="../_app/immutable/assets/3.DzJDuiEe.css" rel="stylesheet">
-		<link href="../_app/immutable/assets/viewport.wLxNe9NH.css" rel="stylesheet">
-		<link rel="modulepreload" href="../_app/immutable/entry/start.DzTOTIud.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/entry.BSx_dYOZ.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/scheduler.C31QdOOv.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/index.CcMCousj.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/app.CPA7548Y.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/index.C7vtcI56.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/0.BKDHJ4MO.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/3.uGRqXSdw.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/viewport.DK2UF2v4.js">
-</head>
-
-<body>
-	<a href="#content" class="skip-to-main">Skip to main content</a>
-	<div>  <header><div class="wordmark svelte-1jutwkd"><a href="https://pudding.cool" aria-label="The Pudding" target="_self" class="svelte-1jutwkd"><!-- HTML_TAG_START --><svg width="100%" viewBox="0 0 201 49" fill="none" xmlns="http://www.w3.org/2000/svg">
+import{a as Z,e as f,H,c as d,b as c,B as g,f as o,l as h,g as u,h as m,n as p,C as v,q as $,v as b,D as L,E as k,F as y}from"../chunks/scheduler.C31QdOOv.js";import{S as V,i as w,b as E,d as S,m as j,t as _,a as M,e as A}from"../chunks/index.BmNRGUCJ.js";const D=!0,T="always",F=Object.freeze(Object.defineProperty({__proto__:null,prerender:D,trailingSlash:T},Symbol.toStringTag,{value:"Module"})),q=`<svg width="100%" viewBox="0 0 201 49" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M135.14 20.83V20.7C135.35 15.87 130.62 16.21 130.96 20.9C130.65 25.56 135.54 25.46 135.14 20.83Z" fill="black"/>
 <path d="M115.78 20.76V20.63C115.66 19.64 115.61 18.26 114.72 17.59C113.88 16.96 112.53 17.28 112.11 18.18C111.23 19.94 110.95 24.19 113.74 24.3C115.53 24.4 115.84 21.9 115.78 20.76Z" fill="black"/>
 <path d="M74.11 12.16C72.84 12.45 72.54 14.46 72.59 15.47V15.59C72.65 16.63 72.88 18.49 74.24 18.65C77.26 19.15 77.15 11.69 74.11 12.17V12.16Z" fill="black"/>
@@ -42,33 +18,4 @@
 <path d="M122.75 18.46C122.65 14.89 122.55 10.74 122.35 7.08999C122.28 6.32999 122.09 5.47999 121.44 5.04999C120.95 4.71999 120.32 4.63999 119.72 4.60999C118.25 4.59999 116.32 4.40999 115.74 5.60999C115.3 6.44999 115.47 7.49999 115.2 8.37999C114.89 9.60999 113.76 9.99999 112.59 10.19C111.08 10.43 109.59 11.03 108.4 12.03C101.79 17.1 104.32 39.06 114.53 29.96C115.42 29.19 116.56 29.25 117.12 30.36C117.53 31.14 118.15 31.77 119.07 31.88C120.84 32.18 122.73 31.86 122.85 30.03C123.07 26.25 122.78 22.39 122.76 18.64V18.46H122.75ZM113.73 24.3C110.93 24.19 111.22 19.94 112.1 18.18C112.53 17.29 113.87 16.96 114.71 17.59C115.6 18.26 115.66 19.65 115.77 20.63V20.76C115.83 21.9 115.53 24.4 113.73 24.3Z" fill="white"/>
 <path d="M103.33 20.62C103.33 18.48 103.3 15.97 103.26 13.62C103.24 12.83 103.24 11.93 102.79 11.27C102.24 10.41 100.97 10.4 99.83 10.41C98.71 10.46 97.18 10.23 96.31 10.88C95.72 11.34 95.62 12.19 95.59 12.92C95.54 15.6 95.65 18.33 95.56 21.01C95.51 21.81 95.34 22.9 94.53 23.23C91.74 24 93.24 14.68 92.88 12.85C92.94 10.49 91.02 10.33 88.94 10.43C86.58 10.33 85.08 10.66 85.25 13.43C85.25 18.45 84.39 23.68 85.77 28.5C86.46 31.71 90.33 33.38 93.13 31.65C94.13 31.14 94.93 30.01 96.08 29.89C96.59 29.86 97.03 30.19 97.44 30.63C98.16 31.52 99.05 32.01 100.2 31.99C102.04 32.15 103.39 31.45 103.36 29.57C103.43 26.64 103.32 23.7 103.33 20.8V20.62Z" fill="white"/>
 </svg>
-<!-- HTML_TAG_END --></a></div> </header> <main id="content"><div class="svelte-vkao56">   <div class="score svelte-1ebjqcn" style="width: undefinedpx;">  <p class="holder you svelte-1ebjqcn  visible"><span class="label svelte-1ebjqcn" data-svelte-h="svelte-26pqx6">20s</span> <strong>0</strong></p> <p class="points svelte-1ebjqcn visible"><span class="label svelte-1ebjqcn" data-svelte-h="svelte-8p7j2g">POINTS</span> <strong><span class="you">0</span> -
-			<span class="opp">0</span></strong></p> <p class="holder opp svelte-1ebjqcn  visible"><span class="label svelte-1ebjqcn" data-svelte-h="svelte-26pqx6">20s</span> <strong>0</strong></p></div> <div class="c  svelte-1ebjqcn"><div class="bg svelte-1ebjqcn" style="width: undefinedpx; height: undefinedpx;"><div class="base svelte-1ebjqcn" style="--w: NaNpx; --b: NaNpx;"></div> <div class="surface svelte-1ebjqcn" style="--w: NaNpx;"></div> <div class="five svelte-1ebjqcn" style="--w: NaNpx; --b: NaNpx"></div><div class="ten svelte-1ebjqcn" style="--w: NaNpx; --b: NaNpx"></div><div class="fifteen svelte-1ebjqcn" style="--w: NaNpx; --b: NaNpx"></div> <div class="twenty svelte-1ebjqcn" style="--w: NaNpx;"></div>  <span class="text text-five svelte-1ebjqcn" style="--w: NaNpx; --d: NaNpx;">5</span> <span class="text text-ten svelte-1ebjqcn" style="--w: NaNpx; --d: NaNpx;">10</span> <span class="text text-fifteen svelte-1ebjqcn" style="--w: NaNpx; --d: NaNpx;">15</span> <span class="text text-twenty svelte-1ebjqcn" style="--w: NaNpx; --d: NaNpx;">20</span> <div class="quadrant-line svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 45deg;"></div><div class="quadrant-line svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 135deg;"></div><div class="quadrant-line svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 225deg;"></div><div class="quadrant-line svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 315deg;"></div> <div class="peg svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 15deg;"></div><div class="peg svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 60deg;"></div><div class="peg svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 105deg;"></div><div class="peg svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 150deg;"></div><div class="peg svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 195deg;"></div><div class="peg svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 240deg;"></div><div class="peg svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 285deg;"></div><div class="peg svelte-1ebjqcn" style="--w: NaNpx; --x: NaNpx; --angle: 330deg;"></div></div> <div class="fg svelte-1ebjqcn"></div> <div class="message svelte-1ebjqcn"></div></div> <div class="ui svelte-1ebjqcn visible"><div class="top svelte-1ebjqcn"> <button data-svelte-h="svelte-18imge0">Place Disc</button></div> <div class="bottom svelte-1ebjqcn"><div class="c svelte-q9ia7x"><p class="label svelte-q9ia7x">position</p> <span dir="ltr" data-orientation="horizontal" style="touch-action: pan-y" data-melt-id="ZXsdpKjBpD" data-melt-slider="" data-slider-root=""><span class="bg svelte-q9ia7x"><span style="position:absolute;left:0%;right:50%;" data-melt-slider-range="" data-slider-range=""></span></span> <span role="slider" aria-valuemin="0.21" aria-valuemax="0.79" aria-valuenow="0.5" aria-orientation="horizontal" data-melt-part="thumb" data-value="0.5" style="position:absolute;left:50%;translate:-50% 0;" tabindex="0" data-melt-slider-thumb="" data-slider-thumb="" class=""></span></span> </div> </div></div> <p class="svelte-1ebjqcn">slider: 0.5</p> <p class="svelte-1ebjqcn">x: 0, y: 0</p> </div></main> 
-			
-			<script>
-				{
-					__sveltekit_oddqpq = {
-						base: new URL("..", location).pathname.slice(0, -1)
-					};
-
-					const element = document.currentScript.parentElement;
-
-					const data = [null,null];
-
-					Promise.all([
-						import("../_app/immutable/entry/start.DzTOTIud.js"),
-						import("../_app/immutable/entry/app.CPA7548Y.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 3],
-							data,
-							form: null,
-							error: null
-						});
-					});
-				}
-			</script>
-		</div>
-</body>
-
-</html>
+`;function B(r){let t,s,e,l;return{c(){t=f("header"),s=f("div"),e=f("a"),l=new H(!1),this.h()},l(i){t=d(i,"HEADER",{});var a=c(t);s=d(a,"DIV",{class:!0});var C=c(s);e=d(C,"A",{href:!0,"aria-label":!0,target:!0,class:!0});var n=c(e);l=g(n,!1),n.forEach(o),C.forEach(o),a.forEach(o),this.h()},h(){l.a=null,h(e,"href","https://pudding.cool"),h(e,"aria-label","The Pudding"),h(e,"target","_self"),h(e,"class","svelte-1jutwkd"),h(s,"class","wordmark svelte-1jutwkd")},m(i,a){u(i,t,a),m(t,s),m(s,e),l.m(q,e)},p,i:p,o:p,d(i){i&&o(t)}}}class I extends V{constructor(t){super(),w(this,t,null,B,Z,{})}}function O(r){let t,s,e,l;t=new I({});const i=r[1].default,a=v(i,r,r[0],null);return{c(){E(t.$$.fragment),s=$(),e=f("main"),a&&a.c(),this.h()},l(C){S(t.$$.fragment,C),s=b(C),e=d(C,"MAIN",{id:!0});var n=c(e);a&&a.l(n),n.forEach(o),this.h()},h(){h(e,"id","content")},m(C,n){j(t,C,n),u(C,s,n),u(C,e,n),a&&a.m(e,null),l=!0},p(C,[n]){a&&a.p&&(!l||n&1)&&L(a,i,C,C[0],l?y(i,C[0],n,null):k(C[0]),null)},i(C){l||(_(t.$$.fragment,C),_(a,C),l=!0)},o(C){M(t.$$.fragment,C),M(a,C),l=!1},d(C){C&&(o(s),o(e)),A(t,C),a&&a.d(C)}}}function P(r,t,s){let{$$slots:e={},$$scope:l}=t;return r.$$set=i=>{"$$scope"in i&&s(0,l=i.$$scope)},[l,e]}class N extends V{constructor(t){super(),w(this,t,P,O,Z,{})}}export{N as component,F as universal};
