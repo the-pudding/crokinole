@@ -13,7 +13,7 @@
 		Peg Diameter: 3/8”
 	*/
 
-export const rimW = 8;
+export const rimW = 6;
 export const surfaceR = 330;
 export const ditchW = 51;
 export const pegR = 4.7625;
@@ -25,3 +25,9 @@ export const discR = 15;
 export const baseR = surfaceR + ditchW;
 export const boardR = baseR + rimW;
 export const center = boardR;
+
+export const uiHeight = 88;
+export const scoreHeight = 39;
+export const marginBottom = 32;
+export const stepperPadding = 32;
+export const marginSide = 0;

@@ -55,7 +55,7 @@
 	let rangeValue = rangeDefault.position.value;
 	let power = powerDefault;
 	let phase = "position";
-	let degrees;
+	let degrees = 0;
 	let disabled;
 	let replay;
 	let uiVisible;
@@ -250,6 +250,7 @@
 	$: if (width && tutorial) updateTutorial(tutorial);
 	$: if (width) crokinole.autoMute(autoMute);
 	$: tutorialClass = tutorial ? `tutorial tutorial-${tutorial}` : "";
+	// $: tutorialClass = "tutorial-regions";
 
 	onMount(() => {
 		crokinole.init({ element });
@@ -295,33 +296,41 @@
 	<div class="bg" style:width="{width}px" style:height="{width}px">
 		<div
 			class="base"
-			style="--w: {S.base * width}px; --b: {(S.rimWidth / 2) * width}px;"
+			style="--w: {((S.baseR - S.rimW) / S.boardR) * width}px; --b: {(S.rimW /
+				S.boardR) *
+				width}px;"
 		></div>
 
-		<div class="surface" style="--w: {S.surface * width}px;"></div>
+		<div
+			class="surface"
+			style="--w: {(S.surfaceR / S.boardR) * width}px;"
+		></div>
 
 		{#each regions.slice(0, 3) as region, i}
-			{@const outer = (S[`${region}R`] / S.center) * width}
-			{@const inner = (S[`${regions[i + 1]}R`] / S.center) * width}
-			<div class={region} style="--w: {outer}px; --b: {outer - inner}px"></div>
+			{@const regionW = S[`${region}R`]}
+			{@const nextRegionW = S[`${regions[i + 1]}R`]}
+			{@const outerW = (regionW / S.boardR) * width}
+			{@const innerW = (nextRegionW / S.boardR) * width}
+			<div
+				class={region}
+				style="--w: {outerW}px; --b: {(outerW - innerW) / 2}px"
+			></div>
 		{/each}
 
-		<div class="twenty" style="--w: {Math.floor(S.twenty * width)}px;"></div>
+		<div class="twenty" style="--w: {(S.twentyR / S.boardR) * width}px;"></div>
 
 		{#each regions as region}
 			{@const text = regionText[region]}
-			<span
-				class="text text-{region}"
-				style="--w: {Math.floor(
-					width / 2 - (S[region] * width) / 2
-				)}px; --d: {S[region] * width}px;">{text}</span
-			>
+			{@const y = (width - (S[`${region}R`] / S.boardR) * width) / 2}
+			{@const extra = region === "twenty" ? (S.twentyR / S.boardR) * width : 0}
+			<span class="text text-{region}" style="--y: {y + extra}px;">{text}</span>
 		{/each}
 
 		{#each angles as angle}
 			<div
 				class="quadrant-line"
-				style="--w: {((S.five - S.ten) * width) / 2}px; --x: {(S.ten * width) /
+				style="--w: {(((S.fiveR - S.tenR) / S.boardR) * width) /
+					2}px; --x: {((S.tenR / S.boardR) * width) /
 					2}px; --angle: {angle}deg;"
 			></div>
 		{/each}
@@ -329,8 +338,11 @@
 		{#each pegs as peg}
 			<div
 				class="peg"
-				style="--w: {S.peg * width}px; --x: {((S.fifteen - S.peg) * width + 1) /
-					2}px; --angle: {peg}deg;"
+				style="--w: {(S.pegR / S.boardR) * width}px; --x: {(((S.fifteenR -
+					S.pegR) /
+					S.boardR) *
+					width) /
+					2}px; --angle: {peg - 1}deg;"
 			></div>
 		{/each}
 	</div>
@@ -400,7 +412,6 @@
 		left: 50%;
 		transform: translateX(-50%);
 		pointer-events: none;
-		display: none;
 	}
 
 	.fg {
@@ -464,7 +475,7 @@
 	.bg .peg {
 		transform-origin: 0 0;
 		transform: rotate(var(--angle))
-			translate(calc(var(--x) - 1px), calc(var(--w) - 2px));
+			translate(calc(var(--x) - 0px), calc(var(--w) - 0px));
 		width: var(--w);
 		border: none;
 		background: var(--color-peg);
@@ -522,19 +533,18 @@
 	}
 
 	span.text {
-		opacity: 0;
 		transition: opacity 0.2s;
 		position: absolute;
-		top: var(--w);
+		top: var(--y);
 		left: 50%;
 		transform: translate(-50%, 8px);
 		color: var(--color-fg-light);
+		font-weight: bold;
+		font-size: var(--14px);
 	}
 
-	.tutorial span {
+	.tutorial span.text {
 		opacity: 1;
-		font-weight: bold;
-		font-size: var(--16px);
 	}
 
 	.tutorial-regions .five {

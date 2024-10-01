@@ -2,12 +2,8 @@
 	import Crokinole from "$components/Crokinole.svelte";
 	import viewport from "$stores/viewport.js";
 	import inView from "$actions/inView.js";
+	import * as S from "$data/specs.js";
 	export let steps;
-
-	const uiHeight = 88;
-	const scoreHeight = 39;
-	const marginBottom = 32;
-	const stepperPadding = 32;
 
 	let step = 1;
 	let offsetWidth;
@@ -27,7 +23,7 @@
 	$: stepHeight = heights.length ? heights[longestIndex] : 0;
 	$: tutorial = steps[step].id;
 	$: totalHeight =
-		stepHeight + uiHeight + scoreHeight + marginBottom + stepperPadding;
+		stepHeight + S.uiHeight + S.scoreHeight + S.marginBottom + S.stepperPadding;
 	$: maxHeight = $viewport.height - totalHeight;
 	$: width = Math.min(offsetWidth, maxHeight);
 </script>

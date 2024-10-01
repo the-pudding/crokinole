@@ -2,27 +2,24 @@
 	import { browser } from "$app/environment";
 	import Crokinole from "$components/Crokinole.svelte";
 	import viewport from "$stores/viewport.js";
+	import * as S from "$data/specs.js";
 
 	let el;
 	let offsetWidth;
-	let width;
 
-	function resize() {
-		width = offsetWidth;
-	}
-
-	$: hasWidth = offsetWidth !== undefined;
-	$: if (hasWidth) resize($viewport.width);
+	$: totalHeight = S.uiHeight + S.scoreHeight + S.marginBottom;
+	$: maxHeight = $viewport.height - totalHeight;
+	$: width = Math.min(offsetWidth - S.marginSide, maxHeight);
 </script>
 
-<div bind:this={el} bind:offsetWidth>
+<figure bind:this={el} bind:offsetWidth width="{width}px">
 	<Crokinole {width} dev={true} ui={true}></Crokinole>
-</div>
+</figure>
 
 <style>
-	div {
-		width: calc(min(100svw, 100svh) * 0.6);
-		height: calc(min(100svw, 100svh) * 0.6);
+	figure {
+		aspect-ratio: 1;
 		margin: 32px auto;
+		position: relative;
 	}
 </style>

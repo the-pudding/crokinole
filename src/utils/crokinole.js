@@ -22,6 +22,7 @@ const COLOR = {
 	vector: variables.color["black"]
 };
 
+let visible = false;
 let globalMuted;
 
 // Create a new sound
@@ -88,6 +89,11 @@ export default function createCrokinoleSimulation() {
 	let state; // idle, position, shoot, play
 	let activeDisc;
 
+	function scale(v) {
+		const s = canvasWidth / (S.boardR * 2);
+		return v * s;
+	}
+
 	function createZones() {
 		const board = Matter.Bodies.circle(
 			S.center,
@@ -95,8 +101,9 @@ export default function createCrokinoleSimulation() {
 			S.boardR,
 			{
 				isStatic: true,
+				isSensor: true,
 				render: {
-					visible: true,
+					visible,
 					fillStyle: "rgba(0,0,0,0)",
 					lineWidth: 1
 				},
@@ -111,8 +118,9 @@ export default function createCrokinoleSimulation() {
 			S.boardR - S.rimW,
 			{
 				isStatic: true,
+				isSensor: true,
 				render: {
-					visible: true,
+					visible,
 					fillStyle: "rgba(0,0,0,0)",
 					lineWidth: 1
 				},
@@ -127,8 +135,9 @@ export default function createCrokinoleSimulation() {
 			S.surfaceR,
 			{
 				isStatic: true,
+				isSensor: true,
 				render: {
-					visible: true,
+					visible,
 					fillStyle: "rgba(0,0,0,0)",
 					lineWidth: 1
 				},
@@ -145,7 +154,7 @@ export default function createCrokinoleSimulation() {
 				isStatic: true,
 				isSensor: true,
 				render: {
-					visible: true,
+					visible,
 					fillStyle: "rgba(0,0,0,0)",
 					lineWidth: 1
 				},
@@ -162,7 +171,7 @@ export default function createCrokinoleSimulation() {
 				isStatic: true,
 				isSensor: true,
 				render: {
-					visible: true,
+					visible,
 					fillStyle: "rgba(0,0,0,0)",
 					lineWidth: 1
 				},
@@ -179,7 +188,7 @@ export default function createCrokinoleSimulation() {
 				isStatic: true,
 				isSensor: true,
 				render: {
-					visible: true,
+					visible,
 					fillStyle: "rgba(0,0,0,0)",
 					lineWidth: 1
 				},
@@ -196,7 +205,7 @@ export default function createCrokinoleSimulation() {
 				isStatic: true,
 				isSensor: true,
 				render: {
-					visible: true,
+					visible,
 					fillStyle: "rgba(0,0,0,0)",
 					lineWidth: 1
 				},
@@ -356,7 +365,7 @@ export default function createCrokinoleSimulation() {
 				{
 					isStatic: true,
 					restitution: PEG_RESTITUTION,
-					render: { visible: true },
+					render: { visible },
 					collisionFilter: {
 						category: PEG_CATEGORY,
 						mask: DISC_CATEGORY
@@ -394,24 +403,25 @@ export default function createCrokinoleSimulation() {
 
 		const discR = activeDisc.circleRadius;
 		const discP = activeDisc.position;
-		const s = canvasWidth / (S.boardR * 2);
 
 		if (state === "shoot" && indicatorVector && indicatorVisible) {
 			// Calculate the direction of the vector (normalized)
 			const normalizedVector = Matter.Vector.normalise(indicatorVector);
 
-			const startX = (discP.x + normalizedVector.x * discR * 1.25) * s;
-			const startY = (discP.y + normalizedVector.y * discR * 1.25) * s;
+			const startX = scale(discP.x + normalizedVector.x * discR * 1.25);
+			const startY = scale(discP.y + normalizedVector.y * discR * 1.25);
 
-			const endX =
-				(discP.x + normalizedVector.x * discR * 1.5 + indicatorVector.x) * s;
-			const endY =
-				(discP.y + normalizedVector.y * discR * 1.5 + indicatorVector.y) * s;
+			const endX = scale(
+				discP.x + normalizedVector.x * discR * 1.5 + indicatorVector.x
+			);
+			const endY = scale(
+				discP.y + normalizedVector.y * discR * 1.5 + indicatorVector.y
+			);
 
 			// Start drawing the main indicator line
 			ctx.beginPath();
 			ctx.strokeStyle = COLOR.vector;
-			ctx.lineWidth = 2;
+			ctx.lineWidth = canvasWidth < 480 ? 1 : 2;
 
 			// Draw the solid line starting from the outer edge of the disc
 			ctx.moveTo(startX, startY);
@@ -419,64 +429,51 @@ export default function createCrokinoleSimulation() {
 			ctx.stroke();
 
 			// Draw the arrow at the end of the line
-			const arrowLength = S.center * 0.03; // Length of the arrowhead
+			const arrowLength = scale(discR * 0.75);
 			const arrowAngle = Math.PI / 4; // Angle for the arrowhead
 
 			// Calculate direction of the arrow based on the indicatorVector
 			const angle = Math.atan2(indicatorVector.y, indicatorVector.x);
+			const x1 = endX - arrowLength * Math.cos(angle - arrowAngle);
+			const y1 = endY - arrowLength * Math.sin(angle - arrowAngle);
+			const x2 = endX - arrowLength * Math.cos(angle + arrowAngle);
+			const y2 = endY - arrowLength * Math.sin(angle + arrowAngle);
 
 			// Draw the two lines of the arrowhead
 			ctx.beginPath();
 			ctx.moveTo(endX, endY);
-			ctx.lineTo(
-				endX - arrowLength * Math.cos(angle - arrowAngle) * s,
-				endY - arrowLength * Math.sin(angle - arrowAngle) * s
-			);
+			ctx.lineTo(x1, y1);
 			ctx.moveTo(endX, endY);
-			ctx.lineTo(
-				endX - arrowLength * Math.cos(angle + arrowAngle) * s,
-				endY - arrowLength * Math.sin(angle + arrowAngle) * s
-			);
+			ctx.lineTo(x2, y2);
 			ctx.stroke();
 			ctx.closePath();
 		} else if (state === "position") {
-			// draw a rect in the middle of the screen
 			ctx.beginPath();
 			ctx.strokeStyle = COLOR.vector;
 			ctx.stroke();
 
 			ctx.beginPath();
 			ctx.strokeStyle = COLOR.vector;
-			ctx.lineWidth = 2;
+			ctx.lineWidth = canvasWidth < 480 ? 1 : 2;
 
-			ctx.moveTo((discP.x - discR * 2.5) * s, discP.y * s);
-			ctx.lineTo((discP.x - discR * 1.25) * s, discP.y * s);
+			const x1 = scale(discP.x - discR * 2.5);
+			const x2 = scale(discP.x - discR * 1.25);
+			const x3 = scale(discP.x + discR * 2.5);
+			const x4 = scale(discP.x + discR * 1.25);
+			const y = scale(discP.y);
+			const r = scale(discR * 0.75);
 
-			ctx.moveTo((discP.x + discR * 2.5) * s, discP.y * s);
-			ctx.lineTo((discP.x + discR * 1.25) * s, discP.y * s);
+			ctx.moveTo(x1, y);
+			ctx.lineTo(x2, y);
+			ctx.moveTo(x3, y);
+			ctx.lineTo(x4, y);
 
 			ctx.stroke();
 			ctx.closePath();
 
 			ctx.beginPath();
-			// draw arrows at each end
-			drawArrow(
-				ctx,
-				(discP.x - discR * 1.25) * s,
-				discP.y * s,
-				(discP.x - discR * 2.5) * s,
-				discP.y * s,
-				discR * 0.75 * s
-			);
-			drawArrow(
-				ctx,
-				(discP.x + discR * 1.25) * s,
-				discP.y * s,
-				(discP.x + discR * 2.5) * s,
-				discP.y * s,
-				discR * 0.75 * s
-			);
-
+			drawArrow(ctx, x2, y, x1, y, r);
+			drawArrow(ctx, x4, y, x3, y, r);
 			ctx.stroke();
 			ctx.closePath();
 		}
@@ -556,7 +553,7 @@ export default function createCrokinoleSimulation() {
 		});
 	}
 
-	function updateShotVector({ target, speed }) {
+	function updateShotVector(target) {
 		if (!activeDisc) return;
 		const vector = {
 			x: target.x - activeDisc.position.x,
@@ -565,41 +562,20 @@ export default function createCrokinoleSimulation() {
 
 		const normalizedVector = Matter.Vector.normalise(vector);
 
-		if (speed) {
-			// preset flick - if its just a speed and a target
-			const shotVectorMagnitude = speed * shotMaxMagnitude;
-			shotVector = Matter.Vector.mult(normalizedVector, shotVectorMagnitude);
-		} else {
-			// user flick
-			const currentMagnitude = Matter.Vector.magnitude(vector);
-			const indicatorMagnitude = Math.min(
-				currentMagnitude,
-				shotMaxIndicatorMagnitude
-			);
+		const currentMagnitude = Matter.Vector.magnitude(vector);
+		const indicatorMagnitude = Math.min(
+			currentMagnitude,
+			shotMaxIndicatorMagnitude
+		);
 
-			const shotVectorMagnitude =
-				(indicatorMagnitude / shotMaxIndicatorMagnitude) * shotMaxMagnitude;
+		const shotVectorMagnitude =
+			(indicatorMagnitude / shotMaxIndicatorMagnitude) * shotMaxMagnitude;
 
-			// update vector based on clamped vector length
-			shotVector = Matter.Vector.mult(normalizedVector, shotVectorMagnitude);
+		// update vector based on clamped vector length
+		shotVector = Matter.Vector.mult(normalizedVector, shotVectorMagnitude);
 
-			// visual version
-			indicatorVector = Matter.Vector.mult(
-				normalizedVector,
-				indicatorMagnitude
-			);
-		}
-	}
-
-	function panCameraToFollowDisc(disc) {
-		// Define how much margin you want around the disc when following
-		const margin = 100; // Adjust this value to control how much margin around the disc
-
-		// Calculate the bounds to S.center the camera on the disc
-		render.bounds.min.x = disc.position.x - render.options.width / 2 + margin;
-		render.bounds.min.y = disc.position.y - render.options.height / 2 + margin;
-		render.bounds.max.x = disc.position.x + render.options.width / 2 - margin;
-		render.bounds.max.y = disc.position.y + render.options.height / 2 - margin;
+		// visual version
+		indicatorVector = Matter.Vector.mult(normalizedVector, indicatorMagnitude);
 	}
 
 	function getZoneForDisc(disc) {
@@ -863,7 +839,7 @@ export default function createCrokinoleSimulation() {
 
 		const speed = Math.max(0.01, power) * shotMaxIndicatorMagnitude;
 		const target = getTarget({ degrees, speed });
-		updateShotVector({ target });
+		updateShotVector(target);
 	}
 
 	function flickDisc() {
