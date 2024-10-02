@@ -27,7 +27,7 @@ export const baseR = surfaceR + ditchW;
 export const boardR = baseR + rimW;
 export const center = boardR;
 
-export const uiHeight = 88;
+export const uiHeight = 96;
 export const scoreHeight = 39;
 export const marginBottom = 32;
 export const stepperPadding = 32;

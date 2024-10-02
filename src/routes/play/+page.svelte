@@ -7,14 +7,14 @@
 	let el;
 	let offsetWidth;
 
-	$: totalHeight = S.uiHeight + S.scoreHeight + S.marginBottom;
+	$: totalHeight = S.uiHeight + S.scoreHeight * 2 + S.marginBottom * 3;
 	$: maxHeight = $viewport.height - totalHeight;
 	$: width = offsetWidth ? Math.min(offsetWidth - S.marginSide, maxHeight) : 0;
 </script>
 
 <figure bind:this={el} bind:offsetWidth width="{width}px">
 	{#if offsetWidth}
-		<Crokinole {width} dev={true}></Crokinole>
+		<Crokinole {width} game={true}></Crokinole>
 	{/if}
 </figure>
 

@@ -2,30 +2,24 @@
 	import { tick, onMount } from "svelte";
 	import { fade } from "svelte/transition";
 	import { format } from "d3";
+
 	import C from "$utils/crokinole.js";
 	import * as S from "$data/specs.js";
-	import Slider from "$components/Crokinole.Slider.svelte";
-	import Button from "$components/Crokinole.Button.svelte";
+
+	import Bg from "$components/Crokinole.Bg.svelte";
+	import Score from "$components/Crokinole.Score.svelte";
+	import Ui from "$components/Crokinole.Ui.svelte";
+	import Game from "$components/Crokinole.Game.svelte";
 	import scenarios from "$data/scenarios.json";
 
 	export let width;
-	export let dev;
 	export let tutorial;
 	export let autoMute;
+	export let game;
 
 	const crokinole = C();
-	const angles = [45, 135, 225, 315];
-	const pegs = [15, 60, 105, 150, 195, 240, 285, 330];
-	const regions = ["five", "ten", "fifteen", "twenty"];
-	const regionText = {
-		five: "5",
-		ten: "10",
-		fifteen: "15",
-		twenty: "20"
-	};
 
 	const powerDefault = 0;
-
 	const rangeDefault = {
 		position: {
 			value: [0.5 * S.boardR * 2],
@@ -42,36 +36,28 @@
 	};
 
 	const holder = { player1: 0, player2: 0 };
-	const score = { player1: 0, player2: 0, leader: "" };
+	const score = { player1: 0, player2: 0 };
 	const animate = { player1: false, player2: false };
+	const shots = { player1: 8, player2: 8 };
 
-	let element;
-	let isDragging;
-	let target;
-	let x = 0;
-	let y = 0;
-
-	let ready;
+	let element = undefined;
+	let ready = false;
 	let turn = 0;
 	let rangeValuePosition = rangeDefault.position.value;
 	let rangeValueShoot = rangeDefault.shoot.value;
-	// let rangeMin = rangeDefault.position.min;
-	// let rangeMax = rangeDefault.position.max;
-	// let rangeStep = rangeDefault.position.step;
 	let power = powerDefault;
 	let phase = "position";
 	let degrees = 0;
-	let disabled;
-	let replay;
-	let uiVisible;
-	let autoplayTimeout;
-	let replayTimeout;
-	let reactTimeout;
+	let reactText = "";
+	let disabled = false;
+	let replay = false;
+	let autoplayTimeout = undefined;
+	let replayTimeout = undefined;
+	let reactTimeout = undefined;
+	let animateSlider = false;
+	let sliderAnimated = false;
 	let pointsVisible = true;
 	let holderVisible = true;
-	let animateSlider;
-	let sliderAnimated;
-	let reactText;
 
 	function onSliderChange({ detail }) {
 		if (sliderAnimated) return;
@@ -83,6 +69,19 @@
 
 	function onShotComplete({ discs, valid }) {
 		power = powerDefault;
+		resetRanges();
+		disabled = false;
+		updateScore(discs);
+		turn += 1;
+		// reduce the number of shots left for player 1 or player 2
+		const sub = turn % 2 === 0 ? "player2" : "player1";
+		const player = turn % 2 === 0 ? "player1" : "player2";
+		shots[sub] -= 1;
+		if (turn === 16) endRound();
+		else {
+			phase = "position";
+			crokinole.addDisc({ player });
+		}
 	}
 
 	function react({ discs, valid }) {
@@ -118,7 +117,6 @@
 
 	function updateScore(discs) {
 		// add discs to score
-
 		discs.forEach((disc) => {
 			if (disc.valid && disc.score) score[disc.player] += disc.score;
 			if (disc.valid && disc.score === 20) {
@@ -183,6 +181,10 @@
 		holder.player2 = 0;
 		score.player1 = 0;
 		score.player2 = 0;
+		animate.player1 = false;
+		animate.player2 = false;
+		shots.player1 = 8;
+		shots.player2 = 8;
 	}
 
 	async function updateTutorial() {
@@ -193,7 +195,6 @@
 		clearTimeout(reactTimeout);
 		reactText = null;
 		replay = !tutorial.includes("try");
-		uiVisible = !["regions", "score"].includes(tutorial);
 		const end = tutorial === "score";
 		pointsVisible = !["regions", "ricochettry"].includes(tutorial);
 		holderVisible = pointsVisible;
@@ -237,6 +238,12 @@
 		disabled = false;
 	}
 
+	function resetGame() {
+		crokinole.addDisc();
+		turn = 0;
+		resetScore();
+	}
+
 	$: tutorialClass = tutorial ? `tutorial tutorial-${tutorial}` : "";
 	$: if (ready) crokinole.resize(width);
 	$: if (ready) updateRangePosition(rangeValuePosition, width);
@@ -250,94 +257,25 @@
 		crokinole.on("shotCompleteManual", onShotCompleteManual);
 		crokinole.on("ready", () => (ready = true));
 		crokinole.init({ element, width, tutorial });
-		if (dev && !tutorial) crokinole.addDisc();
+		if (game) resetGame();
 	});
 </script>
 
-<!-- svelte-ignore missing-declaration -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="score" style:width="{width}px">
-	<p
-		class="holder you"
-		class:animate={animate.player1}
-		class:visible={holderVisible}
-	>
-		<span class="label">20s</span>
-		<strong>{holder.player1}</strong>
-	</p>
-	<p class="points" class:visible={pointsVisible}>
-		<span class="label">POINTS</span>
-		<strong
-			><span class="you">{score.player1}</span> -
-			<span class="opp">{score.player2}</span></strong
-		>
-	</p>
-	<p
-		class="holder opp"
-		class:animate={animate.player2}
-		class:visible={holderVisible}
-	>
-		<span class="label">20s</span>
-		<strong>{holder.player2}</strong>
-	</p>
-</div>
+{#if game}
+	<Game {width} {shots}></Game>
+{/if}
 
-<div class="c {tutorialClass}">
-	<div class="bg" style:width="{width}px" style:height="{width}px">
-		<div
-			class="base"
-			style="--w: {((S.baseR - S.rimW) / S.boardR) * width}px; --b: {(S.rimW /
-				S.boardR) *
-				width}px;"
-		></div>
+<Score {pointsVisible} {holderVisible} {animate} {holder} {score} {width}
+></Score>
 
-		<div
-			class="surface"
-			style="--w: {(S.surfaceR / S.boardR) * width}px;"
-		></div>
-
-		{#each regions.slice(0, 3) as region, i}
-			{@const regionW = S[`${region}R`]}
-			{@const nextRegionW = S[`${regions[i + 1]}R`]}
-			{@const outerW = (regionW / S.boardR) * width}
-			{@const innerW = (nextRegionW / S.boardR) * width}
-			<div
-				class={region}
-				style="--w: {outerW}px; --b: {(outerW - innerW) / 2}px"
-			></div>
-		{/each}
-
-		<div class="twenty" style="--w: {(S.twentyR / S.boardR) * width}px;"></div>
-
-		{#each regions as region}
-			{@const text = regionText[region]}
-			{@const y = (width - (S[`${region}R`] / S.boardR) * width) / 2}
-			{@const extra = region === "twenty" ? (S.twentyR / S.boardR) * width : 0}
-			<span class="text text-{region}" style="--y: {y + extra}px;">{text}</span>
-		{/each}
-
-		{#each angles as angle}
-			<div
-				class="quadrant-line"
-				style="--w: {(((S.fiveR - S.tenR) / S.boardR) * width) /
-					2}px; --x: {((S.tenR / S.boardR) * width) /
-					2}px; --angle: {angle}deg;"
-			></div>
-		{/each}
-
-		{#each pegs as peg}
-			<div
-				class="peg"
-				style="--w: {(S.pegR / S.boardR) * width}px; --x: {(((S.fifteenR -
-					S.pegR) /
-					S.boardR) *
-					width) /
-					2}px; --angle: {peg - 1}deg;"
-			></div>
-		{/each}
-	</div>
-	<div class="fg" bind:this={element}></div>
+<div class="c">
+	<Bg {tutorialClass} {width}></Bg>
+	<div
+		class="fg"
+		bind:this={element}
+		style:width="{width}px"
+		style:height="{width}px"
+	></div>
 
 	<div class="message">
 		{#if reactText}
@@ -348,55 +286,26 @@
 	</div>
 </div>
 
-<div class="ui" class:visible={uiVisible || !tutorial} style:width="{width}px">
-	<div class="top">
-		{#if !replay}
-			{#if phase === "shoot"}
-				<Button {disabled} bind:value={power} on:release={onRelease}></Button>
-			{:else}
-				<button on:click={onPhaseClick}>Place Disc</button>
-			{/if}
-		{/if}
-	</div>
-
-	<div class="bottom">
-		{#if !replay}
-			{#if phase === "position"}
-				<Slider
-					label="position"
-					min={rangeDefault.position.min}
-					max={rangeDefault.position.max}
-					step={rangeDefault.position.step}
-					{disabled}
-					animate={animateSlider}
-					bind:value={rangeValuePosition}
-					on:change={onSliderChange}
-				></Slider>
-			{:else if phase === "shoot"}
-				<Slider
-					label="aim"
-					min={rangeDefault.shoot.min}
-					max={rangeDefault.shoot.max}
-					step={rangeDefault.shoot.step}
-					{disabled}
-					bind:value={rangeValueShoot}
-				></Slider>
-			{/if}
-		{/if}
-	</div>
-</div>
-
-{#if dev}
-	<p>sliderPosition: {rangeValuePosition[0]}</p>
-	<p>sliderShoot: {rangeValueShoot[0]}</p>
-{/if}
+<Ui
+	visible={!replay || !tutorial}
+	{width}
+	{phase}
+	{disabled}
+	{rangeDefault}
+	animate={animateSlider}
+	bind:rangeValuePosition
+	bind:rangeValueShoot
+	bind:power
+	on:release={onRelease}
+	on:click={onPhaseClick}
+	on:change={onSliderChange}
+></Ui>
 
 <style>
 	.c {
 		position: relative;
 		display: flex;
 		width: 100%;
-		height: 100%;
 		margin: 0 auto;
 		justify-content: center;
 		--color-line: var(--color-gray-200);
@@ -409,236 +318,14 @@
 		font-family: var(--sans);
 	}
 
-	.bg {
-		position: absolute;
-		top: 0;
-		left: 50%;
-		transform: translateX(-50%);
-		pointer-events: none;
-	}
-
-	.fg {
-		position: relative;
-	}
-
-	.bg > div {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		width: var(--w);
-		height: var(--w);
-		border-width: var(--b);
-		border-style: solid;
-		border-radius: 50%;
-		transition: border-color 0.2s;
-	}
-
-	.bg .base {
-		border: none;
-		background: var(--color-ditch);
-		outline: var(--b) solid var(--color-rim);
-	}
-
-	.bg .surface {
-		border: none;
-		background: var(--color-board);
-	}
-
-	.five {
-		border-color: var(--color-board);
-		outline: var(--outline-width) solid var(--color-line);
-	}
-
-	.ten {
-		border-color: var(--color-board);
-		outline: var(--outline-width) solid var(--color-line);
-	}
-
-	.fifteen {
-		border-color: var(--color-board);
-		outline: var(--outline-width) solid var(--color-line);
-	}
-
-	.bg .twenty {
-		background: var(--color-ditch);
-		border: none;
-	}
-
-	.bg .quadrant-line {
-		transform-origin: 0 0;
-		transform: rotate(var(--angle)) translate(var(--x), -1px);
-		width: var(--w);
-		height: var(--outline-width);
-		border: none;
-		background: var(--color-line);
-		border-radius: 0;
-	}
-
-	.bg .peg {
-		transform-origin: 0 0;
-		transform: rotate(var(--angle))
-			translate(calc(var(--x) - 0px), calc(var(--w) - 0px));
-		width: var(--w);
-		border: none;
-		background: var(--color-peg);
-	}
-
 	p {
 		margin: 0;
 		font-size: var(--14px);
 		text-align: center;
 	}
 
-	.ui {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		opacity: 0;
-		pointer-events: none;
-		transition: opacity 0.2s;
-		user-select: none;
-		margin: 0 auto;
-	}
-
-	.ui.visible {
-		opacity: 1;
-		pointer-events: auto;
-	}
-
-	.ui > div {
-		display: flex;
-		justify-content: center;
-		width: 100%;
-	}
-
-	.ui .top {
-		height: 40px;
-		margin-top: 8px;
-		margin-bottom: 8px;
-	}
-
-	.ui .bottom {
-		height: 32px;
-	}
-
-	.ui .bottom p {
-		margin: 0;
-		text-align: center;
-		font-size: var(--14px);
-	}
-
-	:global(.ui button) {
-		padding: 0;
-		width: 11em;
-		text-transform: uppercase;
-		height: 100%;
-	}
-
-	span.text {
-		transition: opacity 0.2s;
-		position: absolute;
-		top: var(--y);
-		left: 50%;
-		transform: translate(-50%, 8px);
-		color: var(--color-fg-light);
-		font-weight: bold;
-		font-size: var(--14px);
-	}
-
-	.tutorial span.text {
-		opacity: 1;
-	}
-
-	.tutorial-regions .five {
-		border-color: var(--color-red-aa);
-	}
-
-	.tutorial-regions .ten {
-		border-color: var(--color-teal-aa);
-	}
-
-	.tutorial-regions .fifteen,
-	.tutorial-fifteen .fifteen {
-		border-color: var(--color-purple-aaa);
-	}
-
-	.tutorial span {
-		color: var(--color-fg-light);
-	}
-
-	/* .tutorial span.text-twenty {
-		transform: translate(-50%, calc(var(--d) + 4px));
-	} */
-
-	.tutorial-regions span {
-		color: var(--color-fg-dark);
-	}
-
-	.tutorial-regions span.text-fifteen,
-	.tutorial-regions span.text-twenty,
-	.tutorial-fifteen span.text-fifteen,
-	.tutorial-fifteen span.text-twenty {
-		color: var(--color-bg);
-	}
-
-	.score {
-		display: flex;
-		justify-content: space-between;
-		font-family: var(--sans);
-		font-size: var(--14px);
-		pointer-events: none;
-		margin: 0 auto 8px auto;
-	}
-
-	.score p {
-		margin: 0;
-	}
-
-	.holder {
-		visibility: hidden;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
-
-	.holder.visible {
-		visibility: visible;
-	}
-
-	.holder.you {
-		color: var(--color-you-text);
-		text-align: left;
-	}
-
-	.holder.opp {
-		color: var(--color-opp-text);
-		text-align: right;
-	}
-
-	.points {
-		color: var(--color-fg-light);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
-
-	.score .label {
-		font-size: var(--12px);
-	}
-
-	.score p.animate {
-		animation: zoom 0.5s ease-in-out;
-	}
-
-	.points {
-		visibility: hidden;
-		text-align: center;
-	}
-
-	.points.visible {
-		visibility: visible;
+	.fg {
+		position: relative;
 	}
 
 	.end {
@@ -665,18 +352,6 @@
 	@media only screen and (max-width: 600px) {
 		.message p {
 			font-size: var(--16px);
-		}
-	}
-
-	@keyframes zoom {
-		0% {
-			transform: scale(1);
-		}
-		50% {
-			transform: scale(1.5);
-		}
-		100% {
-			transform: scale(1);
 		}
 	}
 </style>
