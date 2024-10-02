@@ -11,7 +11,9 @@
 	import Method from "$components/Method.svelte";
 	import Histogram from "$components/Histogram.svelte";
 	import Rules from "$components/Rules.svelte";
+	import Ul from "$components/Ul.svelte";
 	import Situation from "$components/Situation.svelte";
+	import Footer from "$components/Footer.svelte";
 	import { muted } from "$stores/misc.js";
 	import Volume2 from "lucide-svelte/icons/volume-2";
 	import VolumeX from "lucide-svelte/icons/volume-x";
@@ -25,6 +27,7 @@
 		Method,
 		Histogram,
 		Rules,
+		Ul,
 		Situation
 	};
 
@@ -49,6 +52,8 @@
 	{/if}
 </button>
 <MicroCMS {body} {components}></MicroCMS>
+
+<Footer></Footer>
 
 <style>
 	button {

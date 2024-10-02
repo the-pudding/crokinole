@@ -9,6 +9,10 @@
 </div>
 
 <style>
+	.c {
+		margin-top: 64px;
+	}
+
 	p {
 		font-size: var(--20px);
 	}
