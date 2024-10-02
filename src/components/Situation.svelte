@@ -1,4 +1,4 @@
-<script>
+<!-- <script>
 	import Crokinole from "$components/Crokinole.svelte";
 	import viewport from "$stores/viewport.js";
 	import * as S from "$data/specs.js";
@@ -29,4 +29,4 @@
 		position: relative;
 		min-height: 280px;
 	}
-</style>
+</style> -->

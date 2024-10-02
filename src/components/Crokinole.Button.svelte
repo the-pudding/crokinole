@@ -34,5 +34,5 @@
 	{disabled}
 	on:pointerdown={onStart}
 	on:pointerup={onStop}
-	on:pointerleave={onStop}>Shoot</button
+	on:pointerleave={onStop}>Hold to Shoot</button
 >

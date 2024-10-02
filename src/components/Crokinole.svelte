@@ -73,6 +73,14 @@
 	let sliderAnimated;
 	let reactText;
 
+	function onSliderChange({ detail }) {
+		if (sliderAnimated) return;
+		if (detail[0] !== rangeDefault.position.value) {
+			sliderAnimated = true;
+			animateSlider = !sliderAnimated;
+		}
+	}
+
 	function onShotComplete({ discs, valid }) {
 		power = powerDefault;
 	}
@@ -142,10 +150,6 @@
 
 	function updateRangePosition() {
 		if (phase !== "position") return;
-		if (!sliderAnimated) {
-			sliderAnimated = rangeValuePosition[0] !== rangeDefault.position.value[0];
-			animateSlider = !sliderAnimated;
-		}
 		crokinole.positionDisc(rangeValuePosition[0]);
 	}
 
@@ -364,7 +368,9 @@
 					max={rangeDefault.position.max}
 					step={rangeDefault.position.step}
 					{disabled}
+					animate={animateSlider}
 					bind:value={rangeValuePosition}
+					on:change={onSliderChange}
 				></Slider>
 			{:else if phase === "shoot"}
 				<Slider
@@ -525,7 +531,7 @@
 
 	:global(.ui button) {
 		padding: 0;
-		width: 10em;
+		width: 11em;
 		text-transform: uppercase;
 		height: 100%;
 	}

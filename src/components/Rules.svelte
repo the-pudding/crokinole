@@ -9,9 +9,11 @@
 	let offsetWidth;
 	let heights = [];
 	let notInView = true;
+	let animate = true;
 
 	function onStep(n) {
 		// scroll .rules into view
+		animate = false;
 		const rules = document.querySelector(".rules");
 		rules.scrollIntoView({ behavior: "smooth" });
 		step += n;
@@ -41,6 +43,7 @@
 		</div>
 		<button
 			class="next"
+			class:animate
 			disabled={step === steps.length - 1}
 			on:click={() => onStep(1)}>NEXT</button
 		>
@@ -101,6 +104,10 @@
 	button {
 		flex: 0;
 		align-self: center;
+	}
+
+	button.next.animate {
+		animation: pulse 1s ease-in-out infinite;
 	}
 
 	.steps {
@@ -178,6 +185,30 @@
 		.steps p {
 			width: 100%;
 			left: 0;
+		}
+	}
+
+	@keyframes zoom {
+		0% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.25);
+		}
+		100% {
+			transform: scale(1);
+		}
+	}
+
+	@keyframes pulse {
+		0% {
+			box-shadow: 0 0 0 0 transparent;
+		}
+		50% {
+			box-shadow: 0 0 4px 4px var(--color-mark);
+		}
+		100% {
+			box-shadow: 0 0 0 0 transparent;
 		}
 	}
 </style>

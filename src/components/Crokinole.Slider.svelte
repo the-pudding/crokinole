@@ -1,5 +1,6 @@
 <script>
 	import { Slider } from "bits-ui";
+	import { createEventDispatcher } from "svelte";
 
 	export let label;
 	export let value;
@@ -9,12 +10,26 @@
 	export let step;
 	export let animate;
 
+	const dispatch = createEventDispatcher();
+
+	function onValueChange() {
+		dispatch("change", value);
+	}
+
 	$: animateClass = animate ? "animate" : "";
 </script>
 
 <div class="c">
 	<p class="label">{label}</p>
-	<Slider.Root bind:value let:thumbs {min} {max} {step} {disabled}>
+	<Slider.Root
+		bind:value
+		let:thumbs
+		{min}
+		{max}
+		{step}
+		{disabled}
+		{onValueChange}
+	>
 		<span class="bg">
 			<Slider.Range />
 		</span>
