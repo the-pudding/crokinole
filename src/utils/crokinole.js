@@ -4,6 +4,8 @@ import variables from "$data/variables.json";
 import { Howl } from "howler";
 import { muted } from "$stores/misc.js";
 
+import { base } from "$app/paths";
+
 const DISC_CATEGORY = 0x0001;
 const PEG_CATEGORY = 0x0002;
 const TRAP_CATEGORY = 0x0004;
@@ -27,19 +29,19 @@ let globalMuted;
 
 // Create a new sound
 const DISC_SOUND = new Howl({
-	src: ["assets/audio/disc.mp3"]
+	src: [`${base}/assets/audio/disc.mp3`]
 });
 
 const RIM_SOUND = new Howl({
-	src: ["assets/audio/rim.mp3"]
+	src: [`${base}/assets/audio/rim.mp3`]
 });
 
 const FLICK_SOUND = new Howl({
-	src: ["assets/audio/flick.mp3"]
+	src: [`${base}/assets/audio/flick.mp3`]
 });
 
 const HOLE_SOUND = new Howl({
-	src: ["assets/audio/hole.mp3"]
+	src: [`${base}/assets/audio/hole.mp3`]
 });
 
 muted.subscribe((value) => {
@@ -269,7 +271,7 @@ export default function createCrokinoleSimulation() {
 	function createTrapRim() {
 		const wallCount = 32;
 		const wallThickness = S.twentyR * 4;
-		const wallRadius = S.baseR + wallThickness / 2 - 1;
+		const wallRadius = S.baseR - S.rimW + wallThickness / 2 - 1;
 
 		const trap = [];
 
@@ -716,8 +718,6 @@ export default function createCrokinoleSimulation() {
 	// public methods
 	function removeDiscs() {
 		discs.forEach((disc) => {
-			// remove invalid disc from composite (that haven't already been removed)
-			console.log(disc);
 			Matter.Composite.remove(world, disc);
 		});
 

@@ -97,20 +97,10 @@
 			"state": "idle"
 		}
 	],
-	"tripletry": [
+	"ricochettry": [
 		{
-			"x": 394,
-			"y": 228,
-			"player": "player2"
-		},
-		{
-			"x": 402,
-			"y": 139,
-			"player": "player2"
-		},
-		{
-			"x": 472,
-			"y": 255,
+			"x": 420,
+			"y": 460,
 			"player": "player2"
 		},
 		{

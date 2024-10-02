@@ -85,15 +85,12 @@
 				.filter((d) => d.player === "player2")
 				.every((disc) => disc.score === 0);
 			const goal20 = tutorial.includes("open");
-			const goalTriple = tutorial.includes("triple");
-			const custom = goal20
-				? scored20
-					? "Nice 20!"
-					: "But not a 20 :("
-				: goalTriple
-					? allOpp0
-						? "Triple takeout!"
-						: "But not a triple takeout :("
+			const goalRicochet = tutorial.includes("ricochet");
+			const custom =
+				goal20 || goalRicochet
+					? scored20
+						? "Nice 20!"
+						: "But not a 20 :("
 					: "Well done!";
 			reactText = `Valid shot. ${custom}`;
 		} else {
@@ -185,6 +182,7 @@
 	}
 
 	async function updateTutorial() {
+		if (!tutorial) return;
 		resetScore();
 		clearTimeout(autoplayTimeout);
 		clearTimeout(replayTimeout);
@@ -193,7 +191,7 @@
 		replay = !tutorial.includes("try");
 		uiVisible = !["regions", "score"].includes(tutorial);
 		const end = tutorial === "score";
-		pointsVisible = !["regions", "tripletry"].includes(tutorial);
+		pointsVisible = !["regions", "ricochettry"].includes(tutorial);
 		holderVisible = pointsVisible;
 		animateSlider = tutorial === "opponenttry" && !sliderAnimated;
 		power = powerDefault;
@@ -243,7 +241,7 @@
 	$: if (ready) updateTutorial(tutorial);
 	$: crokinole.autoMute(autoMute);
 
-	onMount(() => {
+	onMount(async () => {
 		crokinole.on("shotComplete", onShotComplete);
 		crokinole.on("shotCompleteManual", onShotCompleteManual);
 		crokinole.on("ready", () => (ready = true));
@@ -346,7 +344,7 @@
 	</div>
 </div>
 
-<div class="ui" class:visible={uiVisible || !tutorial}>
+<div class="ui" class:visible={uiVisible || !tutorial} style:width="{width}px">
 	<div class="top">
 		{#if !replay}
 			{#if phase === "shoot"}
@@ -393,6 +391,7 @@
 		display: flex;
 		width: 100%;
 		height: 100%;
+		margin: 0 auto;
 		justify-content: center;
 		--color-line: var(--color-gray-200);
 		--color-board: var(--color-white);
@@ -494,6 +493,7 @@
 		pointer-events: none;
 		transition: opacity 0.2s;
 		user-select: none;
+		margin: 0 auto;
 	}
 
 	.ui.visible {

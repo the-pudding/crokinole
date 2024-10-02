@@ -9,7 +9,7 @@
 	let offsetWidth;
 	let heights = [];
 
-	$: totalHeight = S.uiHeight + S.scoreHeight + S.marginBottom * 2;
+	$: totalHeight = S.uiHeight + S.scoreHeight + S.marginBottom * 4;
 	$: maxHeight = $viewport.height - totalHeight;
 	$: width = Math.min(offsetWidth, maxHeight);
 </script>
