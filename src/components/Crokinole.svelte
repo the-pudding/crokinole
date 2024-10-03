@@ -67,7 +67,7 @@
 		}
 	}
 
-	function onShotComplete({ discs, valid }) {
+	async function onShotComplete({ discs, valid }) {
 		power = powerDefault;
 		resetRanges();
 		disabled = false;
@@ -79,8 +79,9 @@
 		shots[sub] -= 1;
 		if (turn === 16) endRound();
 		else {
+			await tick();
 			phase = "position";
-			crokinole.addDisc({ player });
+			crokinole.addDisc({ player, mode: "position" });
 		}
 	}
 
@@ -112,7 +113,7 @@
 
 	function endRound() {
 		phase = "end";
-		reactText = `${score.player1 > score.player2 ? "You" : "Opp."} win the round`;
+		reactText = `${score.player1 > score.player2 ? "You" : "Bot"} win the round`;
 	}
 
 	function updateScore(discs) {
@@ -181,8 +182,6 @@
 		holder.player2 = 0;
 		score.player1 = 0;
 		score.player2 = 0;
-		animate.player1 = false;
-		animate.player2 = false;
 		shots.player1 = 8;
 		shots.player2 = 8;
 	}

@@ -52,8 +52,8 @@
 
 	.disc {
 		display: inline-block;
-		width: 16px;
-		height: 16px;
+		width: clamp(10px, 2vw, 16px);
+		height: clamp(10px, 2vw, 16px);
 		border-radius: 50%;
 		margin: 0 2px;
 	}

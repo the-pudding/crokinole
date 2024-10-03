@@ -674,7 +674,8 @@ export default function createCrokinoleSimulation() {
 				const scores = discs.map((d) => ({
 					id: d.id,
 					player: d.player,
-					score: d.score
+					score: d.score,
+					valid: d.valid
 				}));
 
 				// remove 20
@@ -683,7 +684,10 @@ export default function createCrokinoleSimulation() {
 				});
 
 				discs = discs.filter((d) => d.score !== 20);
+				activeDisc = null;
+
 				emitter.emit("shotComplete", { discs: scores, valid });
+
 				discs.forEach((d) => {
 					d.valid = undefined;
 					d.collided = undefined;
@@ -692,27 +696,7 @@ export default function createCrokinoleSimulation() {
 					d.in20 = undefined;
 				});
 			}
-
-			activeDisc = null;
-			setState("idle");
 		}
-	}
-
-	function clearInstance() {
-		// Clear the world bodies
-		Matter.Matter.Composite.clear(world, false);
-
-		// Remove engine events
-		Matter.Events.off(engine);
-
-		// Stop the render and remove canvas
-		Matter.Render.stop(render);
-		render.canvas.remove();
-		render.context = null;
-		render.textures = {};
-
-		// Stop the runner
-		Matter.Runner.stop(runner);
 	}
 
 	// public methods
@@ -886,12 +870,6 @@ export default function createCrokinoleSimulation() {
 
 	function init({ element, width, tutorial }) {
 		manual = !!tutorial;
-
-		if (engine) {
-			clearInstance();
-		} else {
-			setState("idle");
-		}
 
 		shotMaxIndicatorMagnitude = S.center * 0.2;
 

@@ -99,6 +99,16 @@
 		visibility: visible;
 	}
 
+	.points .you {
+		color: var(--color-you-text);
+		text-align: left;
+	}
+
+	.points .opp {
+		color: var(--color-opp-text);
+		text-align: right;
+	}
+
 	@keyframes zoom {
 		0% {
 			transform: scale(1);
