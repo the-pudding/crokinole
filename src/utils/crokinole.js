@@ -511,7 +511,7 @@ export default function createCrokinoleSimulation() {
 
 				if (enableTrap) {
 					if (!globalMuted && !muteOverride) {
-						const v = Math.min(1, disc.speed * 0.05);
+						const v = Math.min(1, disc.speed * 0.03);
 
 						HOLE_SOUND.volume(v);
 						HOLE_SOUND.play();
