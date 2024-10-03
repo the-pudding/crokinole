@@ -85,11 +85,10 @@ export default function createCrokinoleSimulation() {
 	let manual;
 	let muteOverride;
 	let canvasWidth;
-
-	// things to carry over on resize
 	let discs = [];
-	let state; // idle, position, shoot, play
+	let state;
 	let activeDisc;
+	let difficulty = "easy";
 
 	function scale(v) {
 		const s = canvasWidth / (S.boardR * 2);
@@ -920,6 +919,10 @@ export default function createCrokinoleSimulation() {
 		}
 	}
 
+	function setDifficulty(d) {
+		difficulty = d;
+	}
+
 	function setState(v) {
 		state = v;
 	}
@@ -1000,6 +1003,7 @@ export default function createCrokinoleSimulation() {
 		positionDisc,
 		aimDisc,
 		flickDisc,
+		setDifficulty,
 		setState,
 		setIndicatorVisible,
 		autoMute,

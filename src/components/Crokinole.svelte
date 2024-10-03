@@ -16,6 +16,7 @@
 	export let tutorial;
 	export let autoMute;
 	export let game;
+	export let mode;
 
 	const crokinole = C();
 
@@ -266,6 +267,7 @@
 	$: if (ready) updatePower(power, width);
 	$: if (ready) updateTutorial(tutorial);
 	$: crokinole.autoMute(autoMute);
+	$: crokinole.setDifficulty(mode);
 
 	onMount(async () => {
 		crokinole.on("shotComplete", onShotComplete);
