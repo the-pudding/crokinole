@@ -22,8 +22,10 @@
 		{#if !replay}
 			{#if phase === "shoot"}
 				<Button {disabled} bind:value={power} on:release></Button>
+			{:else if phase === "position"}
+				<button {disabled} on:click>Place Disc</button>
 			{:else}
-				<button on:click>Place Disc</button>
+				<button on:click>Play Again</button>
 			{/if}
 		{/if}
 	</div>

@@ -449,7 +449,7 @@ export default function createCrokinoleSimulation() {
 			ctx.lineTo(x2, y2);
 			ctx.stroke();
 			ctx.closePath();
-		} else if (state === "position") {
+		} else if (state === "position" && indicatorVisible) {
 			ctx.beginPath();
 			ctx.strokeStyle = COLOR.vector;
 			ctx.stroke();
@@ -510,7 +510,12 @@ export default function createCrokinoleSimulation() {
 				const enableTrap = isClose && isSlow;
 
 				if (enableTrap) {
-					if (!globalMuted && !muteOverride) HOLE_SOUND.play();
+					if (!globalMuted && !muteOverride) {
+						const v = Math.min(1, disc.speed * 0.05);
+
+						HOLE_SOUND.volume(v);
+						HOLE_SOUND.play();
+					}
 					disc.in20 = true;
 					disc.collisionFilter.mask =
 						DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY | TRAP_CATEGORY;
@@ -540,12 +545,20 @@ export default function createCrokinoleSimulation() {
 						: null;
 
 			if (disc && rim) {
-				if (!globalMuted && !muteOverride) RIM_SOUND.play();
+				if (!globalMuted && !muteOverride) {
+					const v = Math.min(1, disc.speed * 0.05);
+					RIM_SOUND.volume(v);
+					RIM_SOUND.play();
+				}
 				disc.frictionAir = 0.3;
 				disc.collisionFilter.mask =
 					DISC_CATEGORY | PEG_CATEGORY | RIM_CATEGORY | SURFACE_CATEGORY;
 			} else if (disc && otherDisc) {
-				if (!globalMuted && !muteOverride) DISC_SOUND.play();
+				if (!globalMuted && !muteOverride) {
+					const v = Math.min(1, disc.speed * 0.05);
+					RIM_SOUND.volume(v);
+					DISC_SOUND.play();
+				}
 				disc.collided = true;
 				otherDisc.collided = true;
 				const opp = disc.player !== otherDisc.player;
@@ -758,6 +771,51 @@ export default function createCrokinoleSimulation() {
 		shotMaxMagnitude = activeDisc.mass * MAX_RATE;
 
 		setState(s);
+		if (opts.bot) botShot();
+	}
+
+	function getBotDegrees(opps) {
+		if (opps) {
+			// pick a random player1 disc
+			const oppDisc = discs.find((d) => d.player === "player1");
+			const radians = Matter.Vector.angle(
+				activeDisc.position,
+				oppDisc.position
+			);
+			const degrees = (radians * 180) / Math.PI + 90;
+			return degrees;
+		} else {
+			return 180;
+		}
+	}
+
+	function getBotPower(opps) {
+		if (opps) {
+			const oppDisc = discs.find((d) => d.player === "player1");
+			const distance = Matter.Vector.magnitude(
+				Matter.Vector.sub(activeDisc.position, oppDisc.position)
+			);
+			const maxDistance = S.surfaceR * 2;
+			const pow = Math.max(
+				0.01,
+				Math.random() * 0.05 + 1 - distance / maxDistance - 0.05
+			);
+			return pow;
+		} else {
+			return 0.15 + Math.random() * 0.3;
+		}
+	}
+	function botShot() {
+		const opps = discs.some((d) => d.player === "player1");
+		const position = opps ? 0.21 + Math.random() * (0.79 - 0.21) : 0.5;
+		positionDisc(position * S.boardR * 2);
+		const degrees = getBotDegrees(opps);
+		const power = getBotPower(opps);
+		setState("shoot");
+		aimDisc({ degrees, power, visible: false, random: true });
+		setTimeout(() => {
+			flickDisc({ degrees, power });
+		}, 2000);
 	}
 
 	function positionDisc(inputX) {
@@ -803,8 +861,26 @@ export default function createCrokinoleSimulation() {
 		}
 	}
 
-	function getTarget({ degrees, speed }) {
-		const radians = ((degrees - 90) * Math.PI) / 180;
+	function getOscillatingValue(speed) {
+		const opps = discs.some((d) => d.player !== activeDisc.player);
+
+		// Get the current time in milliseconds
+		const time = Date.now();
+
+		// Use a sine wave to oscillate the value between -2 and 2
+		// Multiply time by speed to make oscillation faster with higher speed
+		const fast = opps ? 2 : 3;
+		const o = (time / Math.pow(10, 13)) * speed * fast;
+
+		// more if empty board for harder 20s
+
+		const wiggle = opps ? 2 : 4;
+		return wiggle * Math.sin(o); // 0.001 is a scaling factor for smooth oscillation
+	}
+
+	function getTarget({ degrees, speed, random }) {
+		const offset = random ? getOscillatingValue(speed) : 0;
+		const radians = ((degrees + offset - 90) * Math.PI) / 180;
 		const x = activeDisc.position.x + Math.cos(radians);
 		const y = activeDisc.position.y + Math.sin(radians);
 
@@ -817,14 +893,14 @@ export default function createCrokinoleSimulation() {
 		return target;
 	}
 
-	function aimDisc({ degrees, power, visible }) {
+	function aimDisc({ degrees, power, visible, random }) {
 		if (!activeDisc || state !== "shoot") return;
 
 		const v = visible === undefined ? true : visible;
 		setIndicatorVisible(v);
 
 		const speed = Math.max(0.01, power) * shotMaxIndicatorMagnitude;
-		const target = getTarget({ degrees, speed });
+		const target = getTarget({ degrees, speed, random });
 		updateShotVector(target);
 	}
 
@@ -837,7 +913,11 @@ export default function createCrokinoleSimulation() {
 
 		Matter.Body.applyForce(activeDisc, activeDisc.position, shotVector);
 
-		if (!globalMuted && !muteOverride) FLICK_SOUND.play();
+		if (!globalMuted && !muteOverride) {
+			const v = Math.min(1, Matter.Vector.magnitude(shotVector) * 0.4);
+			FLICK_SOUND.volume(v);
+			FLICK_SOUND.play();
+		}
 	}
 
 	function setState(v) {

@@ -71,6 +71,7 @@
 		power = powerDefault;
 		resetRanges();
 		disabled = false;
+		resetScore(true);
 		updateScore(discs);
 		turn += 1;
 		// reduce the number of shots left for player 1 or player 2
@@ -80,8 +81,10 @@
 		if (turn === 16) endRound();
 		else {
 			await tick();
+			disabled = player === "player2";
 			phase = "position";
-			crokinole.addDisc({ player, mode: "position" });
+			const bot = game && player === "player2";
+			crokinole.addDisc({ player, mode: "position", bot });
 		}
 	}
 
@@ -113,18 +116,27 @@
 
 	function endRound() {
 		phase = "end";
-		reactText = `${score.player1 > score.player2 ? "You" : "Bot"} win the round`;
+		const you = score.player1 > score.player2;
+		const tie = score.player1 === score.player2;
+		reactText = tie
+			? "You tied the round"
+			: `${score.player1 > score.player2 ? "You" : "Bot"} win${you ? "" : "s"} the round`;
 	}
 
 	function updateScore(discs) {
 		// add discs to score
 		discs.forEach((disc) => {
-			if (disc.valid && disc.score) score[disc.player] += disc.score;
+			if (disc.valid && disc.score && disc.score !== 20)
+				score[disc.player] += disc.score;
 			if (disc.valid && disc.score === 20) {
 				animate[disc.player] = true;
 				holder[disc.player]++;
 			}
 		});
+
+		// add 20s
+		score.player1 += holder.player1 * 20;
+		score.player2 += holder.player2 * 20;
 	}
 
 	function onShotCompleteManual({ discs, valid }) {
@@ -165,7 +177,7 @@
 
 	function updatePower() {
 		const visible = tutorial ? tutorial.includes("try") : true;
-		crokinole.aimDisc({ degrees, power, visible });
+		crokinole.aimDisc({ degrees, power, visible, random: game });
 	}
 
 	async function onPhaseClick() {
@@ -174,16 +186,18 @@
 			power = powerDefault;
 			resetRanges();
 			crokinole.setState("shoot");
+		} else if (phase === "end") {
+			resetGame();
 		}
 	}
 
-	function resetScore() {
-		holder.player1 = 0;
-		holder.player2 = 0;
+	function resetScore(keep) {
+		holder.player1 = keep ? holder.player1 : 0;
+		holder.player2 = keep ? holder.player2 : 0;
 		score.player1 = 0;
 		score.player2 = 0;
-		shots.player1 = 8;
-		shots.player2 = 8;
+		shots.player1 = keep ? shots.player1 : 8;
+		shots.player2 = keep ? shots.player2 : 8;
 	}
 
 	async function updateTutorial() {
@@ -238,6 +252,8 @@
 	}
 
 	function resetGame() {
+		phase = "position";
+		crokinole.removeDiscs();
 		crokinole.addDisc();
 		turn = 0;
 		resetScore();
@@ -286,7 +302,7 @@
 </div>
 
 <Ui
-	visible={!replay || !tutorial}
+	visible={!replay || !tutorial || phase === "end"}
 	{width}
 	{phase}
 	{disabled}
@@ -325,14 +341,6 @@
 
 	.fg {
 		position: relative;
-	}
-
-	.end {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
 	}
 
 	.message p {

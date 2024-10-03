@@ -1,7 +1,7 @@
 <script>
 	import { browser } from "$app/environment";
 	import { format } from "d3";
-	import { getContext, onMount } from "svelte";
+	import { getContext } from "svelte";
 	import MicroCMS from "$components/helpers/MicroCMS.svelte";
 	import Hero from "$components/Hero.svelte";
 	import Byline from "$components/Byline.svelte";
@@ -14,9 +14,7 @@
 	import Ul from "$components/Ul.svelte";
 	import Situation from "$components/Situation.svelte";
 	import Footer from "$components/Footer.svelte";
-	import { muted } from "$stores/misc.js";
-	import Volume2 from "lucide-svelte/icons/volume-2";
-	import VolumeX from "lucide-svelte/icons/volume-x";
+	import Mute from "$components/Mute.svelte";
 
 	const components = {
 		Hero,
@@ -34,38 +32,9 @@
 	const copy = getContext("copy");
 	let globalMute;
 	$: body = copy.body;
-
-	onMount(() => {
-		document.addEventListener("visibilitychange", () => {
-			const hidden = document.hidden;
-			if (hidden) globalMute = $muted;
-			$muted = globalMute || hidden;
-		});
-	});
 </script>
 
-<button on:click={() => ($muted = !$muted)}>
-	{#if $muted}
-		<VolumeX></VolumeX>
-	{:else}
-		<Volume2></Volume2>
-	{/if}
-</button>
+<Mute></Mute>
 <MicroCMS {body} {components}></MicroCMS>
 
 <Footer></Footer>
-
-<style>
-	button {
-		position: fixed;
-		bottom: 8px;
-		right: 8px;
-		z-index: var(--z-top);
-		border: none;
-		background: var(--color-bg);
-		padding: 4px;
-	}
-	button:hover {
-		background: var(--color-bg);
-	}
-</style>

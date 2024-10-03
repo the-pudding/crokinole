@@ -34,12 +34,6 @@
 </div>
 
 <style>
-	p {
-		margin: 0;
-		font-size: var(--14px);
-		text-align: center;
-	}
-
 	.score {
 		display: flex;
 		justify-content: space-between;
@@ -47,10 +41,13 @@
 		font-size: var(--14px);
 		pointer-events: none;
 		margin: 0 auto 8px auto;
+		height: 39px;
 	}
 
 	.score p {
 		margin: 0;
+		font-size: var(--14px);
+		text-align: center;
 		transform-origin: center;
 	}
 

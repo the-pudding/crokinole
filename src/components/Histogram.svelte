@@ -1,6 +1,5 @@
 <script>
 	import { format, sum, max } from "d3";
-	export let caption;
 	export let note;
 	import misses from "$data/misses.csv";
 
@@ -12,7 +11,6 @@
 
 <div class="c">
 	<div class="chart">
-		<!-- css histogram -->
 		<div class="bins">
 			{#each data as { bin, count, percent }, i}
 				{@const height = `${Math.round((count / maximum) * 100)}%`}

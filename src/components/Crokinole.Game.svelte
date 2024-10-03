@@ -18,12 +18,6 @@
 </div>
 
 <style>
-	p {
-		margin: 0;
-		font-size: var(--14px);
-		text-align: center;
-	}
-
 	.game {
 		display: flex;
 		justify-content: space-between;
@@ -31,6 +25,7 @@
 		font-size: var(--14px);
 		pointer-events: none;
 		margin: 0 auto 8px auto;
+		height: clamp(10px, 2vw, 16px);
 	}
 
 	.game p {
@@ -39,7 +34,6 @@
 
 	.shots {
 		display: flex;
-		/* align-items: center; */
 	}
 
 	.shots.you .disc {
