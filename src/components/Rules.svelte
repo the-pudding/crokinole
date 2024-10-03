@@ -127,9 +127,6 @@
 		color: var(--color-black);
 		padding: 16px;
 		font-family: var(--serif);
-		/* border-top: 4px solid var(--color-fg); */
-		/* background: var(--color-mark); */
-		/* box-shadow: 4px 4px 0 2px var(--color-pink-aa); */
 		background: var(--color-bg-dark);
 		box-shadow: 6px 6px 0 0px var(--color-gray-300);
 		font-size: var(--20px);

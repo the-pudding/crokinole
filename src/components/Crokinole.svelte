@@ -257,6 +257,7 @@
 		crokinole.removeDiscs();
 		crokinole.addDisc();
 		turn = 0;
+		reactText = null;
 		resetScore();
 	}
 

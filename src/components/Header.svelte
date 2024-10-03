@@ -40,5 +40,6 @@
 		margin: 0;
 		max-width: 10em;
 		padding: 8px;
+		transform: none;
 	}
 </style>
