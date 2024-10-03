@@ -302,7 +302,7 @@
 </div>
 
 <Ui
-	visible={!replay || !tutorial || phase === "end"}
+	visible={!replay || !tutorial || (phase === "end" && game)}
 	{width}
 	{phase}
 	{disabled}
