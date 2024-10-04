@@ -59,6 +59,7 @@
 	let sliderAnimated = false;
 	let pointsVisible = true;
 	let holderVisible = true;
+	let firstUp;
 
 	function onSliderChange({ detail }) {
 		if (sliderAnimated) return;
@@ -76,16 +77,18 @@
 		updateScore(discs);
 		turn += 1;
 		// reduce the number of shots left for player 1 or player 2
-		const sub = turn % 2 === 0 ? "player2" : "player1";
-		const player = turn % 2 === 0 ? "player1" : "player2";
-		shots[sub] -= 1;
+		const a = turn % 2 === 0 ? "player2" : "player1";
+		const b = a === "player1" ? "player2" : "player1";
+		const justWent = firstUp === "player1" ? a : b;
+		const nextUp = firstUp === "player1" ? b : a;
+		shots[justWent] -= 1;
 		if (turn === 16) endRound();
 		else {
 			await tick();
-			disabled = player === "player2";
+			disabled = nextUp === "player2";
 			phase = "position";
-			const bot = game && player === "player2";
-			crokinole.addDisc({ player, mode: "position", bot });
+			const bot = game && nextUp === "player2";
+			crokinole.addDisc({ player: nextUp, mode: "position", bot });
 		}
 	}
 
@@ -255,7 +258,9 @@
 	function resetGame() {
 		phase = "position";
 		crokinole.removeDiscs();
-		crokinole.addDisc();
+		firstUp = firstUp === "player1" ? "player2" : "player1";
+		const bot = firstUp === "player2";
+		crokinole.addDisc({ player: firstUp, mode: "position", bot });
 		turn = 0;
 		reactText = null;
 		resetScore();
