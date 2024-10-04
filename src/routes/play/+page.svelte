@@ -39,11 +39,13 @@
 
 <Header top={true}></Header>
 
-<figure bind:this={el} bind:offsetWidth width="{width}px" height="{width}px">
-	{#if offsetWidth}
-		<Crokinole {width} game={true} {mode}></Crokinole>
-	{/if}
-</figure>
+<div class="c">
+	<figure bind:this={el} bind:offsetWidth width="{width}px" height="{width}px">
+		{#if offsetWidth}
+			<Crokinole {width} game={true} {mode}></Crokinole>
+		{/if}
+	</figure>
+</div>
 
 <Mute></Mute>
 
@@ -52,6 +54,10 @@
 		text-align: center;
 		font-size: clamp(28px, 5vw, 128px);
 		font-family: var(--serif-hed);
+	}
+
+	.c {
+		padding: 0 16px;
 	}
 
 	figure {

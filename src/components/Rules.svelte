@@ -67,6 +67,7 @@
 <style>
 	.c {
 		margin-bottom: 128px;
+		padding: 0 16px;
 	}
 
 	figure {

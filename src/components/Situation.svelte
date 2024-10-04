@@ -23,6 +23,10 @@
 </div>
 
 <style>
+	.c {
+		padding: 0 16px;
+	}
+
 	figure {
 		margin: 0 auto 32px;
 		width: 100%;
