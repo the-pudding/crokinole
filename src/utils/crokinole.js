@@ -878,7 +878,6 @@ export default function createCrokinoleSimulation() {
 	}
 
 	function getOptimalShot() {
-		console.time("getOptimalShot");
 		let bestPosition = null;
 		let bestDegrees = null;
 		let bestPower = null;
@@ -905,7 +904,6 @@ export default function createCrokinoleSimulation() {
 			}
 		}
 
-		console.timeEnd("getOptimalShot");
 		return { bestPosition, bestDegrees, bestPower, bestScore };
 	}
 
