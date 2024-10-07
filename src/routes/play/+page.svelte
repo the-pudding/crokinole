@@ -23,7 +23,7 @@
 
 <div class="intro" class:hide={ready}>
 	<section>
-		<Header></Header>
+		<Header intro={true}></Header>
 		<h1>Crokinole Simulator 3000</h1>
 		<p>Can you win a round against Crokinole Bot?</p>
 		<p>Not sure what Crokinole is? <a href="../">Read our story</a>.</p>

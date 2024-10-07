@@ -795,23 +795,151 @@ export default function createCrokinoleSimulation() {
 				Matter.Vector.sub(activeDisc.position, oppDisc.position)
 			);
 			const maxDistance = S.surfaceR * 2;
+			const r = difficulty === "hard" ? 0.03 : 0.05;
 			const pow = Math.max(
 				0.01,
-				Math.random() * 0.05 + 1 - distance / maxDistance - 0.05
+				Math.random() * r + 1 - distance / maxDistance - r
 			);
 			return pow;
 		} else {
-			return 0.15 + Math.random() * 0.3;
+			// smaller range if difficulty is hard
+			if (difficulty === "hard") return 0.2 + Math.random() * 0.2;
+			else return 0.15 + Math.random() * 0.3;
 		}
 	}
+
+	function calculatePower(target) {
+		const distance = Matter.Vector.magnitude(
+			Matter.Vector.sub(activeDisc.position, target)
+		);
+
+		// Normalize distance relative to board size (surface radius)
+		const maxDistance = S.surfaceR * 2;
+		const minPower = 0.1;
+		const maxPower = 1.0;
+
+		// Scale the power based on the distance (closer = less power, farther = more power)
+		let power = (distance / maxDistance) * maxPower;
+
+		// Clamp the power to a reasonable range
+		power = Math.max(minPower, Math.min(maxPower, power));
+
+		return power;
+	}
+
+	function evaluateShot(degrees) {
+		// Calculate the target position based on the shot degrees
+		const target = getTarget({ degrees, speed: 1, random: false }); // Speed 1 for calculating the target
+
+		// Calculate power dynamically based on the distance to the target
+		const power = calculatePower(target);
+
+		let score = 0;
+
+		// Check if the shot will hit an opponent's disc (best case)
+		const oppHit = discs.some((disc) => {
+			return (
+				disc.player === "player1" &&
+				Matter.Vector.magnitude(Matter.Vector.sub(disc.position, target)) <
+					S.discR
+			);
+		});
+
+		// Check if the shot will hit the bot's own disc (penalized case)
+		const ownHit = discs.some((disc) => {
+			return (
+				disc.player === activeDisc.player &&
+				disc.id !== activeDisc.id &&
+				Matter.Vector.magnitude(Matter.Vector.sub(disc.position, target)) <
+					S.discR
+			);
+		});
+
+		// Check if the shot will hit a peg (penalized case)
+		const pegHit = discs.some(
+			(disc) =>
+				disc.label === "peg" &&
+				Matter.Vector.magnitude(Matter.Vector.sub(disc.position, target)) <
+					S.pegR
+		);
+
+		// Score the shot
+		if (oppHit) {
+			score += 3; // Best outcome, hitting an opponent's disc
+		}
+		if (ownHit) {
+			score -= 1; // Penalize hitting own disc
+		}
+		if (pegHit) {
+			score -= 1; // Penalize hitting a peg
+		}
+
+		return { score, power };
+	}
+
+	function getOptimalShot() {
+		console.time("getOptimalShot");
+		let bestPosition = null;
+		let bestDegrees = null;
+		let bestPower = null;
+		let bestScore = -Infinity;
+
+		// Try a set of candidate positions around the 5-point circle
+		const attempts = 20;
+		// test from 0.21 to 0.79
+		for (let i = 0; i < attempts; i++) {
+			const p = 0.21 + (0.79 - 0.21) * (i / attempts);
+			positionDisc(p * S.boardR * 2);
+
+			// Try different angles for each position
+			// only do the ones that are possible
+			for (let angle = 90; angle < 270; angle += 1) {
+				const { score, power } = evaluateShot(angle);
+
+				if (score > bestScore) {
+					bestScore = score;
+					bestPosition = p;
+					bestDegrees = angle;
+					bestPower = power; // Now calculated based on distance
+				}
+			}
+		}
+
+		console.timeEnd("getOptimalShot");
+		return { bestPosition, bestDegrees, bestPower, bestScore };
+	}
+
 	function botShot() {
 		const opps = discs.some((d) => d.player === "player1");
+
+		if (difficulty === "hard") {
+			const { bestPosition, bestDegrees, bestPower, bestScore } =
+				getOptimalShot();
+
+			// If we found a good shot, use it
+			if (bestScore > 0) {
+				positionDisc(bestPosition * S.boardR * 2);
+				setState("shoot");
+				aimDisc({
+					degrees: bestDegrees,
+					power: bestPower,
+					visible: false,
+					random: false
+				});
+				setTimeout(() => {
+					flickDisc({ degrees: bestDegrees, power: bestPower });
+				}, 2000);
+				return;
+			}
+		}
+
+		// Default to a basic shot if no optimal shot is found
 		const position = opps ? 0.21 + Math.random() * (0.79 - 0.21) : 0.5;
 		positionDisc(position * S.boardR * 2);
 		const degrees = getBotDegrees(opps);
 		const power = getBotPower(opps);
 		setState("shoot");
-		aimDisc({ degrees, power, visible: false, random: true });
+		aimDisc({ degrees, power, visible: false, random: false });
 		setTimeout(() => {
 			flickDisc({ degrees, power });
 		}, 2000);
@@ -868,12 +996,12 @@ export default function createCrokinoleSimulation() {
 
 		// Use a sine wave to oscillate the value between -2 and 2
 		// Multiply time by speed to make oscillation faster with higher speed
-		const fast = opps ? 2 : 3;
-		const o = (time / Math.pow(10, 13)) * speed * fast;
+		const mult = opps ? 2 : 3 * (difficulty === "easy" ? 0.5 : 1);
+		const o = (time / Math.pow(10, 13)) * speed * mult;
 
 		// more if empty board for harder 20s
 
-		const wiggle = opps ? 2 : 4;
+		const wiggle = opps ? 2 : 3 * (difficulty === "easy" ? 0.5 : 1);
 		return wiggle * Math.sin(o); // 0.001 is a scaling factor for smooth oscillation
 	}
 

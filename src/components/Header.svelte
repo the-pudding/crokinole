@@ -2,9 +2,10 @@
 	// shadow, plain, line, bubble
 	import wordmark from "$svg/wordmark-shadow.svg";
 	export let top;
+	export let intro;
 </script>
 
-<header class:top>
+<header class:top class:intro>
 	<div class="wordmark">
 		<a href="https://pudding.cool" aria-label="The Pudding" target="_self"
 			>{@html wordmark}</a
@@ -39,7 +40,11 @@
 	.top .wordmark {
 		margin: 0;
 		max-width: 10em;
-		padding: 8px;
+		padding: 0 8px;
 		transform: none;
+	}
+
+	.intro .wordmark {
+		padding: 0;
 	}
 </style>
