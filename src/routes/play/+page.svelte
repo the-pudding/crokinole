@@ -25,7 +25,10 @@
 	<section>
 		<Header intro={true}></Header>
 		<h1>Crokinole Simulator 3000</h1>
-		<p>Can you win a round against Crokinole Bot?</p>
+		<p>
+			Can <strong class="color-text-you">you</strong> win a round against
+			<strong class="color-text-opp">Crokinole Bot?</strong>
+		</p>
 		<p>Not sure what Crokinole is? <a href="../">Read our story</a>.</p>
 		<div class="mode">
 			<p>Select Difficulty</p>
@@ -92,10 +95,10 @@
 	}
 
 	.mode {
-		background: var(--color-bg-dark);
-		padding: 32px;
-		max-width: 20em;
-		width: 80%;
+		/* background: var(--color-fg-light); */
+		/* padding: 32px; */
+		/* max-width: 20em; */
+		/* width: 80%; */
 	}
 
 	.mode p {
@@ -114,5 +117,6 @@
 	button {
 		margin: 0 8px;
 		text-transform: uppercase;
+		width: 8em;
 	}
 </style>
