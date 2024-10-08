@@ -13,7 +13,7 @@
 	});
 </script>
 
-<button on:click={() => ($muted = !$muted)}>
+<button on:click={() => ($muted = !$muted)} aria-label="Toggle Mute">
 	{#if $muted}
 		<VolumeX></VolumeX>
 	{:else}
