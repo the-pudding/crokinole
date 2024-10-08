@@ -63,7 +63,7 @@
 
 	function onSliderChange({ detail }) {
 		if (sliderAnimated) return;
-		if (detail[0] !== rangeDefault.position.value) {
+		if (detail[0] !== rangeDefault.position.value[0]) {
 			sliderAnimated = true;
 			animateSlider = !sliderAnimated;
 		}
