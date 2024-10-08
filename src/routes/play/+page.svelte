@@ -5,11 +5,25 @@
 	import * as S from "$data/specs.js";
 	import Mute from "$components/Mute.svelte";
 	import Header from "$components/Header.svelte";
+	import Meta from "$components/Meta.svelte";
 
 	let el;
 	let offsetWidth;
 	let mode = "easy";
 	let ready;
+
+	const preloadFont = [
+		"https://pudding.cool/assets/fonts/tiempos/TiemposTextWeb-Regular.woff2",
+		"https://pudding.cool/assets/fonts/tiempos/TiemposTextWeb-Bold.woff2",
+		"https://pudding.cool/assets/fonts/atlas/AtlasGrotesk-Regular-Web.woff2",
+		"https://pudding.cool/assets/fonts/atlas/AtlasGrotesk-Bold-Web.woff2"
+	];
+
+	const title = "Crokinole Simulator 3000";
+	const description = "Can you win a round against Crokinole Bot?";
+	const url = "https://pudding.cool/2024/10/crokinole/play";
+	const keywords =
+		"crokinole, crokinole simulator, crokinole bot, crokinole game";
 
 	function onClick(m) {
 		mode = m;
@@ -20,6 +34,8 @@
 	$: maxHeight = $viewport.height - totalHeight;
 	$: width = offsetWidth ? Math.min(offsetWidth - S.marginSide, maxHeight) : 0;
 </script>
+
+<Meta {title} {description} {url} {preloadFont} {keywords} img={"og-play"} />
 
 <div class="intro" class:hide={ready}>
 	<section>
