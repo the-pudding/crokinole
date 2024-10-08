@@ -784,7 +784,9 @@ export default function createCrokinoleSimulation() {
 			const degrees = (radians * 180) / Math.PI + 90;
 			return degrees;
 		} else {
-			return 180;
+			const d = Math.random() * difficulty === "hard" ? 3 : 6;
+			const r = Math.random() * d;
+			return 180 - d / 2 + r;
 		}
 	}
 
@@ -795,7 +797,7 @@ export default function createCrokinoleSimulation() {
 				Matter.Vector.sub(activeDisc.position, oppDisc.position)
 			);
 			const maxDistance = S.surfaceR * 2;
-			const r = difficulty === "hard" ? 0.03 : 0.05;
+			const r = difficulty === "hard" ? 0.05 : 0.1;
 			const pow = Math.max(
 				0.01,
 				Math.random() * r + 1 - distance / maxDistance - r
@@ -803,8 +805,8 @@ export default function createCrokinoleSimulation() {
 			return pow;
 		} else {
 			// smaller range if difficulty is hard
-			if (difficulty === "hard") return 0.2 + Math.random() * 0.2;
-			else return 0.15 + Math.random() * 0.3;
+			if (difficulty === "hard") return 0.15 + Math.random() * 0.2;
+			else return 0.15 + Math.random() * 0.35;
 		}
 	}
 
@@ -994,12 +996,12 @@ export default function createCrokinoleSimulation() {
 
 		// Use a sine wave to oscillate the value between -2 and 2
 		// Multiply time by speed to make oscillation faster with higher speed
-		const mult = opps ? 2 : 3 * (difficulty === "easy" ? 0.5 : 1);
+		const mult = opps ? 2 : 3 * (difficulty === "easy" ? 0.67 : 1);
 		const o = (time / Math.pow(10, 13)) * speed * mult;
 
 		// more if empty board for harder 20s
 
-		const wiggle = opps ? 2 : 3 * (difficulty === "easy" ? 0.5 : 1);
+		const wiggle = opps ? 2 : 3 * (difficulty === "easy" ? 0.67 : 1);
 		return wiggle * Math.sin(o); // 0.001 is a scaling factor for smooth oscillation
 	}
 
