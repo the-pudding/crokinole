@@ -3,14 +3,17 @@
 	import Crokinole from "$components/Crokinole.svelte";
 	import viewport from "$stores/viewport.js";
 	import * as S from "$data/specs.js";
+	import copy from "$data/copy.json";
 	import Mute from "$components/Mute.svelte";
 	import Header from "$components/Header.svelte";
 	import Meta from "$components/Meta.svelte";
+	import Ul from "$components/Ul.svelte";
 
 	let el;
 	let offsetWidth;
 	let mode = "easy";
 	let ready;
+	let rulesVisible = false;
 
 	const preloadFont = [
 		"https://pudding.cool/assets/fonts/tiempos/TiemposTextWeb-Regular.woff2",
@@ -66,6 +69,26 @@
 	</figure>
 </div>
 
+<button class="show-rules" on:click={() => (rulesVisible = true)}>
+	Rules</button
+>
+
+<div class="rules" class:visible={rulesVisible}>
+	<div class="bg"></div>
+	<div class="inner">
+		{#each copy.Rules.text as { type, value }}
+			{#if type === "Ul"}
+				<Ul list={value.list}></Ul>
+			{:else}
+				<p>{@html value}</p>
+			{/if}
+		{/each}
+		<div class="close">
+			<button on:click={() => (rulesVisible = false)}>Close</button>
+		</div>
+	</div>
+</div>
+
 <Mute></Mute>
 
 <style>
@@ -110,13 +133,6 @@
 		display: none;
 	}
 
-	.mode {
-		/* background: var(--color-fg-light); */
-		/* padding: 32px; */
-		/* max-width: 20em; */
-		/* width: 80%; */
-	}
-
 	.mode p {
 		font-family: var(--sans);
 		font-size: var(--16px);
@@ -134,5 +150,70 @@
 		margin: 0 8px;
 		text-transform: uppercase;
 		width: 8em;
+	}
+
+	.rules {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100svh;
+		z-index: var(--z-overlay);
+		overflow: auto;
+		visibility: hidden;
+	}
+
+	.rules.visible {
+		visibility: visible;
+	}
+
+	.rules .bg {
+		background: var(--color-bg);
+		opacity: 0.95;
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		top: 0;
+		left: 0;
+	}
+
+	.rules .inner {
+		color: var(--color-fg);
+		position: relative;
+		width: 90%;
+		padding: 16px;
+		max-width: 700px;
+		margin: 32px auto 0 auto;
+		font-family: var(--sans);
+	}
+
+	.rules .inner p {
+		text-align: left;
+	}
+
+	.rules p {
+		font-size: var(--16px);
+	}
+
+	:global(.rules ul) {
+		padding-left: 16px;
+		margin-bottom: 16px;
+	}
+
+	:global(.rules ul li) {
+		font-size: var(--16px);
+		margin: 8px 0;
+	}
+
+	button.show-rules {
+		width: auto;
+		position: fixed;
+		top: 16px;
+		right: 16px;
+	}
+
+	.rules .close {
+		margin-top: 16px;
+		text-align: center;
 	}
 </style>
