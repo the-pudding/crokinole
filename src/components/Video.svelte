@@ -29,6 +29,7 @@
 		{loop}
 		{muted}
 		{controls}
+		playsinline
 	></video>
 	{#if restart}<button on:click={onRestart} aria-label="restart"
 			><RotateCCW></RotateCCW></button
