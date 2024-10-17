@@ -210,10 +210,17 @@
 		position: fixed;
 		top: 16px;
 		right: 16px;
+		margin: 0;
 	}
 
 	.rules .close {
 		margin-top: 16px;
 		text-align: center;
+	}
+
+	@media only screen and (max-width: 800px) {
+		.c {
+			padding-top: 40px;
+		}
 	}
 </style>
